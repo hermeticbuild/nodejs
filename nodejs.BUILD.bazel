@@ -22,6 +22,8 @@ load("@nodejs//nodejs/private:release_archive.bzl", "nodejs_release_archives")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@v8_python_deps//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
@@ -615,6 +617,67 @@ cc_binary(
         no_match_error = "node currently supports Linux and macOS targets",
     ),
     deps = [":node_snapshot"],
+)
+
+filegroup(
+    name = "node_test_root",
+    srcs = ["test/root.status"],
+)
+
+py_binary(
+    name = "node_test_runner",
+    srcs = [
+        "tools/test.py",
+        "tools/utils.py",
+    ],
+    data = glob(
+        [
+            "test/**",
+            "tools/**",
+        ],
+        exclude = [
+            "tools/test.py",
+            "tools/utils.py",
+        ],
+    ),
+    imports = ["tools"],
+    main = "tools/test.py",
+)
+
+sh_binary(
+    name = "node_test",
+    srcs = ["@nodejs//nodejs/private:node_test.sh"],
+    args = [
+        "$(rootpath :node_test_runner)",
+        "$(rootpath :node)",
+        "$(rootpath :node_test_root)",
+    ],
+    data = [
+        ":node",
+        ":node_test_root",
+        ":node_test_runner",
+    ],
+)
+
+sh_test(
+    name = "node_upstream_smoke_test",
+    srcs = ["@nodejs//nodejs/private:node_test.sh"],
+    args = [
+        "$(rootpath :node_test_runner)",
+        "$(rootpath :node)",
+        "$(rootpath :node_test_root)",
+        "parallel/test-assert",
+        "parallel/test-buffer-alloc",
+        "parallel/test-crypto-hash",
+        "parallel/test-fs-readfile",
+        "parallel/test-http-server",
+    ],
+    data = [
+        ":node",
+        ":node_test_root",
+        ":node_test_runner",
+    ],
+    timeout = "long",
 )
 
 cc_library(

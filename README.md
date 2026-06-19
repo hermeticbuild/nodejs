@@ -149,3 +149,15 @@ bazel build --config=release \
 `//tests/release:release_archive_test` verifies the official 5,714-entry
 layout, normalized metadata, gzip/xz equivalence, and relocated execution of
 `node`, `npm`, and `npx`.
+
+`@nodejs_26_3_1//:node_test` runs Node.js's upstream Python test harness with
+the Bazel-built `node` executable and the complete upstream `test` directory.
+Pass upstream suite or test names after `--`:
+
+```console
+bazel run --config=release @nodejs_26_3_1//:node_test -- \
+  parallel/test-assert parallel/test-buffer-alloc
+```
+
+`@nodejs_26_3_1//:node_upstream_smoke_test` runs representative upstream
+assertion, buffer, crypto, filesystem, and HTTP tests in CI.

@@ -4,6 +4,7 @@ exports_files([
     "lief_sources.bzl",
     "node_javascript.bzl",
     "node_sources.bzl",
+    "node_test.sh",
     "openssl_sources.bzl",
     "release_archive.bzl",
     "repositories.bzl",
