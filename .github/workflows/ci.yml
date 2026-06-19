@@ -245,11 +245,13 @@ jobs:
             @nodejs_26_3_1//:node_upstream_ffi_tests \
             @nodejs_26_3_1//:node_upstream_message_tests \
             @nodejs_26_3_1//:node_upstream_module_hooks_tests \
+            @nodejs_26_3_1//:node_upstream_pseudo_tty_tests \
             @nodejs_26_3_1//:node_upstream_report_tests \
             @nodejs_26_3_1//:node_upstream_sqlite_tests \
             @nodejs_26_3_1//:node_upstream_wasi_tests \
             @nodejs_26_3_1//:node_upstream_wasm_allocation_tests \
-            @nodejs_26_3_1//:node_upstream_test_runner_tests
+            @nodejs_26_3_1//:node_upstream_test_runner_tests \
+            @nodejs_26_3_1//:node_upstream_wpt_tests
 
       - name: Test Node.js release archives
         run: |

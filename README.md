@@ -213,3 +213,14 @@ expected by the upstream tests.
 native addon fixtures are not built yet. The WASI target excludes
 `wasi/test-wasi-readdir` because BuildBuddy's execution filesystem includes
 directory entries beyond the four entries asserted by that test.
+
+The following Linux x86_64 targets run 64 more upstream tests across five
+remote actions:
+
+- `@nodejs_26_3_1//:node_upstream_pseudo_tty_tests`
+- `@nodejs_26_3_1//:node_upstream_wpt_tests`
+
+`node_upstream_pseudo_tty_tests` uses the pinned Python 3.11 toolchain because
+upstream `tools/pseudo-tty.py` creates the controlling terminal for each of its
+39 tests. `node_upstream_wpt_tests` runs 25 Node.js WPT runner files against
+the WPT files pinned in the Node.js source archive.
