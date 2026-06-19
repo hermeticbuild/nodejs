@@ -59,27 +59,31 @@ jobs:
             --platforms=@llvm//platforms:windows_x86_64_msvc \
             @nodejs_26_3_1//:libnode \
             @nodejs_26_3_1//:node \
+            //tests/node:node_windows_binary \
             //tests/release:windows_release_archive_validation
+
+      - name: Upload node.exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-windows-x86_64
+          path: bazel-bin/tests/node/node.exe
+          if-no-files-found: error
 
   windows-x86_64-execution:
     name: Windows x86_64 execution / Node.js 26.3.1
+    needs: windows-x86_64
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download node.exe
+        uses: actions/download-artifact@v4
+        with:
+          name: node-windows-x86_64
+          path: node-windows-x86_64
+
       - name: Test node.exe
-        run: |
-          bazel test `
-            --config=ci `
-            --config=release `
-            --config=remote `
-            --jobs=64 `
-            --local_test_jobs=1 `
-            --lockfile_mode=error `
-            "--extra_execution_platforms=@nodejs//:rbe_platform,@llvm//platforms:windows_x86_64_msvc" `
-            --platforms=@llvm//platforms:windows_x86_64_msvc `
-            --strategy=TestRunner=local `
-            //tests/node:node_windows_test
+        run: python tests/node/node_windows_test.py node-windows-x86_64/node.exe x64 win32
 
   test:
     name: ${{ matrix.system.name }} / Node.js 26.3.1
