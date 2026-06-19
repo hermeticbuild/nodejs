@@ -30,6 +30,10 @@ rust_static_library(
 cc_library(
     name = "temporal_capi_cpp",
     hdrs = glob(["vendor/temporal_capi/bindings/cpp/**/*.hpp"]),
+    linkopts = select({
+        "@platforms//os:windows": ["ntdll.lib"],
+        "//conditions:default": [],
+    }),
     strip_include_prefix = "vendor/temporal_capi/bindings/cpp",
     deps = [":temporal_capi"],
 )
