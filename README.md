@@ -226,6 +226,11 @@ used by the upstream `node-api` suite and runs all 45 JavaScript tests in two
 Linux x86_64 remote shards. CI runs this complete target; the default-compile
 target remains available for focused validation.
 
+`@nodejs_26_3_1//:node_upstream_addon_async_hello_world_tests` builds the seven
+legacy `NODE_MODULE` addons in the four async directories and three hello-world
+directories, then runs their ten JavaScript tests in one Linux x86_64 remote
+action.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 

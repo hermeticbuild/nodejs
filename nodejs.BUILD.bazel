@@ -769,6 +769,13 @@ py_binary(
         ":node_api_test_worker_buffer_callback_binding_node",
         ":node_api_test_worker_terminate_finalization_node",
         ":node_api_test_worker_terminate_node",
+        ":test_addon_async_cleanup_hook_binding_node",
+        ":test_addon_async_hello_world_binding_node",
+        ":test_addon_async_hooks_id_binding_node",
+        ":test_addon_async_resource_binding_node",
+        ":test_addon_hello_world_2_binding_node",
+        ":test_addon_hello_world_binding_node",
+        ":test_addon_hello_world_function_export_binding_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -1466,6 +1473,104 @@ node_addon(
 )
 
 node_addon(
+    name = "test_addon_async_cleanup_hook_binding_node",
+    output = "test/addons/async-cleanup-hook/build/Release/binding.node",
+    srcs = ["test/addons/async-cleanup-hook/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_async_hello_world_binding_node",
+    output = "test/addons/async-hello-world/build/Release/binding.node",
+    srcs = ["test/addons/async-hello-world/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_async_hooks_id_binding_node",
+    output = "test/addons/async-hooks-id/build/Release/binding.node",
+    srcs = ["test/addons/async-hooks-id/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_async_resource_binding_node",
+    output = "test/addons/async-resource/build/Release/binding.node",
+    srcs = ["test/addons/async-resource/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_hello_world_binding_node",
+    output = "test/addons/hello-world/build/Release/binding.node",
+    srcs = ["test/addons/hello-world/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_hello_world_2_binding_node",
+    output = "test/addons/hello-world-2/build/Release/binding.node",
+    srcs = ["test/addons/hello-world-2/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
+    name = "test_addon_hello_world_function_export_binding_node",
+    output = "test/addons/hello-world-function-export/build/Release/binding.node",
+    srcs = ["test/addons/hello-world-function-export/binding.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+    ],
+    defines = [
+        "NODE_GYP_MODULE_NAME=binding",
+        "V8_DEPRECATION_WARNINGS=1",
+    ],
+)
+
+node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
@@ -1788,6 +1893,26 @@ nodejs_upstream_test_shards(
     name = "node_upstream_node_api_tests",
     suites = ["node-api"],
     shards = 2,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_async_hello_world_tests",
+    suites = [
+        "addons/async-cleanup-hook",
+        "addons/async-hello-world",
+        "addons/async-hooks-id",
+        "addons/async-resource",
+        "addons/hello-world",
+        "addons/hello-world-2",
+        "addons/hello-world-function-export",
+    ],
+    shards = 1,
     node = ":node",
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",
