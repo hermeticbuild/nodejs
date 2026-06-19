@@ -704,6 +704,20 @@ py_binary(
         ":js_native_api_6_object_wrap_nested_wrap_node",
         ":js_native_api_7_factory_wrap_node",
         ":js_native_api_8_passing_wrapped_node",
+        ":js_native_api_test_array_node",
+        ":js_native_api_test_bigint_node",
+        ":js_native_api_test_constructor_node",
+        ":js_native_api_test_conversions_node",
+        ":js_native_api_test_date_node",
+        ":js_native_api_test_error_node",
+        ":js_native_api_test_function_node",
+        ":js_native_api_test_new_target_node",
+        ":js_native_api_test_number_node",
+        ":js_native_api_test_promise_node",
+        ":js_native_api_test_properties_node",
+        ":js_native_api_test_sharedarraybuffer_node",
+        ":js_native_api_test_string_node",
+        ":js_native_api_test_symbol_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -908,6 +922,122 @@ node_addon(
         "test/js-native-api/8_passing_wrapped/myobject.h",
     ],
     copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_array_node",
+    output = "test/js-native-api/test_array/build/Release/test_array.node",
+    srcs = ["test/js-native-api/test_array/test_array.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_bigint_node",
+    output = "test/js-native-api/test_bigint/build/Release/test_bigint.node",
+    srcs = ["test/js-native-api/test_bigint/test_bigint.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_constructor_node",
+    output = "test/js-native-api/test_constructor/build/Release/test_constructor.node",
+    srcs = [
+        "test/js-native-api/test_constructor/test_constructor.c",
+        "test/js-native-api/test_constructor/test_null.c",
+        "test/js-native-api/test_constructor/test_null.h",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_conversions_node",
+    output = "test/js-native-api/test_conversions/build/Release/test_conversions.node",
+    srcs = [
+        "test/js-native-api/test_conversions/test_conversions.c",
+        "test/js-native-api/test_conversions/test_null.c",
+        "test/js-native-api/test_conversions/test_null.h",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_date_node",
+    output = "test/js-native-api/test_date/build/Release/test_date.node",
+    srcs = ["test/js-native-api/test_date/test_date.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_error_node",
+    output = "test/js-native-api/test_error/build/Release/test_error.node",
+    srcs = ["test/js-native-api/test_error/test_error.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_function_node",
+    output = "test/js-native-api/test_function/build/Release/test_function.node",
+    srcs = ["test/js-native-api/test_function/test_function.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_new_target_node",
+    output = "test/js-native-api/test_new_target/build/Release/test_new_target.node",
+    srcs = ["test/js-native-api/test_new_target/test_new_target.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_number_node",
+    output = "test/js-native-api/test_number/build/Release/test_number.node",
+    srcs = [
+        "test/js-native-api/test_number/test_number.c",
+        "test/js-native-api/test_number/test_null.c",
+        "test/js-native-api/test_number/test_null.h",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_promise_node",
+    output = "test/js-native-api/test_promise/build/Release/test_promise.node",
+    srcs = ["test/js-native-api/test_promise/test_promise.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_properties_node",
+    output = "test/js-native-api/test_properties/build/Release/test_properties.node",
+    srcs = ["test/js-native-api/test_properties/test_properties.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_sharedarraybuffer_node",
+    output = "test/js-native-api/test_sharedarraybuffer/build/Release/test_sharedarraybuffer.node",
+    srcs = ["test/js-native-api/test_sharedarraybuffer/test_sharedarraybuffer.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_string_node",
+    output = "test/js-native-api/test_string/build/Release/test_string.node",
+    srcs = [
+        "test/js-native-api/test_string/test_string.c",
+        "test/js-native-api/test_string/test_null.c",
+        "test/js-native-api/test_string/test_null.h",
+    ],
+    defines = ["NAPI_VERSION=10"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_symbol_node",
+    output = "test/js-native-api/test_symbol/build/Release/test_symbol.node",
+    srcs = ["test/js-native-api/test_symbol/test_symbol.c"],
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1153,6 +1283,33 @@ nodejs_upstream_test_shards(
         "js-native-api/6_object_wrap",
         "js-native-api/7_factory_wrap",
         "js-native-api/8_passing_wrapped",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_js_native_api_value_tests",
+    suites = [
+        "js-native-api/test_array",
+        "js-native-api/test_bigint",
+        "js-native-api/test_constructor",
+        "js-native-api/test_conversions",
+        "js-native-api/test_date",
+        "js-native-api/test_error",
+        "js-native-api/test_function",
+        "js-native-api/test_new_target",
+        "js-native-api/test_number",
+        "js-native-api/test_promise",
+        "js-native-api/test_properties",
+        "js-native-api/test_sharedarraybuffer",
+        "js-native-api/test_string",
+        "js-native-api/test_symbol",
     ],
     shards = 1,
     node = ":node",
