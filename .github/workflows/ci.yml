@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  configure-audit:
+    name: Configure audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check configure audit
+        run: tools/configure_check_audit.sh --check
+
+      - name: Check unsupported Node.js version
+        working-directory: tests/unsupported_version
+        run: |
+          if output="$(bazel query --lockfile_mode=off '@nodejs_26_3_2//...' 2>&1)"; then
+            echo "unsupported Node.js version unexpectedly succeeded" >&2
+            exit 1
+          fi
+          grep -F 'Unsupported Node.js version "26.3.2"; supported versions are 26.3.1' <<<"$output"
+
+  source-contract:
+    name: ${{ matrix.system.name }} source contract
+    runs-on: ${{ matrix.system.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        system:
+          - name: Linux x86_64
+            runner: ubuntu-24.04
+            platform: "@llvm//platforms:linux_x86_64"
+          - name: macOS arm64
+            runner: macos-15
+            platform: "@llvm//platforms:macos_aarch64"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test source contract
+        working-directory: tests/integration
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            --strategy=TestRunner=remote \
+            //:source_contract_test
