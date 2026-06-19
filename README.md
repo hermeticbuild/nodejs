@@ -208,11 +208,10 @@ Node.js's `-rdynamic` link setting and allowing FFI to resolve
 `uv_os_getpid`. Bazel builds the FFI and SQLite fixture libraries at the paths
 expected by the upstream tests.
 
-`abort/test-addon-register-signal-handler` and
-`abort/test-addon-uv-handle-leak` report upstream runtime skips because their
-native addon fixtures are not built yet. The WASI target excludes
-`wasi/test-wasi-readdir` because BuildBuddy's execution filesystem includes
-directory entries beyond the four entries asserted by that test.
+Bazel builds the `register-signal-handler` and `uv-handle-leak` addon fixtures,
+so all 10 `abort` cases run. The WASI target excludes `wasi/test-wasi-readdir`
+because BuildBuddy's execution filesystem includes directory entries beyond
+the four entries asserted by that test.
 
 The following Linux x86_64 targets run 64 more upstream tests across five
 remote actions:

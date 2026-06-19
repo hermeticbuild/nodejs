@@ -133,7 +133,16 @@ def _nodejs_source_repository_impl(repository_ctx):
 
     v8_build_path = "deps/v8/BUILD.bazel"
     v8_build = repository_ctx.read(v8_build_path)
-    v8_build += "\nexports_files({} + glob([\"include/**/*.h\"]))\n".format(repr(_V8_EXPORTED_FILES))
+    v8_build += """
+exports_files({} + glob(["include/**/*.h"]))
+
+cc_library(
+    name = "node_addon_headers",
+    hdrs = glob(["include/**/*.h"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+""".format(repr(_V8_EXPORTED_FILES))
     repository_ctx.file(v8_build_path, v8_build)
     _validate_release(repository_ctx)
 

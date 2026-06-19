@@ -642,6 +642,19 @@ cc_binary(
     deps = [":node_snapshot_stub"],
 )
 
+cc_library(
+    name = "node_addon_headers",
+    hdrs = glob([
+        "deps/uv/include/**/*.h",
+        "src/*.h",
+    ]),
+    includes = [
+        "deps/uv/include",
+        "src",
+    ],
+    deps = ["//deps/v8:node_addon_headers"],
+)
+
 filegroup(
     name = "node_test_root",
     srcs = ["test/root.status"],
@@ -658,6 +671,8 @@ py_binary(
         "CHANGELOG.md",
         "deps/undici/src/package.json",
         ":embedtest",
+        ":test/addons/register-signal-handler/build/Release/binding.node",
+        ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
         "src/node_options.cc",
         "src/node_version.h",
@@ -760,6 +775,50 @@ cc_binary(
     includes = ["deps/sqlite"],
     linkshared = True,
     target_compatible_with = ["@platforms//os:macos"],
+)
+
+cc_binary(
+    name = "register_signal_handler_binding",
+    srcs = ["test/addons/register-signal-handler/binding.cc"],
+    copts = ["-std=c++20"],
+    linkopts = select(
+        {
+            ":target_linux": [],
+            ":target_macos": ["-Wl,-undefined,dynamic_lookup"],
+        },
+        no_match_error = "Node.js addons currently support Linux and macOS targets",
+    ),
+    linkshared = True,
+    deps = [":node_addon_headers"],
+)
+
+cc_binary(
+    name = "uv_handle_leak_binding",
+    srcs = ["test/addons/uv-handle-leak/binding.cc"],
+    copts = ["-std=c++20"],
+    linkopts = select(
+        {
+            ":target_linux": [],
+            ":target_macos": ["-Wl,-undefined,dynamic_lookup"],
+        },
+        no_match_error = "Node.js addons currently support Linux and macOS targets",
+    ),
+    linkshared = True,
+    deps = [":node_addon_headers"],
+)
+
+genrule(
+    name = "register_signal_handler_binding_node",
+    srcs = [":register_signal_handler_binding"],
+    outs = ["test/addons/register-signal-handler/build/Release/binding.node"],
+    cmd = "cp $< $@",
+)
+
+genrule(
+    name = "uv_handle_leak_binding_node",
+    srcs = [":uv_handle_leak_binding"],
+    outs = ["test/addons/uv-handle-leak/build/Release/binding.node"],
+    cmd = "cp $< $@",
 )
 
 sh_binary(
