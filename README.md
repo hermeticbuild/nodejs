@@ -15,7 +15,7 @@ bazel_dep(name = "nodejs", version = "<module version>")
 
 nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
 nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1", "nodejs_icu_26_3_1", "v8")
+use_repo(nodejs, "nodejs_26_3_1", "nodejs_crates_26_3_1", "nodejs_icu_26_3_1", "v8")
 ```
 
 `@nodejs_26_3_1//:release_metadata` contains the checked Node.js, Node module
@@ -46,3 +46,9 @@ toolchains build x86_64 and arm64 variants for both operating systems.
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
 decompresses `icudt78l.dat.bz2` with the hermetic `@bzip2//:bzip2` executable.
+
+`@nodejs_crates_26_3_1` projects `deps/crates` from the Node.js 26.3.1
+archive. It contains Node.js's Cargo lockfile, vendored crates, patched `resb`
+crate, `temporal_capi`, and `temporal_rs`. Rust targets use the pinned Rust
+1.82.0 toolchain for Linux x86_64, Linux arm64, macOS x86_64, macOS arm64, and
+Windows x86_64.

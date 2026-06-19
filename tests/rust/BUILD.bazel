@@ -1,0 +1,7 @@
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+rust_test(
+    name = "rust_toolchain_test",
+    srcs = ["rust_toolchain_test.rs"],
+    edition = "2021",
+)

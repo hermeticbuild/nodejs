@@ -2,6 +2,7 @@
 
 load(
     "//nodejs/private:repositories.bzl",
+    "nodejs_crates_repository",
     "nodejs_icu_repository",
     "nodejs_source_repository",
     "nodejs_v8_repository",
@@ -9,6 +10,7 @@ load(
 load("//nodejs/private:versions.bzl", "NODEJS_RELEASES")
 
 _BUILD_FILE = Label("//:nodejs.BUILD.bazel")
+_CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel")
 _ICU_BUILD_FILE = Label("//nodejs/private/overlays/icu:BUILD.icu.bazel")
 _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast_float/src:BUILD.fast_float.bazel")
 _V8_PATCHES = [
@@ -56,6 +58,13 @@ def _nodejs_impl(module_ctx):
             strip_prefix = release.v8_strip_prefix,
             urls = release.urls,
         )
+        nodejs_crates_repository(
+            name = release.crates_repository_name,
+            build_file = _CRATES_BUILD_FILE,
+            sha256 = release.sha256,
+            strip_prefix = release.crates_strip_prefix,
+            urls = release.urls,
+        )
         nodejs_icu_repository(
             name = release.icu_repository_name,
             build_file = _ICU_BUILD_FILE,
@@ -69,6 +78,7 @@ def _nodejs_impl(module_ctx):
         for version in sorted(root_requested_versions.keys())
         for repository_name in [
             NODEJS_RELEASES[version].repository_name,
+            NODEJS_RELEASES[version].crates_repository_name,
             NODEJS_RELEASES[version].icu_repository_name,
             NODEJS_RELEASES[version].v8_repository_name,
         ]

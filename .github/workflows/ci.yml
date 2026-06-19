@@ -17,11 +17,11 @@ jobs:
       - name: Check configure audit
         run: tools/configure_check_audit.sh --check
 
-      - name: Check bundled V8 and ICU target graphs
+      - name: Check bundled V8, ICU, and Rust crate target graphs
         run: >-
           bazel query
           --lockfile_mode=error
-          'deps(@v8//:v8ci) + deps(@nodejs_icu_26_3_1//:icu)'
+          'deps(@v8//:v8ci) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
           >/dev/null
 
       - name: Build bundled ICU
@@ -102,3 +102,16 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
             //tests/libuv:libuv_version_test
+
+      - name: Test Rust 1.82 toolchain
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --local_test_jobs=4 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            --strategy=TestRunner=local \
+            //tests/rust:rust_toolchain_test

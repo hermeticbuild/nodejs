@@ -1,6 +1,7 @@
 """Exact supported Node.js release records."""
 
 def _nodejs_release(
+        crates_repository_name,
         icu_repository_name,
         release,
         repository_name,
@@ -16,6 +17,8 @@ def _nodejs_release(
         int(part)
 
     return struct(
+        crates_repository_name = crates_repository_name,
+        crates_strip_prefix = "node-v{}/deps/crates".format(release),
         icu_repository_name = icu_repository_name,
         icu_strip_prefix = "node-v{}/deps/icu-small".format(release),
         node_module_version = node_module_version,
@@ -36,6 +39,7 @@ def _nodejs_release(
 
 NODEJS_RELEASES = {
     "26.3.1": _nodejs_release(
+        crates_repository_name = "nodejs_crates_26_3_1",
         icu_repository_name = "nodejs_icu_26_3_1",
         release = "26.3.1",
         repository_name = "nodejs_26_3_1",

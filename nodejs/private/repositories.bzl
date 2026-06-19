@@ -154,6 +154,34 @@ nodejs_v8_repository = repository_rule(
     },
 )
 
+def _nodejs_crates_repository_impl(repository_ctx):
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.urls,
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+    for path in [
+        ".cargo/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+        "patches/resb/Cargo.toml",
+        "vendor/temporal_capi/Cargo.toml",
+        "vendor/temporal_rs/Cargo.toml",
+    ]:
+        if not repository_ctx.path(path).exists:
+            fail("Node.js Rust crates are missing {}".format(path))
+    repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
+
+nodejs_crates_repository = repository_rule(
+    implementation = _nodejs_crates_repository_impl,
+    attrs = {
+        "build_file": attr.label(mandatory = True, allow_single_file = True),
+        "sha256": attr.string(mandatory = True),
+        "strip_prefix": attr.string(mandatory = True),
+        "urls": attr.string_list(mandatory = True),
+    },
+)
+
 def _nodejs_icu_repository_impl(repository_ctx):
     repository_ctx.download_and_extract(
         url = repository_ctx.attr.urls,

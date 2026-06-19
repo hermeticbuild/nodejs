@@ -1,0 +1,34 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    ".cargo/config.toml",
+    "Cargo.lock",
+    "Cargo.toml",
+])
+
+filegroup(
+    name = "cargo_files",
+    srcs = [
+        ".cargo/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
+    ],
+)
+
+filegroup(
+    name = "vendored_sources",
+    srcs = glob([
+        "patches/resb/**",
+        "vendor/**",
+    ]),
+)
+
+filegroup(
+    name = "temporal_capi_sources",
+    srcs = glob(["vendor/temporal_capi/**"]),
+)
+
+filegroup(
+    name = "temporal_rs_sources",
+    srcs = glob(["vendor/temporal_rs/**"]),
+)
