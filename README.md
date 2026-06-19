@@ -230,3 +230,16 @@ cases sequentially in one Linux x86_64 remote action. The suite reports runtime
 skips for `test-fs-watch-system-limit` when the executor's inotify limit is too
 large, `test-keep-alive` when `wrk` is unavailable, and the 32-bit-only
 `test-webcrypto-kangarootwelve-32bit-overflow` case.
+
+The following Linux x86_64 targets run 68 upstream test files across ten
+remote actions:
+
+- `@nodejs_26_3_1//:node_upstream_client_proxy_tests`
+- `@nodejs_26_3_1//:node_upstream_test426_tests`
+- `@nodejs_26_3_1//:node_upstream_v8_updates_tests`
+
+The 65 `client-proxy` tests use loopback HTTP, HTTPS, and proxy servers. The
+`test426` runner uses the ECMA-426 source-map tests pinned in the Node.js source
+archive. The upstream `v8-updates.status` file excludes `test-linux-perf`, so
+the `v8-updates` target runs `test-linux-perf-logger` and
+`test-trace-gc-flag`.

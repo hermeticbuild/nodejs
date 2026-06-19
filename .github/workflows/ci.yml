@@ -241,6 +241,7 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_26_3_1//:node_upstream_abort_tests \
             @nodejs_26_3_1//:node_upstream_async_hooks_tests \
+            @nodejs_26_3_1//:node_upstream_client_proxy_tests \
             @nodejs_26_3_1//:node_upstream_es_module_tests \
             @nodejs_26_3_1//:node_upstream_ffi_tests \
             @nodejs_26_3_1//:node_upstream_message_tests \
@@ -251,7 +252,9 @@ jobs:
             @nodejs_26_3_1//:node_upstream_sqlite_tests \
             @nodejs_26_3_1//:node_upstream_wasi_tests \
             @nodejs_26_3_1//:node_upstream_wasm_allocation_tests \
+            @nodejs_26_3_1//:node_upstream_test426_tests \
             @nodejs_26_3_1//:node_upstream_test_runner_tests \
+            @nodejs_26_3_1//:node_upstream_v8_updates_tests \
             @nodejs_26_3_1//:node_upstream_wpt_tests
 
       - name: Test Node.js release archives

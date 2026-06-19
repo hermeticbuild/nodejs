@@ -986,6 +986,42 @@ nodejs_upstream_test_shards(
     test_runner = ":node_test_runner",
 )
 
+nodejs_upstream_test_shards(
+    name = "node_upstream_client_proxy_tests",
+    suite = "client-proxy",
+    shards = 8,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_test426_tests",
+    suite = "test426",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_v8_updates_tests",
+    suite = "v8-updates",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
 cc_library(
     name = "zlib_headers",
     hdrs = glob([
