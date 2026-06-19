@@ -1,4 +1,16 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 package(default_visibility = ["//visibility:public"])
+
+config_setting(
+    name = "target_linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+config_setting(
+    name = "target_macos",
+    constraint_values = ["@platforms//os:macos"],
+)
 
 exports_files([
     "bazel/release.bzl",
@@ -24,4 +36,108 @@ filegroup(
         "tools/v8_gypfiles/*.gyp",
         "tools/v8_gypfiles/*.gypi",
     ]),
+)
+
+_LIBUV_COMMON_SOURCES = [
+    "deps/uv/src/fs-poll.c",
+    "deps/uv/src/idna.c",
+    "deps/uv/src/inet.c",
+    "deps/uv/src/random.c",
+    "deps/uv/src/strscpy.c",
+    "deps/uv/src/strtok.c",
+    "deps/uv/src/thread-common.c",
+    "deps/uv/src/threadpool.c",
+    "deps/uv/src/timer.c",
+    "deps/uv/src/uv-common.c",
+    "deps/uv/src/uv-data-getter-setters.c",
+    "deps/uv/src/version.c",
+]
+
+_LIBUV_UNIX_SOURCES = [
+    "deps/uv/src/unix/async.c",
+    "deps/uv/src/unix/core.c",
+    "deps/uv/src/unix/dl.c",
+    "deps/uv/src/unix/fs.c",
+    "deps/uv/src/unix/getaddrinfo.c",
+    "deps/uv/src/unix/getnameinfo.c",
+    "deps/uv/src/unix/loop-watcher.c",
+    "deps/uv/src/unix/loop.c",
+    "deps/uv/src/unix/pipe.c",
+    "deps/uv/src/unix/poll.c",
+    "deps/uv/src/unix/process.c",
+    "deps/uv/src/unix/random-devurandom.c",
+    "deps/uv/src/unix/signal.c",
+    "deps/uv/src/unix/stream.c",
+    "deps/uv/src/unix/tcp.c",
+    "deps/uv/src/unix/thread.c",
+    "deps/uv/src/unix/tty.c",
+    "deps/uv/src/unix/udp.c",
+]
+
+cc_library(
+    name = "libuv",
+    srcs = _LIBUV_COMMON_SOURCES + _LIBUV_UNIX_SOURCES + select(
+        {
+            ":target_linux": [
+                "deps/uv/src/unix/linux.c",
+                "deps/uv/src/unix/procfs-exepath.c",
+                "deps/uv/src/unix/proctitle.c",
+                "deps/uv/src/unix/random-getrandom.c",
+                "deps/uv/src/unix/random-sysctl-linux.c",
+            ],
+            ":target_macos": [
+                "deps/uv/src/unix/bsd-ifaddrs.c",
+                "deps/uv/src/unix/darwin-proctitle.c",
+                "deps/uv/src/unix/darwin.c",
+                "deps/uv/src/unix/fsevents.c",
+                "deps/uv/src/unix/kqueue.c",
+                "deps/uv/src/unix/proctitle.c",
+                "deps/uv/src/unix/random-getentropy.c",
+            ],
+        },
+        no_match_error = "libuv currently supports Linux and macOS targets",
+    ),
+    hdrs = glob([
+        "deps/uv/include/**/*.h",
+        "deps/uv/src/**/*.h",
+    ]),
+    copts = [
+        "-fno-strict-aliasing",
+        "-Wno-unused-parameter",
+    ],
+    defines = [
+        "_FILE_OFFSET_BITS=64",
+        "_LARGEFILE_SOURCE",
+    ] + select(
+        {
+            ":target_linux": [
+                "_GNU_SOURCE",
+                "_POSIX_C_SOURCE=200112",
+            ],
+            ":target_macos": [
+                "_DARWIN_UNLIMITED_SELECT=1",
+                "_DARWIN_USE_64_BIT_INODE=1",
+            ],
+        },
+        no_match_error = "libuv currently supports Linux and macOS targets",
+    ),
+    includes = [
+        "deps/uv/include",
+        "deps/uv/src",
+    ],
+    linkopts = select(
+        {
+            ":target_linux": [
+                "-ldl",
+                "-lm",
+                "-lpthread",
+                "-lrt",
+            ],
+            ":target_macos": [
+                "-lm",
+                "-lpthread",
+            ],
+        },
+        no_match_error = "libuv currently supports Linux and macOS targets",
+    ),
 )

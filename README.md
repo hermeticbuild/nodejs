@@ -34,3 +34,10 @@ release values that the Bazel build must preserve.
 
 Run `tools/configure_check_audit.sh` to update the inventory. Run
 `tools/configure_check_audit.sh --check` to verify the checked-in inventory.
+
+## Build targets
+
+`@nodejs_26_3_1//:libuv` builds the libuv 1.52.1 source bundled in the Node.js
+26.3.1 archive. The target uses the upstream source lists, preprocessor
+definitions, and system libraries for Linux and macOS. The hermetic LLVM
+toolchains build x86_64 and arm64 variants for both operating systems.
