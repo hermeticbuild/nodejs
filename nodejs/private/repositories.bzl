@@ -242,6 +242,7 @@ def _nodejs_icu_repository_impl(repository_ctx):
         "source/common/BUILD.bazel",
         "source/i18n/BUILD.bazel",
         "source/stubdata/BUILD.bazel",
+        "source/tools/toolutil/BUILD.bazel",
     ]:
         repository_ctx.delete(build_file)
     repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")

@@ -131,6 +131,7 @@ jobs:
             //tests/brotli:brotli_test \
             //tests/cares:cares_test \
             //tests/histogram:histogram_test \
+            //tests/icu:icu_data_test \
             //tests/libffi:libffi_test \
             //tests/lief:lief_test \
             //tests/llhttp:llhttp_test \

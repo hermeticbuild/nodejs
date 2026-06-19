@@ -1,7 +1,8 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 genrule(
-    name = "icudata",
+    name = "icudata_file",
     srcs = ["source/data/in/icudt78l.dat.bz2"],
     outs = ["common/icudtl.dat"],
     cmd = "$(execpath @bzip2//:bzip2) -dc $(location source/data/in/icudt78l.dat.bz2) >$@",
@@ -10,7 +11,7 @@ genrule(
 )
 
 cc_library(
-    name = "icuuc",
+    name = "icu_common",
     srcs = glob([
         "source/common/**/*.h",
         "source/common/**/*.cpp",
@@ -26,7 +27,6 @@ cc_library(
             "-Wno-deprecated-declarations",
         ],
     }),
-    data = [":icudata"],
     defines = [
         "HAVE_DLOPEN=0",
         "UCONFIG_ONLY_HTML_CONVERSION=1",
@@ -59,6 +59,64 @@ cc_library(
 )
 
 cc_library(
+    name = "icustubdata",
+    srcs = [
+        "source/stubdata/stubdata.cpp",
+        "source/stubdata/stubdata.h",
+    ],
+    local_defines = ["U_COMMON_IMPLEMENTATION"],
+    deps = [":icu_common"],
+)
+
+cc_binary(
+    name = "genccode",
+    srcs = [
+        "source/tools/genccode/genccode.c",
+        "source/tools/toolutil/filestrm.cpp",
+        "source/tools/toolutil/filestrm.h",
+        "source/tools/toolutil/filetools.cpp",
+        "source/tools/toolutil/filetools.h",
+        "source/tools/toolutil/pkg_genc.cpp",
+        "source/tools/toolutil/pkg_genc.h",
+        "source/tools/toolutil/toolutil.cpp",
+        "source/tools/toolutil/toolutil.h",
+        "source/tools/toolutil/uoptions.cpp",
+        "source/tools/toolutil/uoptions.h",
+    ],
+    includes = ["source/tools/toolutil"],
+    local_defines = ["U_TOOLUTIL_IMPLEMENTATION"],
+    deps = [":icustubdata"],
+)
+
+genrule(
+    name = "icudata_assembly",
+    srcs = [":icudata_file"],
+    outs = ["icudt78_dat.S"],
+    cmd = select(
+        {
+            "@platforms//os:linux": "$(execpath :genccode) -q -a gcc -e icudt78 -f icudt78_dat -d $(@D) $(location :icudata_file)",
+            "@platforms//os:macos": "$(execpath :genccode) -q -a gcc-darwin -e icudt78 -f icudt78_dat -d $(@D) $(location :icudata_file)",
+        },
+        no_match_error = "icudata_assembly currently supports Linux and macOS targets",
+    ),
+    tools = [":genccode"],
+)
+
+cc_library(
+    name = "icudata",
+    srcs = [":icudata_assembly"],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "icuuc",
+    deps = [
+        ":icu_common",
+        ":icudata",
+    ],
+)
+
+cc_library(
     name = "icui18n",
     srcs = glob([
         "source/i18n/**/*.h",
@@ -82,10 +140,6 @@ cc_library(
 
 cc_library(
     name = "icu",
-    srcs = [
-        "source/stubdata/stubdata.cpp",
-        "source/stubdata/stubdata.h",
-    ],
     hdrs = glob([
         "source/common/unicode/*.h",
         "source/i18n/unicode/*.h",
@@ -100,7 +154,6 @@ cc_library(
         "//conditions:default": [],
     }),
     include_prefix = "third_party/icu",
-    local_defines = ["U_COMMON_IMPLEMENTATION"],
     visibility = ["//visibility:public"],
     deps = [
         ":icui18n",

@@ -1,0 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "icu_data_test",
+    srcs = ["icu_data_test.cc"],
+    deps = ["@nodejs_icu_26_3_1//:icu"],
+)
