@@ -107,6 +107,7 @@ jobs:
             //tests/llhttp:llhttp_test \
             //tests/libuv:libuv_version_test \
             //tests/nbytes:nbytes_test \
+            //tests/nghttp2:nghttp2_test \
             //tests/zlib:zlib_test
 
       - name: Test Node.js js2c
