@@ -3,6 +3,7 @@
 load(
     "//nodejs/private:repositories.bzl",
     "nodejs_crates_repository",
+    "nodejs_doc_dependencies_repository",
     "nodejs_icu_repository",
     "nodejs_source_repository",
     "nodejs_v8_repository",
@@ -58,6 +59,12 @@ def _nodejs_impl(module_ctx):
             urls = release.urls,
             uv_version = release.uv_version,
             v8_version = release.v8_version,
+        )
+        nodejs_doc_dependencies_repository(
+            name = release.doc_dependencies_repository_name,
+            sha256 = release.sha256,
+            strip_prefix = release.strip_prefix,
+            urls = release.urls,
         )
         nodejs_v8_repository(
             name = release.v8_repository_name,

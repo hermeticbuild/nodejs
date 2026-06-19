@@ -339,6 +339,6 @@ static `libnode`.
 
 `@nodejs_26_3_1//:node_upstream_doctool_tests` stages the HTML, JSON, and
 Markdown API documentation shipped in the Node.js 26.3.1 source archive and
-runs `test-doc-api-json` and `test-make-doc`. `test-deprecation-codes` remains
-excluded until its `unified` and `remark-parse` dependencies are available as
-Bazel inputs.
+runs all three doctool cases. Bazel fetches the exact `unified`, `remark-parse`,
+and transitive package versions recorded by Node.js 26.3.1's
+`tools/doc/package-lock.json` for `test-deprecation-codes`.

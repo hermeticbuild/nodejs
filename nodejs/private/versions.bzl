@@ -2,6 +2,7 @@
 
 def _nodejs_release(
         crates_repository_name,
+        doc_dependencies_repository_name,
         headers_sha256,
         icu_repository_name,
         release,
@@ -20,6 +21,7 @@ def _nodejs_release(
     return struct(
         crates_repository_name = crates_repository_name,
         crates_strip_prefix = "node-v{}/deps/crates".format(release),
+        doc_dependencies_repository_name = doc_dependencies_repository_name,
         headers_sha256 = headers_sha256,
         headers_strip_prefix = "node-v{}/include/node".format(release),
         headers_urls = [
@@ -48,6 +50,7 @@ def _nodejs_release(
 NODEJS_RELEASES = {
     "26.3.1": _nodejs_release(
         crates_repository_name = "nodejs_crates_26_3_1",
+        doc_dependencies_repository_name = "nodejs_doc_dependencies_26_3_1",
         headers_sha256 = "e84075cd1296f089ad17bc87d34cea964bad7f1018378656af16d494adf91d1a",
         icu_repository_name = "nodejs_icu_26_3_1",
         release = "26.3.1",

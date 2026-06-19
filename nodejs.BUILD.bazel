@@ -683,6 +683,15 @@ copy_to_directory(
     root_paths = ["doc/api"],
 )
 
+copy_to_directory(
+    name = "node_test_doc_modules",
+    srcs = ["@nodejs_doc_dependencies_26_3_1//:node_modules"],
+    out = "tools/doc/node_modules",
+    hardlink = "off",
+    include_external_repositories = ["*nodejs_doc_dependencies_26_3_1"],
+    root_paths = ["node_modules"],
+)
+
 py_binary(
     name = "node_test_runner",
     srcs = [
@@ -779,6 +788,7 @@ py_binary(
         ":node_api_test_worker_terminate_finalization_node",
         ":node_api_test_worker_terminate_node",
         ":node_test_doc_api",
+        ":node_test_doc_modules",
         ":test_addon_async_cleanup_hook_binding_node",
         ":test_addon_async_hello_world_binding_node",
         ":test_addon_async_hooks_id_binding_node",
@@ -2492,7 +2502,7 @@ nodejs_upstream_test_shards(
     node = ":node",
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = ["doctool/test-deprecation-codes"],
+    skip_tests = [],
     test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
 )

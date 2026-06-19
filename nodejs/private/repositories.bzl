@@ -186,6 +186,83 @@ nodejs_source_repository = repository_rule(
     },
 )
 
+def _resolve_node_package(packages, package_path, dependency):
+    candidate = "{}/node_modules/{}".format(package_path, dependency)
+    if candidate in packages:
+        return candidate
+
+    path_parts = package_path.split("/")
+    for offset in range(len(path_parts)):
+        index = len(path_parts) - offset - 1
+        if index > 0 and path_parts[index] == "node_modules":
+            candidate = "{}/node_modules/{}".format("/".join(path_parts[:index]), dependency)
+            if candidate in packages:
+                return candidate
+
+    candidate = "node_modules/{}".format(dependency)
+    if candidate in packages:
+        return candidate
+    fail("Cannot resolve {} from {}".format(dependency, package_path))
+
+def _nodejs_doc_dependencies_repository_impl(repository_ctx):
+    source_directory = "_nodejs_source"
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.urls,
+        output = source_directory,
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+    package_lock_path = "{}/tools/doc/package-lock.json".format(source_directory)
+    if not repository_ctx.path(package_lock_path).exists:
+        fail("Node.js source archive is missing tools/doc/package-lock.json")
+    package_lock = json.decode(repository_ctx.read(package_lock_path))
+    repository_ctx.delete(source_directory)
+    packages = package_lock["packages"]
+    pending = {
+        "node_modules/remark-parse": True,
+        "node_modules/unified": True,
+    }
+    closure = {}
+    for _ in range(len(packages)):
+        next_pending = {}
+        for package_path in sorted(pending.keys()):
+            if package_path in closure:
+                continue
+            if package_path not in packages:
+                fail("tools/doc/package-lock.json does not contain {}".format(package_path))
+            closure[package_path] = packages[package_path]
+            for dependency in sorted(packages[package_path].get("dependencies", {}).keys()):
+                next_pending[_resolve_node_package(packages, package_path, dependency)] = True
+        pending = next_pending
+
+    for output, package in sorted(closure.items()):
+        archive_prefix = output.split("/")[-1] if output.startswith("node_modules/@types/") else "package"
+        repository_ctx.download_and_extract(
+            url = package["resolved"],
+            integrity = package["integrity"],
+            output = output,
+            stripPrefix = archive_prefix,
+        )
+    repository_ctx.file(
+        "BUILD.bazel",
+        """package(default_visibility = [\"//visibility:public\"])
+
+filegroup(
+    name = \"node_modules\",
+    srcs = glob([\"node_modules/**\"]),
+)
+""",
+    )
+
+nodejs_doc_dependencies_repository = repository_rule(
+    implementation = _nodejs_doc_dependencies_repository_impl,
+    attrs = {
+        "sha256": attr.string(mandatory = True),
+        "strip_prefix": attr.string(mandatory = True),
+        "urls": attr.string_list(mandatory = True),
+    },
+)
+
 def _nodejs_v8_repository_impl(repository_ctx):
     repository_ctx.download_and_extract(
         url = repository_ctx.attr.urls,
