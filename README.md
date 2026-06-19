@@ -49,6 +49,8 @@ toolchains build x86_64 and arm64 variants for both operating systems.
 `@nodejs_26_3_1//:node_js2c` builds Node.js's `node_js2c` executable with the
 bundled libuv and V8 simdutf sources. `//tests/js2c:node_js2c_test` verifies
 that `node_js2c` embeds JavaScript, ES module, and `config.gypi` inputs.
+`@nodejs_26_3_1//:node_javascript` embeds every Node.js built-in JavaScript
+module plus the pinned target `config.gypi` into `node_javascript.cc`.
 
 `@nodejs_26_3_1//:zlib` builds Node.js's bundled zlib 1.3.1 sources with the
 x86-64 and arm64 SIMD source sets and release preprocessor definitions.

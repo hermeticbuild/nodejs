@@ -3,6 +3,7 @@ load(
     "LIEF_SOURCES",
     "LIEF_THIRD_PARTY_SOURCES",
 )
+load("@nodejs//nodejs/private:node_javascript.bzl", "node_javascript")
 load(
     "@nodejs//nodejs/private:openssl_sources.bzl",
     "OPENSSL_NO_ASM_PLATFORM_DEFINES",
@@ -233,6 +234,39 @@ cc_binary(
         ":libuv",
         "@v8//:simdutf",
     ],
+)
+
+node_javascript(
+    name = "node_javascript",
+    config_gypi = ":config_gypi",
+    dependency_files = [
+        "//deps/v8:tools/splaytree.mjs",
+        "//deps/v8:tools/codemap.mjs",
+        "//deps/v8:tools/consarray.mjs",
+        "//deps/v8:tools/csvparser.mjs",
+        "//deps/v8:tools/profile.mjs",
+        "//deps/v8:tools/profile_view.mjs",
+        "//deps/v8:tools/logreader.mjs",
+        "//deps/v8:tools/arguments.mjs",
+        "//deps/v8:tools/tickprocessor.mjs",
+        "//deps/v8:tools/sourcemap.mjs",
+        "//deps/v8:tools/tickprocessor-driver.mjs",
+        "deps/acorn/acorn/dist/acorn.js",
+        "deps/acorn/acorn-walk/dist/walk.js",
+        "deps/minimatch/index.js",
+        "deps/undici/undici.js",
+        "deps/amaro/dist/index.js",
+    ],
+    library_files = glob(
+        [
+            "lib/**/*.js",
+            "lib/**/*.mjs",
+        ],
+        allow_empty = True,
+    ),
+    node_js2c = ":node_js2c",
+    out = "generated/node_javascript.cc",
+    root_marker = "node.gyp",
 )
 
 cc_library(

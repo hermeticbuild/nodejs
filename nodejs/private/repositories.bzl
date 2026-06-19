@@ -10,6 +10,20 @@ _REQUIRED_SOURCE_FILES = [
     "tools/test.py",
 ]
 
+_V8_JS2C_FILES = [
+    "tools/arguments.mjs",
+    "tools/codemap.mjs",
+    "tools/consarray.mjs",
+    "tools/csvparser.mjs",
+    "tools/logreader.mjs",
+    "tools/profile.mjs",
+    "tools/profile_view.mjs",
+    "tools/sourcemap.mjs",
+    "tools/splaytree.mjs",
+    "tools/tickprocessor-driver.mjs",
+    "tools/tickprocessor.mjs",
+]
+
 def _integer_define(repository_ctx, path, name):
     prefix = "#define {} ".format(name)
     values = []
@@ -110,6 +124,11 @@ def _nodejs_source_repository_impl(repository_ctx):
         ))
     repository_ctx.file("bazel/release_config.gypi", release_config)
     repository_ctx.delete(release_headers_directory)
+
+    v8_build_path = "deps/v8/BUILD.bazel"
+    v8_build = repository_ctx.read(v8_build_path)
+    v8_build += "\nexports_files({})\n".format(repr(_V8_JS2C_FILES))
+    repository_ctx.file(v8_build_path, v8_build)
     _validate_release(repository_ctx)
 
     release_metadata = {
