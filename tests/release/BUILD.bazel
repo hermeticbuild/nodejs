@@ -1,4 +1,5 @@
-load("@rules_python//python:defs.bzl", "py_test")
+load("@bazel_lib//lib:run_binary.bzl", "run_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 
 py_test(
     name = "release_archive_test",
@@ -19,4 +20,26 @@ py_test(
         "@nodejs_26_3_1//:release_archives_tar_gz",
         "@nodejs_26_3_1//:release_archives_tar_xz",
     ],
+)
+
+py_binary(
+    name = "windows_release_archive_validator",
+    srcs = ["windows_release_archive_validator.py"],
+    visibility = ["//visibility:private"],
+)
+
+run_binary(
+    name = "windows_release_archive_validation",
+    srcs = ["@nodejs_26_3_1//:release_archives_zip"],
+    outs = ["windows_release_archive_validation.txt"],
+    args = [
+        "$(execpath @nodejs_26_3_1//:release_archives_zip)",
+        "$(execpath windows_release_archive_validation.txt)",
+        "node-v26.3.1-win-x64",
+    ],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    tool = ":windows_release_archive_validator",
 )

@@ -1,6 +1,8 @@
 """Node.js release archive layout."""
 
+load("@bazel_lib//lib:copy_file.bzl", "copy_file")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_lib//lib:paths.bzl", "to_repository_relative_path")
 load("@bazel_lib//lib:run_binary.bzl", "run_binary")
 load("@tar.bzl", "mtree_spec", "tar")
 
@@ -189,6 +191,21 @@ _EXECUTABLE_RELEASE_FILES = [
     "lib/node_modules/npm/node_modules/which/bin/which.js",
 ]
 
+_WINDOWS_EMPTY_RELEASE_DIRECTORIES = [
+    "node_modules/npm/tap-snapshots",
+    "node_modules/npm/tap-snapshots/workspaces",
+    "node_modules/npm/tap-snapshots/workspaces/arborist",
+]
+
+_WINDOWS_RELEASE_WRAPPERS = [
+    "npm",
+    "npm.cmd",
+    "npm.ps1",
+    "npx",
+    "npx.cmd",
+    "npx.ps1",
+]
+
 _RELEASE_FILES = [
     "CHANGELOG.md",
     "LICENSE",
@@ -226,30 +243,52 @@ _REPLACE_PREFIXES = {
     "src": "include/node",
 }
 
+_WINDOWS_REPLACE_PREFIXES = {
+    "CHANGELOG.md": "CHANGELOG.md",
+    "LICENSE": "LICENSE",
+    "README.md": "README.md",
+    "deps/npm": "node_modules/npm",
+    "generated/release/windows": "",
+    "node.exe": "node.exe",
+    "tools/msvs/install_tools/install_tools.bat": "install_tools.bat",
+    "tools/msvs/nodevars.bat": "nodevars.bat",
+}
+
 _PLATFORMS = [
     struct(
+        archive_formats = ["tar_gz", "tar_xz"],
         config = ":target_linux_x86_64",
         constraints = ["@platforms//cpu:x86_64", "@platforms//os:linux"],
         name = "linux_x86_64",
         release_name = "linux-x64",
     ),
     struct(
+        archive_formats = ["tar_gz", "tar_xz"],
         config = ":target_linux_arm64",
         constraints = ["@platforms//cpu:aarch64", "@platforms//os:linux"],
         name = "linux_arm64",
         release_name = "linux-arm64",
     ),
     struct(
+        archive_formats = ["tar_gz", "tar_xz"],
         config = ":target_macos_x86_64",
         constraints = ["@platforms//cpu:x86_64", "@platforms//os:macos"],
         name = "macos_x86_64",
         release_name = "darwin-x64",
     ),
     struct(
+        archive_formats = ["tar_gz", "tar_xz"],
         config = ":target_macos_arm64",
         constraints = ["@platforms//cpu:aarch64", "@platforms//os:macos"],
         name = "macos_arm64",
         release_name = "darwin-arm64",
+    ),
+    struct(
+        archive_formats = ["zip"],
+        config = ":target_windows_x86_64",
+        constraints = ["@platforms//cpu:x86_64", "@platforms//os:windows"],
+        name = "windows_x86_64",
+        release_name = "win-x64",
     ),
 ]
 
@@ -274,14 +313,120 @@ def _release_sources(node, config_gypi):
         exclude = ["deps/npm/**/test/**"],
     ) + public_openssl_headers
 
+def _windows_release_sources(node, wrappers):
+    return [node] + wrappers + [
+        "CHANGELOG.md",
+        "LICENSE",
+        "README.md",
+        "tools/msvs/install_tools/install_tools.bat",
+        "tools/msvs/nodevars.bat",
+    ] + native.glob(
+        ["deps/npm/**"],
+        exclude = ["deps/npm/**/test/**"],
+    )
+
+def _replace_prefix(path, replace_prefixes):
+    matched_prefix = None
+    for prefix in replace_prefixes:
+        if (path == prefix or path.startswith(prefix + "/")) and (matched_prefix == None or len(prefix) > len(matched_prefix)):
+            matched_prefix = prefix
+    if matched_prefix == None:
+        fail("Windows release file has no destination: {}".format(path))
+
+    suffix = path[len(matched_prefix):].lstrip("/")
+    replacement = replace_prefixes[matched_prefix].rstrip("/")
+    if replacement and suffix:
+        return replacement + "/" + suffix
+    return replacement or suffix
+
+def _release_zip_impl(ctx):
+    directories = ctx.files.directory
+    if len(directories) != 1 or not directories[0].is_directory:
+        fail("directory must produce one directory")
+    directory = directories[0]
+
+    files = {}
+    archive_directories = {ctx.attr.root: True}
+    for source in ctx.files.srcs:
+        destination = _replace_prefix(to_repository_relative_path(source), ctx.attr.replace_prefixes)
+        archive_path = ctx.attr.root + "/" + destination
+        if archive_path in files:
+            fail("duplicate Windows release destination: {}".format(archive_path))
+        files[archive_path] = source
+
+        components = destination.split("/")
+        for index in range(len(components) - 1):
+            archive_directories[ctx.attr.root + "/" + "/".join(components[:index + 1])] = True
+
+    for relative_directory in ctx.attr.empty_directories:
+        components = relative_directory.split("/")
+        for index in range(len(components)):
+            archive_directories[ctx.attr.root + "/" + "/".join(components[:index + 1])] = True
+
+    mappings_by_name = {
+        archive_path + "/": "{}={}".format(archive_path, directory.path)
+        for archive_path in archive_directories
+    }
+    for archive_path, source in files.items():
+        mappings_by_name[archive_path] = "{}={}".format(archive_path, source.path)
+    mappings = [mappings_by_name[name] for name in sorted(mappings_by_name)]
+
+    filelist = ctx.actions.declare_file(ctx.label.name + ".filelist")
+    ctx.actions.write(filelist, "\n".join(mappings) + "\n")
+    ctx.actions.run(
+        executable = ctx.executable._zipper,
+        arguments = ["cC", ctx.outputs.out.path, "@" + filelist.path],
+        inputs = depset(ctx.files.srcs + [directory, filelist]),
+        outputs = [ctx.outputs.out],
+        mnemonic = "NodejsReleaseZip",
+        progress_message = "Creating Windows Node.js release ZIP %{output}",
+    )
+    return [DefaultInfo(files = depset([ctx.outputs.out]))]
+
+_release_zip = rule(
+    implementation = _release_zip_impl,
+    attrs = {
+        "directory": attr.label(allow_files = True, mandatory = True),
+        "empty_directories": attr.string_list(),
+        "out": attr.output(mandatory = True),
+        "replace_prefixes": attr.string_dict(mandatory = True),
+        "root": attr.string(mandatory = True),
+        "srcs": attr.label_list(allow_files = True),
+        "_zipper": attr.label(
+            default = "@bazel_tools//tools/zip:zipper",
+            cfg = "exec",
+            executable = True,
+        ),
+    },
+)
+
 def nodejs_release_archives(name, version, node, config_gypi):
     """Creates the upstream Node.js binary archive layout."""
+    windows_wrappers = []
+    for wrapper in _WINDOWS_RELEASE_WRAPPERS:
+        target = "_windows_release_{}".format(wrapper.replace(".", "_"))
+        copy_file(
+            name = target,
+            src = "deps/npm/bin/{}".format(wrapper),
+            out = "generated/release/windows/{}".format(wrapper),
+            visibility = ["//visibility:private"],
+        )
+        windows_wrappers.append(":" + target)
+
+    windows_sources = _windows_release_sources(node, windows_wrappers)
+
     copy_to_directory(
         name = "release_tree",
-        srcs = _release_sources(node, config_gypi),
+        srcs = select({
+            ":target_windows": windows_sources,
+            "//conditions:default": _release_sources(node, config_gypi),
+        }),
         out = "release",
         hardlink = "off",
-        replace_prefixes = _REPLACE_PREFIXES,
+        replace_prefixes = select({
+            ":target_windows": _WINDOWS_REPLACE_PREFIXES,
+            "//conditions:default": _REPLACE_PREFIXES,
+        }),
         root_paths = ["."],
         visibility = ["//visibility:public"],
     )
@@ -295,6 +440,7 @@ def nodejs_release_archives(name, version, node, config_gypi):
 
     gzip_archives = {}
     xz_archives = {}
+    zip_archives = {}
     for platform in _PLATFORMS:
         root = "node-v{}-{}".format(version, platform.release_name)
         release_constraints = platform.constraints + select({
@@ -302,48 +448,66 @@ def nodejs_release_archives(name, version, node, config_gypi):
             "//conditions:default": ["@platforms//:incompatible"],
         })
         normalized_mtree = "_release_mtree_{}".format(platform.name)
-        run_binary(
-            name = normalized_mtree,
-            srcs = [
-                ":_release_mtree",
-                ":release_tree",
-            ],
-            outs = [normalized_mtree + ".mtree"],
-            args = [
-                "$(execpath :_release_mtree)",
-                "$(execpath {}.mtree)".format(normalized_mtree),
-                root,
-            ] + _EXECUTABLE_RELEASE_FILES,
-            target_compatible_with = release_constraints,
-            tool = "@nodejs//nodejs/private:release_mtree",
-            visibility = ["//visibility:private"],
-        )
+        if "tar_gz" in platform.archive_formats or "tar_xz" in platform.archive_formats:
+            run_binary(
+                name = normalized_mtree,
+                srcs = [
+                    ":_release_mtree",
+                    ":release_tree",
+                ],
+                outs = [normalized_mtree + ".mtree"],
+                args = [
+                    "$(execpath :_release_mtree)",
+                    "$(execpath {}.mtree)".format(normalized_mtree),
+                    root,
+                ] + _EXECUTABLE_RELEASE_FILES,
+                target_compatible_with = release_constraints,
+                tool = "@nodejs//nodejs/private:release_mtree",
+                visibility = ["//visibility:private"],
+            )
 
-        gzip_target = "_release_archive_{}_tar_gz".format(platform.name)
-        tar(
-            name = gzip_target,
-            srcs = [":release_tree"],
-            compress = "gzip",
-            compute_unused_inputs = 0,
-            mtree = ":" + normalized_mtree,
-            out = root + ".tar.gz",
-            target_compatible_with = release_constraints,
-            visibility = ["//visibility:private"],
-        )
-        gzip_archives[platform.config] = ":" + gzip_target
+        if "tar_gz" in platform.archive_formats:
+            gzip_target = "_release_archive_{}_tar_gz".format(platform.name)
+            tar(
+                name = gzip_target,
+                srcs = [":release_tree"],
+                compress = "gzip",
+                compute_unused_inputs = 0,
+                mtree = ":" + normalized_mtree,
+                out = root + ".tar.gz",
+                target_compatible_with = release_constraints,
+                visibility = ["//visibility:private"],
+            )
+            gzip_archives[platform.config] = ":" + gzip_target
 
-        xz_target = "_release_archive_{}_tar_xz".format(platform.name)
-        tar(
-            name = xz_target,
-            srcs = [":release_tree"],
-            compress = "xz",
-            compute_unused_inputs = 0,
-            mtree = ":" + normalized_mtree,
-            out = root + ".tar.xz",
-            target_compatible_with = release_constraints,
-            visibility = ["//visibility:private"],
-        )
-        xz_archives[platform.config] = ":" + xz_target
+        if "tar_xz" in platform.archive_formats:
+            xz_target = "_release_archive_{}_tar_xz".format(platform.name)
+            tar(
+                name = xz_target,
+                srcs = [":release_tree"],
+                compress = "xz",
+                compute_unused_inputs = 0,
+                mtree = ":" + normalized_mtree,
+                out = root + ".tar.xz",
+                target_compatible_with = release_constraints,
+                visibility = ["//visibility:private"],
+            )
+            xz_archives[platform.config] = ":" + xz_target
+
+        if "zip" in platform.archive_formats:
+            zip_target = "_release_archive_{}_zip".format(platform.name)
+            _release_zip(
+                name = zip_target,
+                directory = ":release_tree",
+                empty_directories = _WINDOWS_EMPTY_RELEASE_DIRECTORIES,
+                out = root + ".zip",
+                replace_prefixes = _WINDOWS_REPLACE_PREFIXES,
+                root = root,
+                srcs = windows_sources,
+                target_compatible_with = release_constraints,
+                visibility = ["//visibility:private"],
+            )
+            zip_archives[platform.config] = ":" + zip_target
 
     native.alias(
         name = name + "_tar_gz",
@@ -355,11 +519,22 @@ def nodejs_release_archives(name, version, node, config_gypi):
         actual = select(xz_archives),
         visibility = ["//visibility:public"],
     )
+    native.alias(
+        name = name + "_zip",
+        actual = select(
+            zip_archives,
+            no_match_error = "{}_zip currently supports Windows x86_64 targets".format(name),
+        ),
+        visibility = ["//visibility:public"],
+    )
     native.filegroup(
         name = name,
-        srcs = [
-            ":" + name + "_tar_gz",
-            ":" + name + "_tar_xz",
-        ],
+        srcs = select({
+            ":target_windows_x86_64": [":" + name + "_zip"],
+            "//conditions:default": [
+                ":" + name + "_tar_gz",
+                ":" + name + "_tar_xz",
+            ],
+        }),
         visibility = ["//visibility:public"],
     )
