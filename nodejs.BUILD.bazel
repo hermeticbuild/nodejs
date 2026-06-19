@@ -3387,6 +3387,17 @@ genrule(
     tools = [":libffi_generate_headers"],
 )
 
+genrule(
+    name = "libffi_headers_windows_x86_64",
+    outs = [
+        "generated/libffi/windows_x86_64/ffi.h",
+        "generated/libffi/windows_x86_64/fficonfig.h",
+        "generated/libffi/windows_x86_64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/windows_x86_64 --target-arch x64 --os win",
+    tools = [":libffi_generate_headers"],
+)
+
 cc_library(
     name = "libffi",
     srcs = [
@@ -3419,8 +3430,12 @@ cc_library(
                 "deps/libffi/src/x86/unix64.S",
                 "deps/libffi/src/x86/win64.S",
             ],
+            ":target_windows_x86_64": [
+                "deps/libffi/src/x86/ffiw64.c",
+                "deps/libffi/src/x86/win64.S",
+            ],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
     ),
     hdrs = glob([
         "deps/libffi/include/*.h",
@@ -3447,11 +3462,19 @@ cc_library(
                 ":generated/libffi/macos_x86_64/fficonfig.h",
                 ":generated/libffi/macos_x86_64/ffitarget.h",
             ],
+            ":target_windows_x86_64": [
+                ":generated/libffi/windows_x86_64/ffi.h",
+                ":generated/libffi/windows_x86_64/fficonfig.h",
+                ":generated/libffi/windows_x86_64/ffitarget.h",
+            ],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
     ),
     textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
-    copts = ["-fvisibility=hidden"],
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": ["-fvisibility=hidden"],
+    }),
     includes = [
         "deps/libffi/include",
         "deps/libffi/src",
@@ -3461,10 +3484,11 @@ cc_library(
             ":target_linux_x86_64": ["generated/libffi/linux_x86_64"],
             ":target_macos_arm64": ["generated/libffi/macos_arm64"],
             ":target_macos_x86_64": ["generated/libffi/macos_x86_64"],
+            ":target_windows_x86_64": ["generated/libffi/windows_x86_64"],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
     ),
-    local_defines = ["FFI_STATIC_BUILD"],
+    defines = ["FFI_STATIC_BUILD"],
 )
 
 nodejs_release_archives(
