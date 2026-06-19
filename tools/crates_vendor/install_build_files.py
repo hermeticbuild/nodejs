@@ -46,6 +46,23 @@ def _transform_build_file(
         "#     bazel run //tools/crates_vendor:generate\n"
         "#     bazel run //tools/crates_vendor:install",
     )
+    content = content.replace(
+        'load("@rules_rust//cargo:defs.bzl", "cargo_toml_env_vars")\n',
+        "",
+    )
+    content = content.replace('    "cargo_toml_env_vars",\n', "")
+    content = re.sub(
+        r"\ncargo_toml_env_vars\(\n"
+        r'    name = "cargo_toml_env_vars",\n'
+        r'    src = "Cargo.toml",\n'
+        r"\)\n",
+        "",
+        content,
+    )
+    content = content.replace(
+        '":cargo_toml_env_vars"',
+        '"cargo_toml_env_vars.env"',
+    )
 
     if _GENERATED_LABEL_PREFIX in content or '"///' in content:
         raise ValueError("BUILD file contains an unconverted generated label")

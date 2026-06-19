@@ -12,11 +12,11 @@ cc_test(
     args = [
         "$(rootpath @v8//:icu/d8)",
         "$(rootpath :v8_temporal_test.js)",
-        "$(rootpath @nodejs_icu_26_3_1//:icudata)",
+        "$(rootpath @nodejs_icu_26_3_1//:icudata_file)",
     ],
     data = [
         ":v8_temporal_test.js",
-        "@nodejs_icu_26_3_1//:icudata",
+        "@nodejs_icu_26_3_1//:icudata_file",
         "@v8//:icu/d8",
     ],
 )

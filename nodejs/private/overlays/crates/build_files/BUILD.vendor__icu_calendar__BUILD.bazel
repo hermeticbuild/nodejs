@@ -7,15 +7,9 @@
 #     bazel run //tools/crates_vendor:install
 ###############################################################################
 
-load("@rules_rust//cargo:defs.bzl", "cargo_toml_env_vars")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 
 package(default_visibility = ["//visibility:public"])
-
-cargo_toml_env_vars(
-    name = "cargo_toml_env_vars",
-    src = "Cargo.toml",
-)
 
 rust_library(
     name = "icu_calendar",
@@ -45,7 +39,7 @@ rust_library(
         "//vendor/displaydoc:displaydoc",
     ],
     rustc_env_files = [
-        ":cargo_toml_env_vars",
+        "cargo_toml_env_vars.env",
     ],
     rustc_flags = [
         "--cap-lints=allow",

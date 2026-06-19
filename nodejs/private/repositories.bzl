@@ -1,5 +1,8 @@
 """Repository rule for an official Node.js source release."""
 
+load("@rules_rs//rs/private:repository_utils.bzl", "cargo_build_file_values")
+load("@rules_rs//rs/private:toml2json.bzl", "run_toml2json")
+
 _REQUIRED_SOURCE_FILES = [
     "common.gypi",
     "configure.py",
@@ -306,6 +309,18 @@ def _nodejs_crates_repository_impl(repository_ctx):
     repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
     for build_file, destination in repository_ctx.attr.build_files.items():
         repository_ctx.symlink(build_file, destination)
+        package_path = destination.removesuffix("/BUILD.bazel")
+        cargo_toml = run_toml2json(
+            repository_ctx,
+            repository_ctx.path(package_path).get_child("Cargo.toml"),
+        )
+        cargo_build_file_values(
+            repository_ctx,
+            cargo_toml,
+            [],
+            gen_build_script = "off",
+            package_path = package_path,
+        )
 
 nodejs_crates_repository = repository_rule(
     implementation = _nodejs_crates_repository_impl,

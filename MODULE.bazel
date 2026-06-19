@@ -14,7 +14,7 @@ bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "rules_cc_autoconf", version = "0.12.1")
 bazel_dep(name = "rules_python", version = "1.7.0")
-bazel_dep(name = "rules_rust", version = "0.70.0")
+bazel_dep(name = "rules_rs", version = "0.0.86")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "tar.bzl", version = "0.10.5")
 
@@ -51,7 +51,10 @@ pip.parse(
 )
 use_repo(pip, "v8_python_deps")
 
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+use_repo(rules_rust, "rules_rust")
+
+rust = use_extension("@rules_rs//rs:rules_rust_reexported_extensions.bzl", "rust")
 rust.toolchain(
     edition = "2021",
     extra_target_triples = [
@@ -67,12 +70,6 @@ rust.toolchain(
 use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")
-
-cargo_bazel = use_extension(
-    "@rules_rust//crate_universe/private:internal_extensions.bzl",
-    "cu_nr",
-)
-use_repo(cargo_bazel, "cargo_bazel_bootstrap")
 
 nodejs = use_extension("//nodejs:extensions.bzl", "nodejs", dev_dependency = True)
 nodejs.version(version = "26.3.1")
