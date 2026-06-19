@@ -99,6 +99,10 @@ target-architecture sources. Node.js's `deps/libffi/generate-headers.py`
 generates `ffi.h`, `fficonfig.h`, and `ffitarget.h` for each target platform.
 `//tests/libffi:libffi_test` calls a C function through `ffi_call`.
 
+`@nodejs_26_3_1//:lief` builds Node.js's bundled LIEF 0.17.0 source inventory
+and its checked-in mbedTLS sources. `//tests/lief:lief_test` checks the bundled
+version and parses its own ELF or Mach-O executable.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which

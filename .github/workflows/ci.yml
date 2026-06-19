@@ -106,6 +106,7 @@ jobs:
             //tests/cares:cares_test \
             //tests/histogram:histogram_test \
             //tests/libffi:libffi_test \
+            //tests/lief:lief_test \
             //tests/llhttp:llhttp_test \
             //tests/libuv:libuv_version_test \
             //tests/nbytes:nbytes_test \

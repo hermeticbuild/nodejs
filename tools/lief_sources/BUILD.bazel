@@ -1,0 +1,10 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "generate",
+    srcs = ["generate.py"],
+    args = ["--gyp=$(rootpath @nodejs_26_3_1//:deps/LIEF/lief.gyp)"],
+    data = ["@nodejs_26_3_1//:deps/LIEF/lief.gyp"],
+    main = "generate.py",
+    tags = ["manual"],
+)

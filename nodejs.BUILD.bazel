@@ -1,4 +1,9 @@
 load(
+    "@nodejs//nodejs/private:lief_sources.bzl",
+    "LIEF_SOURCES",
+    "LIEF_THIRD_PARTY_SOURCES",
+)
+load(
     "@nodejs//nodejs/private:openssl_sources.bzl",
     "OPENSSL_NO_ASM_PLATFORM_DEFINES",
     "OPENSSL_NO_ASM_PLATFORM_SOURCES",
@@ -71,6 +76,7 @@ exports_files([
     "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/openssl.gypi",
     "deps/openssl/config/archs/linux-aarch64/no-asm/openssl.gypi",
     "deps/openssl/config/archs/linux-x86_64/no-asm/openssl.gypi",
+    "deps/LIEF/lief.gyp",
     "node.gyp",
     "src/node_version.h",
 ])
@@ -941,4 +947,84 @@ cc_library(
         no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
     ),
     local_defines = ["FFI_STATIC_BUILD"],
+)
+
+cc_library(
+    name = "lief_mbedtls",
+    srcs = LIEF_THIRD_PARTY_SOURCES,
+    hdrs = glob([
+        "deps/LIEF/config/**/*.h",
+        "deps/LIEF/third-party/mbedtls/include/**/*.h",
+        "deps/LIEF/third-party/mbedtls/library/**/*.h",
+    ]),
+    copts = ["-fPIC"],
+    includes = [
+        "deps/LIEF",
+        "deps/LIEF/third-party/mbedtls/include",
+        "deps/LIEF/third-party/mbedtls/library",
+    ],
+    local_defines = [
+        "MBEDTLS_CONFIG_FILE=\\\"config/mbedtls/config.h\\\"",
+        "MBEDTLS_NO_PLATFORM_ENTROPY",
+    ],
+)
+
+cc_library(
+    name = "lief",
+    srcs = LIEF_SOURCES,
+    hdrs = glob(
+        [
+            "deps/LIEF/include/**/*.def",
+            "deps/LIEF/include/**/*.h",
+            "deps/LIEF/include/**/*.hpp",
+            "deps/LIEF/include/**/*.inc",
+            "deps/LIEF/include/**/*.tcc",
+            "deps/LIEF/src/**/*.def",
+            "deps/LIEF/src/**/*.h",
+            "deps/LIEF/src/**/*.hpp",
+            "deps/LIEF/src/**/*.inc",
+            "deps/LIEF/src/**/*.tcc",
+            "deps/LIEF/third-party/expected/include/**/*.hpp",
+            "deps/LIEF/third-party/frozen/include/**/*.h",
+            "deps/LIEF/third-party/spdlog/include/**/*.h",
+            "deps/LIEF/third-party/spdlog/include/**/*.hpp",
+        ],
+        allow_empty = True,
+    ),
+    copts = [
+        "-std=gnu++17",
+        "-include",
+        "cstdlib",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fvisibility-inlines-hidden",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+        "-Wno-expansion-to-defined",
+        "-Werror=return-type",
+        "-fno-exceptions",
+    ],
+    includes = [
+        "deps/LIEF",
+        "deps/LIEF/include",
+        "deps/LIEF/src",
+        "deps/LIEF/third-party/mbedtls/include",
+        "deps/LIEF/third-party/mbedtls/library",
+        "deps/LIEF/third-party/spdlog/include",
+        "deps/LIEF/third-party/frozen/include",
+        "deps/LIEF/include/LIEF/third-party",
+        "deps/LIEF/include/LIEF/third-party/internal",
+    ],
+    local_defines = [
+        "LIEF_STATIC",
+        "MBEDTLS_CONFIG_FILE=\\\"config/mbedtls/config.h\\\"",
+        "MBEDTLS_NO_PLATFORM_ENTROPY",
+        "NDEBUG",
+        "SPDLOG_DISABLE_DEFAULT_LOGGER",
+        "SPDLOG_FUNCTION=\\\"\\\"",
+        "SPDLOG_NO_EXCEPTIONS",
+        "_GLIBCXX_USE_CXX11_ABI=1",
+    ],
+    deps = [":lief_mbedtls"],
 )

@@ -63,6 +63,12 @@
       "justification": "Node.js 26.3.1 release artifacts enable the bundled libffi implementation on Linux and macOS x86_64 and arm64 targets."
     },
     {
+      "name": "node_use_lief",
+      "values": {"*": "true"},
+      "required_assignments": ["'true'"],
+      "justification": "Node.js 26.3.1 release artifacts enable bundled LIEF for single-executable application support on Linux and macOS."
+    },
+    {
       "name": "node_use_v8_platform",
       "values": {"*": "true"},
       "required_assignments": ["b(not options.without_v8_platform)"],
