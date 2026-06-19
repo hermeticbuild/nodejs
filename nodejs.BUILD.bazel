@@ -2938,7 +2938,14 @@ cc_library(
         "HAVE_CONFIG_H",
         "NGHTTP2_STATICLIB",
         "_U_=",
-    ],
+    ] + select({
+        ":target_windows": [
+            "WIN32",
+            "_WINDOWS",
+            "ssize_t=intptr_t",
+        ],
+        "//conditions:default": [],
+    }),
     includes = ["deps/nghttp2/lib/includes"],
 )
 
@@ -3475,7 +3482,10 @@ cc_library(
         "deps/LIEF/third-party/mbedtls/include/**/*.h",
         "deps/LIEF/third-party/mbedtls/library/**/*.h",
     ]),
-    copts = ["-fPIC"],
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": ["-fPIC"],
+    }),
     includes = [
         "deps/LIEF",
         "deps/LIEF/third-party/mbedtls/include",
@@ -3509,20 +3519,28 @@ cc_library(
         ],
         allow_empty = True,
     ),
-    copts = [
-        "-std=gnu++17",
-        "-include",
-        "cstdlib",
-        "-fPIC",
-        "-fvisibility=hidden",
-        "-fvisibility-inlines-hidden",
-        "-Wall",
-        "-Wextra",
-        "-Wpedantic",
-        "-Wno-expansion-to-defined",
-        "-Werror=return-type",
-        "-fno-exceptions",
-    ],
+    copts = select({
+        ":target_windows": [
+            "/FIcstdlib",
+            "/std:c++17",
+            "/clang:-fno-exceptions",
+            "/clang:-Werror=return-type",
+        ],
+        "//conditions:default": [
+            "-std=gnu++17",
+            "-include",
+            "cstdlib",
+            "-fPIC",
+            "-fvisibility=hidden",
+            "-fvisibility-inlines-hidden",
+            "-Wall",
+            "-Wextra",
+            "-Wpedantic",
+            "-Wno-expansion-to-defined",
+            "-Werror=return-type",
+            "-fno-exceptions",
+        ],
+    }),
     includes = [
         "deps/LIEF",
         "deps/LIEF/include",
@@ -3543,6 +3561,9 @@ cc_library(
         "SPDLOG_FUNCTION=\\\"\\\"",
         "SPDLOG_NO_EXCEPTIONS",
         "_GLIBCXX_USE_CXX11_ABI=1",
-    ],
+    ] + select({
+        ":target_windows": ["_HAS_EXCEPTIONS=0"],
+        "//conditions:default": [],
+    }),
     deps = [":lief_mbedtls"],
 )

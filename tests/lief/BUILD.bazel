@@ -3,6 +3,5 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
 cc_test(
     name = "lief_test",
     srcs = ["lief_test.cc"],
-    copts = ["-std=gnu++17"],
     deps = ["@nodejs_26_3_1//:lief"],
 )
