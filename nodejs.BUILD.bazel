@@ -738,14 +738,32 @@ py_binary(
         ":js_native_api_test_typedarray_sharedarraybuffer_node",
         ":node_api_1_hello_world_binding_node",
         ":node_api_test_async_node",
+        ":node_api_test_async_cleanup_hook_binding_node",
+        ":node_api_test_async_context_binding_node",
+        ":node_api_test_buffer_finalizer_node",
+        ":node_api_test_buffer_node",
+        ":node_api_test_callback_scope_binding_node",
+        ":node_api_test_cleanup_hook_binding_node",
         ":node_api_test_env_teardown_gc_binding_node",
         ":node_api_test_exception_node",
         ":node_api_test_fatal_exception_node",
         ":node_api_test_fatal_node",
         ":node_api_test_general_node",
         ":node_api_test_init_order_node",
+        ":node_api_test_instance_data_node",
+        ":node_api_test_instance_data_ref_then_set_node",
+        ":node_api_test_instance_data_set_then_ref_node",
+        ":node_api_test_make_callback_binding_node",
+        ":node_api_test_make_callback_recurse_binding_node",
         ":node_api_test_null_init_node",
+        ":node_api_test_reference_all_types_node",
+        ":node_api_test_reference_obj_only_node",
         ":node_api_test_sea_addon_binding_node",
+        ":node_api_test_threadsafe_function_abort_binding_node",
+        ":node_api_test_threadsafe_function_binding_node",
+        ":node_api_test_threadsafe_function_shutdown_binding_node",
+        ":node_api_test_threadsafe_function_uncaught_exception_node",
+        ":node_api_test_threadsafe_function_uncaught_exception_v9_node",
         ":node_api_test_uv_loop_node",
         ":node_api_test_uv_threadpool_size_node",
         ":node_api_test_worker_buffer_callback_binding_node",
@@ -1300,6 +1318,154 @@ node_addon(
 )
 
 node_addon(
+    name = "node_api_test_async_cleanup_hook_binding_node",
+    output = "test/node-api/test_async_cleanup_hook/build/Release/binding.node",
+    srcs = ["test/node-api/test_async_cleanup_hook/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_async_context_binding_node",
+    output = "test/node-api/test_async_context/build/Release/binding.node",
+    srcs = ["test/node-api/test_async_context/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_buffer_node",
+    output = "test/node-api/test_buffer/build/Release/test_buffer.node",
+    srcs = ["test/node-api/test_buffer/test_buffer.c"],
+    defines = [
+        "NAPI_EXPERIMENTAL",
+        "NODE_API_EXPERIMENTAL_NO_WARNING",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_buffer_finalizer_node",
+    output = "test/node-api/test_buffer/build/Release/test_finalizer.node",
+    srcs = ["test/node-api/test_buffer/test_finalizer.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_callback_scope_binding_node",
+    output = "test/node-api/test_callback_scope/build/Release/binding.node",
+    srcs = ["test/node-api/test_callback_scope/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_cleanup_hook_binding_node",
+    output = "test/node-api/test_cleanup_hook/build/Release/binding.node",
+    srcs = ["test/node-api/test_cleanup_hook/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_instance_data_node",
+    output = "test/node-api/test_instance_data/build/Release/test_instance_data.node",
+    srcs = ["test/node-api/test_instance_data/test_instance_data.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_instance_data_set_then_ref_node",
+    output = "test/node-api/test_instance_data/build/Release/test_set_then_ref.node",
+    srcs = [
+        "test/node-api/test_instance_data/addon.c",
+        "test/node-api/test_instance_data/test_set_then_ref.c",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_instance_data_ref_then_set_node",
+    output = "test/node-api/test_instance_data/build/Release/test_ref_then_set.node",
+    srcs = [
+        "test/node-api/test_instance_data/addon.c",
+        "test/node-api/test_instance_data/test_ref_then_set.c",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_make_callback_binding_node",
+    output = "test/node-api/test_make_callback/build/Release/binding.node",
+    srcs = ["test/node-api/test_make_callback/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_make_callback_recurse_binding_node",
+    output = "test/node-api/test_make_callback_recurse/build/Release/binding.node",
+    srcs = ["test/node-api/test_make_callback_recurse/binding.c"],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_reference_all_types_node",
+    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_all_types.node",
+    srcs = ["test/node-api/test_reference_by_node_api_version/test_reference_by_node_api_version.c"],
+    defines = ["NAPI_VERSION=10"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_reference_obj_only_node",
+    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_obj_only.node",
+    srcs = ["test/node-api/test_reference_by_node_api_version/test_reference_by_node_api_version.c"],
+    defines = ["NAPI_VERSION=9"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_threadsafe_function_binding_node",
+    output = "test/node-api/test_threadsafe_function/build/Release/binding.node",
+    srcs = ["test/node-api/test_threadsafe_function/binding.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_threadsafe_function_uncaught_exception_v9_node",
+    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception_v9.node",
+    srcs = ["test/node-api/test_threadsafe_function/test_uncaught_exception.c"],
+    defines = ["NAPI_VERSION=9"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_threadsafe_function_uncaught_exception_node",
+    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception.node",
+    srcs = ["test/node-api/test_threadsafe_function/test_uncaught_exception.c"],
+    defines = ["NAPI_EXPERIMENTAL"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_threadsafe_function_abort_binding_node",
+    output = "test/node-api/test_threadsafe_function_abort/build/Release/binding.node",
+    srcs = ["test/node-api/test_threadsafe_function_abort/binding.cc"],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_threadsafe_function_shutdown_binding_node",
+    output = "test/node-api/test_threadsafe_function_shutdown/build/Release/binding.node",
+    srcs = ["test/node-api/test_threadsafe_function_shutdown/binding.cc"],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
@@ -1609,6 +1775,18 @@ nodejs_upstream_test_shards(
         "node-api/test_worker_terminate",
         "node-api/test_worker_terminate_finalization",
     ],
+    shards = 2,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_node_api_tests",
+    suites = ["node-api"],
     shards = 2,
     node = ":node",
     root_status = ":node_test_root",

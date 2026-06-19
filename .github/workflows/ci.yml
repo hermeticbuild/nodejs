@@ -251,7 +251,7 @@ jobs:
             @nodejs_26_3_1//:node_upstream_known_issues_tests \
             @nodejs_26_3_1//:node_upstream_message_tests \
             @nodejs_26_3_1//:node_upstream_module_hooks_tests \
-            @nodejs_26_3_1//:node_upstream_node_api_default_compile_tests \
+            @nodejs_26_3_1//:node_upstream_node_api_tests \
             @nodejs_26_3_1//:node_upstream_pseudo_tty_tests \
             @nodejs_26_3_1//:node_upstream_pummel_tests \
             @nodejs_26_3_1//:node_upstream_report_tests \

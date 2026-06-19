@@ -221,6 +221,11 @@ Bazel's `opt`-mode `NDEBUG` definition. The Linux `node` executable uses the
 SysV ELF hash table with `--export-dynamic`; this preserves Node-API symbol
 lookup after postject rewrites the PIE executable in `test_sea_addon`.
 
+`@nodejs_26_3_1//:node_upstream_node_api_tests` builds all 33 native addons
+used by the upstream `node-api` suite and runs all 45 JavaScript tests in two
+Linux x86_64 remote shards. CI runs this complete target; the default-compile
+target remains available for focused validation.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 
