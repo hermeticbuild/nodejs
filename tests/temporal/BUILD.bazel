@@ -1,0 +1,22 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "temporal_capi_test",
+    srcs = ["temporal_capi_test.cc"],
+    deps = ["@nodejs_crates_26_3_1//:temporal_capi_cpp"],
+)
+
+cc_test(
+    name = "v8_temporal_test",
+    srcs = ["v8_temporal_test.cc"],
+    args = [
+        "$(rootpath @v8//:icu/d8)",
+        "$(rootpath :v8_temporal_test.js)",
+        "$(rootpath @nodejs_icu_26_3_1//:icudata)",
+    ],
+    data = [
+        ":v8_temporal_test.js",
+        "@nodejs_icu_26_3_1//:icudata",
+        "@v8//:icu/d8",
+    ],
+)

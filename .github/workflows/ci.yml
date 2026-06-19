@@ -21,7 +21,7 @@ jobs:
         run: >-
           bazel query
           --lockfile_mode=error
-          'deps(@v8//:v8ci) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
+          'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
           >/dev/null
 
       - name: Build bundled ICU
@@ -126,3 +126,16 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_crates_26_3_1//:temporal_capi
+
+      - name: Test V8 Temporal
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --local_test_jobs=4 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            --strategy=TestRunner=local \
+            //tests/temporal:all

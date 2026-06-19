@@ -52,6 +52,23 @@ def _transform_build_file(
     return content
 
 
+def _add_temporal_cpp_target(content: str) -> str:
+    content = content.replace(
+        'load("@rules_rust//rust:defs.bzl", "rust_library")',
+        'load("@rules_cc//cc:cc_library.bzl", "cc_library")\n'
+        'load("@rules_rust//rust:defs.bzl", "rust_library")',
+    )
+    return content + """
+
+cc_library(
+    name = "temporal_capi_cpp",
+    hdrs = glob(["bindings/cpp/**/*.hpp"]),
+    strip_include_prefix = "bindings/cpp",
+    deps = [":temporal_capi"],
+)
+"""
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--buildifier", required=True, type=Path)
@@ -95,6 +112,8 @@ def main() -> None:
             (generated_root / generated_directory / "BUILD.bazel").read_text(),
             crate_destinations,
         )
+        if destination == "temporal_capi":
+            content = _add_temporal_cpp_target(content)
         repository_destination = f"vendor/{destination}/BUILD.bazel"
         output_name = "BUILD." + repository_destination.replace("/", "__")
         output = overlay_root / "build_files" / output_name

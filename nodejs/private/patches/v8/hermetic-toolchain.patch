@@ -1,6 +1,45 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -4431,7 +4431,6 @@ genrule(
+            --config $(location :src/inspector/inspector_protocol_config.json) \
+            --config_value protocol.path=$(location :include/js_protocol.pdl) \
+            --output_base $(@D)/src/inspector",
+-    local = 1,
+     message = "Generating inspector files",
+     tools = [
+         ":code_generator",
 diff --git a/bazel/defs.bzl b/bazel/defs.bzl
 --- a/bazel/defs.bzl
 +++ b/bazel/defs.bzl
 @@ -100 +100 @@ def _default_args():
 -        deps = [":define_flags", "@libcxx//:libc++"],
 +        deps = [":define_flags"],
+@@ -187 +187 @@ def _default_args():
+-            "//conditions:default": ["-Wl,--no-as-needed -ldl -latomic -pthread"],
++            "//conditions:default": ["-Wl,--no-as-needed -ldl -pthread"],
+diff --git a/src/base/platform/platform-posix.cc b/src/base/platform/platform-posix.cc
+--- a/src/base/platform/platform-posix.cc
++++ b/src/base/platform/platform-posix.cc
+@@ -110 +110 @@ extern int madvise(caddr_t, size_t, int);
+-extern "C" void* __libc_stack_end;
++extern "C" void* __libc_stack_end __attribute__((weak));
+@@ -1473,7 +1473,8 @@ Stack::StackSlot Stack::ObtainCurrentThreadStackStart() {
+     // pthread_getattr_np can fail for the main thread.
+     // For the main thread we prefer using __libc_stack_end (if it exists) since
+     // it generally provides a tighter limit for CSS.
+-    return __libc_stack_end;
++    return &__libc_stack_end != nullptr ? __libc_stack_end : nullptr;
+ #else
+     return nullptr;
+ #endif  // !defined(V8_LIBC_GLIBC)
+@@ -1488,7 +1489,8 @@ Stack::StackSlot Stack::ObtainCurrentThreadStackStart() {
+   // __libc_stack_end is process global and thus is only valid for
+   // the main thread. Check whether this is the main thread by checking
+   // __libc_stack_end is within the thread's stack.
+-  if ((base <= __libc_stack_end) && (__libc_stack_end <= stack_start)) {
++  if (&__libc_stack_end != nullptr && (base <= __libc_stack_end) &&
++      (__libc_stack_end <= stack_start)) {
+     DCHECK(MainThreadIsCurrentThread());
+     return __libc_stack_end;
+   }

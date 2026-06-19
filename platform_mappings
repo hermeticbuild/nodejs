@@ -1,0 +1,9 @@
+platforms:
+  @llvm//platforms:linux_x86_64
+    --@v8//bazel/config:v8_target_cpu=x64
+  @llvm//platforms:linux_aarch64
+    --@v8//bazel/config:v8_target_cpu=arm64
+  @llvm//platforms:macos_x86_64
+    --@v8//bazel/config:v8_target_cpu=x64
+  @llvm//platforms:macos_aarch64
+    --@v8//bazel/config:v8_target_cpu=arm64

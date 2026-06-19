@@ -19,3 +19,8 @@ alias(
     name = "temporal_capi",
     actual = "//vendor/temporal_capi",
 )
+
+alias(
+    name = "temporal_capi_cpp",
+    actual = "//vendor/temporal_capi:temporal_capi_cpp",
+)

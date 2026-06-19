@@ -7,3 +7,9 @@ diff --git a/BUILD.bazel b/BUILD.bazel
 @@ -4725 +4725 @@ v8_library(
 -        "//external:icu",
 +        "@nodejs_icu_26_3_1//:icu",
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -195 +195 @@ ENABLE_I18N_SUPPORT_DEFINES = [
+-    "-DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_STATIC",
++    "-DICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_FILE",

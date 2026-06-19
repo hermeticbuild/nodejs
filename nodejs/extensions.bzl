@@ -17,6 +17,7 @@ _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast
 _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:hermetic-toolchain.patch"),
     Label("//nodejs/private/patches/v8:nodejs-icu.patch"),
+    Label("//nodejs/private/patches/v8:temporal.patch"),
 ]
 
 def _nodejs_impl(module_ctx):

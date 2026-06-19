@@ -7,6 +7,7 @@
 #     bazel run //tools/crates_vendor:install
 ###############################################################################
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//cargo:defs.bzl", "cargo_toml_env_vars")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 
@@ -75,4 +76,11 @@ rust_library(
         "//vendor/writeable",
         "//vendor/zoneinfo64",
     ],
+)
+
+cc_library(
+    name = "temporal_capi_cpp",
+    hdrs = glob(["bindings/cpp/**/*.hpp"]),
+    strip_include_prefix = "bindings/cpp",
+    deps = [":temporal_capi"],
 )

@@ -1,4 +1,5 @@
 exports_files([
     "hermetic-toolchain.patch",
     "nodejs-icu.patch",
+    "temporal.patch",
 ])

@@ -1,0 +1,129 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -1235,8 +1235,6 @@ v8_torque_files(
+         "src/objects/js-shared-array.tq",
+         "src/objects/js-struct.tq",
+-        # Temporal is currently gn-only
+-        # "src/objects/js-temporal-objects.tq",
+         "src/objects/js-weak-refs.tq",
+         "src/objects/literal-objects.tq",
+         "src/objects/map.tq",
+@@ -1289,6 +1287,7 @@ filegroup(
+         "src/objects/js-segmenter.tq",
+         "src/objects/js-segments.tq",
++        "src/objects/js-temporal-objects.tq",
+         ":noicu/torque_files",
+     ],
+ )
+@@ -1469,8 +1468,6 @@ filegroup(
+         "src/builtins/builtins-struct.cc",
+         "src/builtins/builtins-symbol.cc",
+-        # Temporal is currently gn-only
+-        # "src/builtins/builtins-temporal.cc",
+         "src/builtins/builtins-trace.cc",
+         "src/builtins/builtins-typed-array.cc",
+         "src/builtins/builtins-utils.h",
+@@ -2186,10 +2183,6 @@ filegroup(
+         "src/objects/js-struct.cc",
+         "src/objects/js-struct.h",
+         "src/objects/js-struct-inl.h",
+-        # Temporal is currently gn-only
+-        # "src/objects/js-temporal-objects.cc",
+-        # "src/objects/js-temporal-objects.h",
+-        # "src/objects/js-temporal-objects-inl.h",
+         "src/objects/js-temporal-helpers.h",
+         "src/objects/js-temporal-helpers.cc",
+         "src/objects/js-weak-refs.cc",
+@@ -4516,6 +4509,18 @@ filegroup(
+     }),
+ )
+-
++
++filegroup(
++    name = "v8_temporal_files",
++    srcs = [
++        "src/builtins/builtins-temporal.cc",
++        "src/objects/js-temporal-objects.cc",
++        "src/objects/js-temporal-objects.h",
++        "src/objects/js-temporal-objects-inl.h",
++        "src/objects/js-temporal-zoneinfo64.cc",
++        "src/objects/js-temporal-zoneinfo64.h",
++    ],
++)
++
+ # =================================================
+ # Libraries rules
+ # =================================================
+@@ -4600,11 +4605,14 @@ v8_library(
+     ]),
+     copts = ["-Wno-implicit-fallthrough"],
+     icu_deps = [
++        "@nodejs_crates_26_3_1//:temporal_capi_cpp",
+         ":icu/generated_torque_definitions_headers",
+         "@nodejs_icu_26_3_1//:icu",
+     ],
++    icu_defines = ["V8_TEMPORAL_SUPPORT"],
+     icu_srcs = [
+         ":generated_regexp_special_case",
++        ":v8_temporal_files",
+         ":icu/generated_torque_definitions",
+         ":icu/v8_base_without_compiler_files",
+     ],
+@@ -4784,6 +4792,7 @@ v8_binary(
+-
++
+ v8_binary(
+     name = "d8",
++    visibility = ["//visibility:public"],
+     srcs = [":d8_files"],
+     copts = ["-Wno-implicit-fallthrough"],
+     icu_deps = [":icu/v8"],
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -257,6 +257,7 @@ def v8_library(
+         name,
+         srcs,
+         deps = [],
++        defines = [],
+         includes = [],
+         copts = [],
+         linkopts = [],
+@@ -273,6 +274,7 @@ def v8_library(
+             name = name + "_noicu",
+             srcs = srcs + noicu_srcs,
+             deps = deps + noicu_deps + default.deps,
++            defines = defines + noicu_defines + default.defines,
+             includes = includes + ["noicu/"] + default.includes,
+             copts = copts + default.copts,
+             linkopts = linkopts + default.linkopts,
+@@ -292,6 +294,7 @@ def v8_library(
+             name = name + "_icu",
+             srcs = srcs + icu_srcs,
+             deps = deps + icu_deps + default.deps,
++            defines = defines + icu_defines + default.defines,
+             includes = includes + ["icu/"] + default.includes,
+             copts = copts + default.copts + ENABLE_I18N_SUPPORT_DEFINES,
+             linkopts = linkopts + default.linkopts,
+@@ -311,6 +314,7 @@ def v8_library(
+         cc_library(
+             name = name,
+             srcs = srcs,
+             deps = deps + default.deps,
++            defines = defines + default.defines,
+             includes = includes + default.includes,
+             copts = copts + default.copts,
+             linkopts = linkopts + default.linkopts,
+diff --git a/src/objects/js-date-time-format.cc b/src/objects/js-date-time-format.cc
+--- a/src/objects/js-date-time-format.cc
++++ b/src/objects/js-date-time-format.cc
+@@ -945,6 +945,8 @@ bool CalendarEquals(temporal_rs::AnyCalendarKind kind,
+     case HijriTabularTypeIIFriday:
+       return other_kind == "islamic-civil" || other_kind == "islamicc" ||
+              other_kind == "islamic";
++    case HijriSimulatedMecca:
++      return other_kind == "islamic-rgsa" || other_kind == "islamic";
+     case HijriTabularTypeIIThursday:
+       return other_kind == "islamic-tbla" || other_kind == "islamic";
+     case HijriUmmAlQura:
