@@ -108,9 +108,15 @@
 #ifndef ENABLE_GDB_JIT_INTERFACE
 #error "ENABLE_GDB_JIT_INTERFACE must be defined on Linux x86-64"
 #endif
+#ifndef V8_ENABLE_WASM_SIMD256_REVEC
+#error "V8_ENABLE_WASM_SIMD256_REVEC must be defined on Linux x86-64"
+#endif
 #else
 #ifdef ENABLE_GDB_JIT_INTERFACE
 #error "ENABLE_GDB_JIT_INTERFACE must not be defined outside Linux x86-64"
+#endif
+#ifdef V8_ENABLE_WASM_SIMD256_REVEC
+#error "V8_ENABLE_WASM_SIMD256_REVEC must not be defined outside Linux x86-64"
 #endif
 #endif
 

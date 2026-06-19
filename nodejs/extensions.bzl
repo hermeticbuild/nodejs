@@ -21,6 +21,7 @@ _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:temporal.patch"),
     Label("//nodejs/private/patches/v8:nodejs-config.patch"),
     Label("//nodejs/private/patches/v8:zlib.patch"),
+    Label("//nodejs/private/patches/v8:simd256.patch"),
 ]
 
 def _nodejs_impl(module_ctx):

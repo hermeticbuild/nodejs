@@ -7,6 +7,12 @@ platform="$3"
 
 [[ "$("$node" --version)" == "v26.3.1" ]]
 
+if [[ "$arch" == "x64" && "$platform" == "linux" ]]; then
+  "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'
+else
+  ! "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'
+fi
+
 "$node" - "$arch" "$platform" <<'JS'
 'use strict';
 

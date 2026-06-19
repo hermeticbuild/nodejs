@@ -1,0 +1,35 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -551,7 +551,10 @@ v8_config(
+         "V8_USE_SIPHASH",
+         "V8_USE_ZLIB",
+     ] + select({
+-        ":nodejs_linux_x64": ["ENABLE_GDB_JIT_INTERFACE"],
++        ":nodejs_linux_x64": [
++            "ENABLE_GDB_JIT_INTERFACE",
++            "V8_ENABLE_WASM_SIMD256_REVEC",
++        ],
+         "//conditions:default": [],
+     }) + select({
+         "@v8//bazel/config:is_debug": [
+@@ -3793,7 +3796,19 @@ filegroup(
+             "src/compiler/wasm-typer.h",
+         ],
+         "//conditions:default": [],
++    }) + select({
++        ":nodejs_linux_x64": [
++            "src/compiler/linear-scheduler.cc",
++            "src/compiler/linear-scheduler.h",
++            "src/compiler/revectorizer.cc",
++            "src/compiler/revectorizer.h",
++            "src/compiler/turboshaft/wasm-revec-phase.cc",
++            "src/compiler/turboshaft/wasm-revec-phase.h",
++            "src/compiler/turboshaft/wasm-revec-reducer.cc",
++            "src/compiler/turboshaft/wasm-revec-reducer.h",
++        ],
++        "//conditions:default": [],
+     }) + select({
+         # Turboshaft's Maglev graph builder needs some Maglev files. We only
+         # include them explicitely when Maglev is disabled.
+         ":enable_maglev": [],

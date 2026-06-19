@@ -3,6 +3,7 @@ exports_files([
     "nodejs-config.patch",
     "nodejs-icu.patch",
     "nodejs-targets.patch",
+    "simd256.patch",
     "temporal.patch",
     "zlib.patch",
 ])
