@@ -6,6 +6,7 @@ load(
 )
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -800,4 +801,144 @@ cc_library(
     defines = ["NCRYPTO_BSSL_LIBDECREPIT_MISSING=1"],
     includes = ["deps/ncrypto"],
     deps = [":openssl"],
+)
+
+py_binary(
+    name = "libffi_generate_headers",
+    srcs = ["deps/libffi/generate-headers.py"],
+    data = [
+        "deps/libffi/include/ffi.h.in",
+        "deps/libffi/src/aarch64/ffitarget.h",
+        "deps/libffi/src/arm/ffitarget.h",
+        "deps/libffi/src/loongarch64/ffitarget.h",
+        "deps/libffi/src/mips/ffitarget.h",
+        "deps/libffi/src/powerpc/ffitarget.h",
+        "deps/libffi/src/riscv/ffitarget.h",
+        "deps/libffi/src/x86/ffitarget.h",
+    ],
+    main = "deps/libffi/generate-headers.py",
+)
+
+genrule(
+    name = "libffi_headers_linux_arm64",
+    outs = [
+        "generated/libffi/linux_arm64/ffi.h",
+        "generated/libffi/linux_arm64/fficonfig.h",
+        "generated/libffi/linux_arm64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/linux_arm64 --target-arch arm64 --os linux",
+    tools = [":libffi_generate_headers"],
+)
+
+genrule(
+    name = "libffi_headers_linux_x86_64",
+    outs = [
+        "generated/libffi/linux_x86_64/ffi.h",
+        "generated/libffi/linux_x86_64/fficonfig.h",
+        "generated/libffi/linux_x86_64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/linux_x86_64 --target-arch x64 --os linux",
+    tools = [":libffi_generate_headers"],
+)
+
+genrule(
+    name = "libffi_headers_macos_arm64",
+    outs = [
+        "generated/libffi/macos_arm64/ffi.h",
+        "generated/libffi/macos_arm64/fficonfig.h",
+        "generated/libffi/macos_arm64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/macos_arm64 --target-arch arm64 --os mac",
+    tools = [":libffi_generate_headers"],
+)
+
+genrule(
+    name = "libffi_headers_macos_x86_64",
+    outs = [
+        "generated/libffi/macos_x86_64/ffi.h",
+        "generated/libffi/macos_x86_64/fficonfig.h",
+        "generated/libffi/macos_x86_64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/macos_x86_64 --target-arch x64 --os mac",
+    tools = [":libffi_generate_headers"],
+)
+
+cc_library(
+    name = "libffi",
+    srcs = [
+        "deps/libffi/src/closures.c",
+        "deps/libffi/src/debug.c",
+        "deps/libffi/src/java_raw_api.c",
+        "deps/libffi/src/prep_cif.c",
+        "deps/libffi/src/raw_api.c",
+        "deps/libffi/src/tramp.c",
+        "deps/libffi/src/types.c",
+    ] + select(
+        {
+            ":target_linux_arm64": [
+                "deps/libffi/src/aarch64/ffi.c",
+                "deps/libffi/src/aarch64/sysv.S",
+            ],
+            ":target_linux_x86_64": [
+                "deps/libffi/src/x86/ffi64.c",
+                "deps/libffi/src/x86/ffiw64.c",
+                "deps/libffi/src/x86/unix64.S",
+                "deps/libffi/src/x86/win64.S",
+            ],
+            ":target_macos_arm64": [
+                "deps/libffi/src/aarch64/ffi.c",
+                "deps/libffi/src/aarch64/sysv.S",
+            ],
+            ":target_macos_x86_64": [
+                "deps/libffi/src/x86/ffi64.c",
+                "deps/libffi/src/x86/ffiw64.c",
+                "deps/libffi/src/x86/unix64.S",
+                "deps/libffi/src/x86/win64.S",
+            ],
+        },
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    hdrs = glob([
+        "deps/libffi/include/*.h",
+        "deps/libffi/src/**/*.h",
+    ]) + select(
+        {
+            ":target_linux_arm64": [
+                ":generated/libffi/linux_arm64/ffi.h",
+                ":generated/libffi/linux_arm64/fficonfig.h",
+                ":generated/libffi/linux_arm64/ffitarget.h",
+            ],
+            ":target_linux_x86_64": [
+                ":generated/libffi/linux_x86_64/ffi.h",
+                ":generated/libffi/linux_x86_64/fficonfig.h",
+                ":generated/libffi/linux_x86_64/ffitarget.h",
+            ],
+            ":target_macos_arm64": [
+                ":generated/libffi/macos_arm64/ffi.h",
+                ":generated/libffi/macos_arm64/fficonfig.h",
+                ":generated/libffi/macos_arm64/ffitarget.h",
+            ],
+            ":target_macos_x86_64": [
+                ":generated/libffi/macos_x86_64/ffi.h",
+                ":generated/libffi/macos_x86_64/fficonfig.h",
+                ":generated/libffi/macos_x86_64/ffitarget.h",
+            ],
+        },
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
+    copts = ["-fvisibility=hidden"],
+    includes = [
+        "deps/libffi/include",
+        "deps/libffi/src",
+    ] + select(
+        {
+            ":target_linux_arm64": ["generated/libffi/linux_arm64"],
+            ":target_linux_x86_64": ["generated/libffi/linux_x86_64"],
+            ":target_macos_arm64": ["generated/libffi/macos_arm64"],
+            ":target_macos_x86_64": ["generated/libffi/macos_x86_64"],
+        },
+        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    local_defines = ["FFI_STATIC_BUILD"],
 )

@@ -94,6 +94,11 @@ computes a SHA-256 digest through the OpenSSL EVP API.
 `//tests/ncrypto:ncrypto_test` checks ncrypto 0.0.1, computes a SHA-256 digest,
 and requests random bytes through `ncrypto::CSPRNG`.
 
+`@nodejs_26_3_1//:libffi` builds Node.js's bundled libffi 3.5.2 common and
+target-architecture sources. Node.js's `deps/libffi/generate-headers.py`
+generates `ffi.h`, `fficonfig.h`, and `ffitarget.h` for each target platform.
+`//tests/libffi:libffi_test` calls a C function through `ffi_call`.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which

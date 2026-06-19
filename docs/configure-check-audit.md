@@ -21,6 +21,7 @@ for the upstream mechanism; the reviewed value is the Bazel build requirement.
 | `node_use_bundled_v8` | `"true"` | `"true"` | `"true"` | `"true"` | `configure.py:2204` `b(not options.without_bundled_v8)` | Node.js 26.3.1 release artifacts use the V8 14.6.202.34 source bundled in the Node.js archive. |
 | `node_use_openssl` | `"true"` | `"true"` | `"true"` | `"true"` | `configure.py:2243` `b(not options.without_ssl)` | Upstream release artifacts include the bundled OpenSSL implementation. |
 | `node_use_sqlite` | `"true"` | `"true"` | `"true"` | `"true"` | `configure.py:2322` `b(not options.without_sqlite)` | Upstream release artifacts include the bundled SQLite implementation. |
+| `node_use_ffi` | `"true"` | `"true"` | `"true"` | `"true"` | `configure.py:2360` `b(use_ffi)` | Node.js 26.3.1 release artifacts enable the bundled libffi implementation on Linux and macOS x86_64 and arm64 targets. |
 | `node_use_v8_platform` | `"true"` | `"true"` | `"true"` | `"true"` | `configure.py:2203` `b(not options.without_v8_platform)` | Node.js uses the V8 platform implementation for foreground and worker tasks. |
 | `v8_enable_i18n_support` | `1` | `1` | `1` | `1` | `configure.py:2474` `1`<br>`configure.py:2482` `0`<br>`configure.py:2487` `1`<br>`configure.py:2496` `1`<br>+1 | The default --with-intl=full-icu release configuration enables V8 internationalization. |
 | `v8_enable_temporal_support` | `1` | `1` | `1` | `1` | `configure.py:2201` `0 if options.v8_disable_temporal_support else 1` | The full-ICU release configuration enables Temporal by default. |
