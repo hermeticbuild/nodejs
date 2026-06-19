@@ -2598,13 +2598,21 @@ cc_library(
     ),
     defines = select(
         {
-            ":target_x86_64": [
+            ":target_linux_x86_64": [
                 "ADLER32_SIMD_SSSE3",
                 "X86_NOT_WINDOWS",
             ],
+            ":target_macos_x86_64": [
+                "ADLER32_SIMD_SSSE3",
+                "X86_NOT_WINDOWS",
+            ],
+            ":target_windows_x86_64": [
+                "ADLER32_SIMD_SSSE3",
+                "X86_WINDOWS",
+            ],
             ":target_arm64": ["ADLER32_SIMD_NEON"],
         },
-        no_match_error = "zlib_adler32_simd currently supports x86_64 and arm64 targets",
+        no_match_error = "zlib_adler32_simd currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
     deps = [":zlib_headers"],
 )
@@ -2640,8 +2648,9 @@ cc_library(
         {
             ":target_linux": ["ARMV8_OS_LINUX"],
             ":target_macos": ["ARMV8_OS_MACOS"],
+            ":target_windows": ["ARMV8_OS_WINDOWS"],
         },
-        no_match_error = "zlib_arm_crc32 currently supports Linux and macOS targets",
+        no_match_error = "zlib_arm_crc32 currently supports Linux, macOS, and Windows targets",
     ),
     target_compatible_with = ["@platforms//cpu:aarch64"],
     deps = [":zlib_headers"],
@@ -2666,8 +2675,11 @@ cc_library(
         "deps/zlib/uncompr.c",
         "deps/zlib/zutil.c",
     ],
-    copts = ["-Wno-implicit-fallthrough"],
-    defines = ["HAVE_HIDDEN"] + select(
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": ["-Wno-implicit-fallthrough"],
+    }),
+    defines = select(
         {
             ":target_x86_64": [
                 "DEFLATE_SLIDE_HASH_SSE2",
@@ -2684,20 +2696,46 @@ cc_library(
         {
             ":target_linux": [],
             ":target_macos": ["USE_FILE32API"],
+            ":target_windows": [],
         },
-        no_match_error = "zlib currently supports Linux and macOS targets",
+        no_match_error = "zlib currently supports Linux, macOS, and Windows targets",
     ),
     includes = ["deps/zlib"],
-    deps = [
-        ":zlib_adler32_simd",
-        ":zlib_data_chunk_simd",
-        ":zlib_headers",
-    ] + select(
+    local_defines = select(
         {
-            ":target_x86_64": [],
-            ":target_arm64": [":zlib_arm_crc32"],
+            ":target_linux": ["HAVE_HIDDEN"],
+            ":target_macos": ["HAVE_HIDDEN"],
+            ":target_windows": ["ZLIB_DLL"],
         },
-        no_match_error = "zlib currently supports x86_64 and arm64 targets",
+        no_match_error = "zlib currently supports Linux, macOS, and Windows targets",
+    ),
+    deps = [":zlib_headers"] + select(
+        {
+            ":target_linux_arm64": [
+                ":zlib_adler32_simd",
+                ":zlib_arm_crc32",
+                ":zlib_data_chunk_simd",
+            ],
+            ":target_linux_x86_64": [
+                ":zlib_adler32_simd",
+                ":zlib_data_chunk_simd",
+            ],
+            ":target_macos_arm64": [
+                ":zlib_adler32_simd",
+                ":zlib_arm_crc32",
+                ":zlib_data_chunk_simd",
+            ],
+            ":target_macos_x86_64": [
+                ":zlib_adler32_simd",
+                ":zlib_data_chunk_simd",
+            ],
+            ":target_windows_arm64": [":zlib_data_chunk_simd"],
+            ":target_windows_x86_64": [
+                ":zlib_adler32_simd",
+                ":zlib_data_chunk_simd",
+            ],
+        },
+        no_match_error = "zlib currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
 )
 
@@ -2721,22 +2759,41 @@ cc_library(
         "deps/cares/include/*.h",
         "deps/cares/src/lib/**/*.h",
     ]),
-    copts = [
-        "-pedantic",
-        "-std=gnu11",
-        "-Wall",
-        "-Wextra",
-        "-Wno-error=deprecated-declarations",
-        "-Wno-unused-parameter",
-    ],
-    local_defines = [
-        "CARES_STATICLIB",
-        "HAVE_CONFIG_H",
-        "_DARWIN_USE_64_BIT_INODE=1",
-        "_FILE_OFFSET_BITS=64",
-        "_GNU_SOURCE",
-        "_LARGEFILE_SOURCE",
-    ],
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": [
+            "-pedantic",
+            "-std=gnu11",
+            "-Wall",
+            "-Wextra",
+            "-Wno-error=deprecated-declarations",
+            "-Wno-unused-parameter",
+        ],
+    }),
+    defines = ["CARES_STATICLIB"],
+    local_defines = select(
+        {
+            ":target_linux": [
+                "HAVE_CONFIG_H",
+                "_DARWIN_USE_64_BIT_INODE=1",
+                "_FILE_OFFSET_BITS=64",
+                "_GNU_SOURCE",
+                "_LARGEFILE_SOURCE",
+            ],
+            ":target_macos": [
+                "HAVE_CONFIG_H",
+                "_DARWIN_USE_64_BIT_INODE=1",
+                "_FILE_OFFSET_BITS=64",
+                "_GNU_SOURCE",
+                "_LARGEFILE_SOURCE",
+            ],
+            ":target_windows": [
+                "CARES_PULL_WS2TCPIP_H=1",
+                "_WINSOCK_DEPRECATED_NO_WARNINGS",
+            ],
+        },
+        no_match_error = "cares currently supports Linux, macOS, and Windows targets",
+    ),
     includes = [
         "deps/cares/include",
         "deps/cares/src/lib",
@@ -2745,9 +2802,17 @@ cc_library(
         {
             ":target_linux": ["deps/cares/config/linux"],
             ":target_macos": ["deps/cares/config/darwin"],
+            ":target_windows": [],
         },
-        no_match_error = "cares currently supports Linux and macOS targets",
+        no_match_error = "cares currently supports Linux, macOS, and Windows targets",
     ),
+    linkopts = select({
+        ":target_windows": [
+            "iphlpapi.lib",
+            "ws2_32.lib",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -2819,16 +2884,18 @@ cc_library(
         {
             ":target_linux": ["OS_LINUX"],
             ":target_macos": ["OS_MACOSX"],
+            ":target_windows": [],
         },
-        no_match_error = "brotli currently supports Linux and macOS targets",
+        no_match_error = "brotli currently supports Linux, macOS, and Windows targets",
     ),
     includes = ["deps/brotli/c/include"],
     linkopts = select(
         {
             ":target_linux": ["-lm"],
             ":target_macos": [],
+            ":target_windows": [],
         },
-        no_match_error = "brotli currently supports Linux and macOS targets",
+        no_match_error = "brotli currently supports Linux, macOS, and Windows targets",
     ),
 )
 
@@ -2916,8 +2983,9 @@ cc_library(
         {
             ":target_linux": ["-pthread"],
             ":target_macos": [],
+            ":target_windows": [],
         },
-        no_match_error = "zstd currently supports Linux and macOS targets",
+        no_match_error = "zstd currently supports Linux, macOS, and Windows targets",
     ),
 )
 
@@ -2938,7 +3006,10 @@ cc_library(
         "deps/uvwasi/include/*.h",
         "deps/uvwasi/src/*.h",
     ]),
-    copts = ["-fvisibility=hidden"],
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": ["-fvisibility=hidden"],
+    }),
     defines = select(
         {
             ":target_linux": [
@@ -2946,8 +3017,9 @@ cc_library(
                 "_POSIX_C_SOURCE=200112",
             ],
             ":target_macos": [],
+            ":target_windows": [],
         },
-        no_match_error = "uvwasi currently supports Linux and macOS targets",
+        no_match_error = "uvwasi currently supports Linux, macOS, and Windows targets",
     ),
     includes = ["deps/uvwasi/include"],
     deps = [":libuv"],
@@ -2960,7 +3032,10 @@ cc_library(
         "deps/sqlite/sqlite3.h",
         "deps/sqlite/sqlite3ext.h",
     ],
-    copts = ["-fvisibility=hidden"],
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": ["-fvisibility=hidden"],
+    }),
     defines = [
         "SQLITE_DEFAULT_MEMSTATUS=0",
         "SQLITE_ENABLE_COLUMN_METADATA",
@@ -2985,8 +3060,9 @@ cc_library(
                 "-lpthread",
             ],
             ":target_macos": [],
+            ":target_windows": [],
         },
-        no_match_error = "sqlite currently supports Linux and macOS targets",
+        no_match_error = "sqlite currently supports Linux, macOS, and Windows targets",
     ),
 )
 
