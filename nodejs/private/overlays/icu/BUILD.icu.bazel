@@ -5,7 +5,7 @@ genrule(
     name = "icudata_file",
     srcs = ["source/data/in/icudt78l.dat.bz2"],
     outs = ["common/icudtl.dat"],
-    cmd = "$(execpath @bzip2//:bzip2) -dc $(location source/data/in/icudt78l.dat.bz2) >$@",
+    cmd = "$(execpath @bzip2//:bzip2) -dc $(execpath source/data/in/icudt78l.dat.bz2) >$@",
     tools = ["@bzip2"],
     visibility = ["//visibility:public"],
 )
