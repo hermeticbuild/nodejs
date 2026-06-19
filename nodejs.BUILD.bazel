@@ -776,8 +776,12 @@ py_binary(
         ":test_addon_buffer_free_callback_binding_node",
         ":test_addon_callback_scope_binding_node",
         ":test_addon_cppgc_object_binding_node",
+        ":test_addon_dlopen_ping_pong_binding_node",
+        ":test_addon_dlopen_ping_pong_ping_so",
+        ":test_addon_esm_binding_node",
         ":test_addon_esm_export_default_binding_node",
         ":test_addon_esm_export_primitive_binding_node",
+        ":test_addon_esm_package_binding_node",
         ":test_addon_errno_exception_binding_node",
         ":test_addon_force_context_aware_binding_node",
         ":test_addon_hello_world_2_binding_node",
@@ -1726,6 +1730,31 @@ node_module_addon(
     srcs = ["test/addons/uv-thread-name/binding.cc"],
 )
 
+node_module_addon(
+    name = "test_addon_dlopen_ping_pong_binding_node",
+    output = "test/addons/dlopen-ping-pong/build/Release/binding.node",
+    srcs = ["test/addons/dlopen-ping-pong/binding.cc"],
+)
+
+node_addon(
+    name = "test_addon_dlopen_ping_pong_ping_so",
+    output = "test/addons/dlopen-ping-pong/build/Release/ping.so",
+    srcs = ["test/addons/dlopen-ping-pong/ping.c"],
+)
+
+node_module_addon(
+    name = "test_addon_esm_binding_node",
+    output = "test/addons/esm/build/Release/binding.node",
+    srcs = ["test/addons/esm/binding.cc"],
+)
+
+genrule(
+    name = "test_addon_esm_package_binding_node",
+    srcs = [":test_addon_esm_binding_node"],
+    outs = ["test/addons/esm/node_modules/esm-package/build/binding.node"],
+    cmd = "cp $< $@",
+)
+
 node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
@@ -2149,6 +2178,21 @@ nodejs_upstream_test_shards(
         "addons/heap-profiler",
         "addons/repl-domain-abort",
         "addons/uv-thread-name",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_dlopen_esm_tests",
+    suites = [
+        "addons/dlopen-ping-pong",
+        "addons/esm",
     ],
     shards = 1,
     node = ":node",

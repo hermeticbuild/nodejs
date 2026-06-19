@@ -250,6 +250,11 @@ tests in one Linux x86_64 remote action.
 `cppgc-object`, `heap-profiler`, `repl-domain-abort`, and `uv-thread-name`
 addons and runs their four JavaScript tests in one Linux x86_64 remote action.
 
+`@nodejs_26_3_1//:node_upstream_addon_dlopen_esm_tests` builds the
+`dlopen-ping-pong` addon and `ping.so`, builds the `esm` addon at both paths
+required by the package export tests, and runs all six JavaScript tests in one
+Linux x86_64 remote action.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 

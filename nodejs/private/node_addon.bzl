@@ -3,7 +3,7 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 
 def node_addon(name, output, srcs, copts = [], defines = [], deps = []):
-    """Builds a shared library and copies it to an upstream .node path."""
+    """Builds a shared library and copies it to an upstream output path."""
     shared_library = name + "_shared_library"
     cc_binary(
         name = shared_library,
