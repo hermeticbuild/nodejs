@@ -110,6 +110,7 @@ jobs:
             //tests/nbytes:nbytes_test \
             //tests/nghttp2:nghttp2_test \
             //tests/merve:merve_test \
+            //tests/openssl:openssl_test \
             //tests/simdjson:simdjson_test \
             //tests/sqlite:sqlite_test \
             //tests/uvwasi:uvwasi_test \

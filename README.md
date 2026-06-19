@@ -84,6 +84,11 @@ support and executes an in-memory query.
 simdjson 4.6.4 sources. Their tests parse a URL, analyze CommonJS exports, and
 read a JSON field.
 
+`@nodejs_26_3_1//:openssl` builds Node.js's bundled OpenSSL 3.5.7 no-assembly
+source inventory and generated configuration for Linux and macOS x86_64 and
+arm64 targets. `//tests/openssl:openssl_test` checks the bundled version and
+computes a SHA-256 digest through the OpenSSL EVP API.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which

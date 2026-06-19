@@ -1,3 +1,9 @@
+load(
+    "@nodejs//nodejs/private:openssl_sources.bzl",
+    "OPENSSL_NO_ASM_PLATFORM_DEFINES",
+    "OPENSSL_NO_ASM_PLATFORM_SOURCES",
+    "OPENSSL_NO_ASM_SOURCES",
+)
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
@@ -23,11 +29,47 @@ config_setting(
     constraint_values = ["@platforms//cpu:aarch64"],
 )
 
+config_setting(
+    name = "target_linux_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:linux",
+    ],
+)
+
+config_setting(
+    name = "target_linux_arm64",
+    constraint_values = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:linux",
+    ],
+)
+
+config_setting(
+    name = "target_macos_x86_64",
+    constraint_values = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:macos",
+    ],
+)
+
+config_setting(
+    name = "target_macos_arm64",
+    constraint_values = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:macos",
+    ],
+)
+
 exports_files([
     "bazel/release.bzl",
     "bazel/release_metadata.json",
     "common.gypi",
     "configure.py",
+    "deps/openssl/config/archs/darwin64-arm64-cc/no-asm/openssl.gypi",
+    "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/openssl.gypi",
+    "deps/openssl/config/archs/linux-aarch64/no-asm/openssl.gypi",
+    "deps/openssl/config/archs/linux-x86_64/no-asm/openssl.gypi",
     "node.gyp",
     "src/node_version.h",
 ])
@@ -627,4 +669,122 @@ cc_library(
     hdrs = ["deps/simdjson/simdjson.h"],
     copts = ["-std=c++20"],
     includes = ["deps/simdjson"],
+)
+
+cc_library(
+    name = "openssl",
+    srcs = OPENSSL_NO_ASM_SOURCES + select(
+        {
+            ":target_linux_arm64": OPENSSL_NO_ASM_PLATFORM_SOURCES["linux_arm64"],
+            ":target_linux_x86_64": OPENSSL_NO_ASM_PLATFORM_SOURCES["linux_x86_64"],
+            ":target_macos_arm64": OPENSSL_NO_ASM_PLATFORM_SOURCES["macos_arm64"],
+            ":target_macos_x86_64": OPENSSL_NO_ASM_PLATFORM_SOURCES["macos_x86_64"],
+        },
+        no_match_error = "openssl currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    hdrs = glob([
+        "deps/openssl/config/**/*.h",
+        "deps/openssl/openssl/**/*.h",
+        "deps/openssl/openssl/**/*.inc",
+    ]),
+    textual_hdrs = [
+        "deps/openssl/openssl/crypto/LPdir_nyi.c",
+        "deps/openssl/openssl/crypto/LPdir_unix.c",
+        "deps/openssl/openssl/crypto/LPdir_vms.c",
+        "deps/openssl/openssl/crypto/LPdir_win.c",
+        "deps/openssl/openssl/crypto/LPdir_win32.c",
+        "deps/openssl/openssl/crypto/LPdir_wince.c",
+        "deps/openssl/openssl/crypto/des/ncbc_enc.c",
+        "deps/openssl/openssl/providers/implementations/macs/blake2_mac_impl.c",
+    ],
+    copts = ["-Wno-missing-field-initializers"] + select(
+        {
+            ":target_linux": ["-pthread"],
+            ":target_macos": [],
+        },
+        no_match_error = "openssl currently supports Linux and macOS targets",
+    ),
+    defines = [
+        "MODULESDIR=\\\"/dev/null\\\"",
+        "OPENSSL_API_COMPAT=0x10100001L",
+        "OPENSSL_NO_ASM",
+        "OPENSSL_NO_HW",
+        "STATIC_LEGACY",
+    ] + select(
+        {
+            ":target_linux_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_arm64"],
+            ":target_linux_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_x86_64"],
+            ":target_macos_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_arm64"],
+            ":target_macos_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_x86_64"],
+        },
+        no_match_error = "openssl currently supports Linux and macOS x86_64 and arm64 targets",
+    ) + select(
+        {
+            ":target_linux": [
+                "ENGINESDIR=\\\"/dev/null\\\"",
+                "OPENSSLDIR=\\\"/etc/ssl\\\"",
+                "TERMIOS",
+            ],
+            ":target_macos": [
+                "ENGINESDIR=\\\"/dev/null\\\"",
+                "OPENSSLDIR=\\\"/System/Library/OpenSSL/\\\"",
+            ],
+        },
+        no_match_error = "openssl currently supports Linux and macOS targets",
+    ),
+    includes = [
+        "deps/openssl/config",
+        "deps/openssl/openssl",
+        "deps/openssl/openssl/crypto",
+        "deps/openssl/openssl/crypto/ec/curve448",
+        "deps/openssl/openssl/crypto/ec/curve448/arch_32",
+        "deps/openssl/openssl/crypto/include",
+        "deps/openssl/openssl/crypto/modes",
+        "deps/openssl/openssl/include",
+        "deps/openssl/openssl/providers/common/include",
+        "deps/openssl/openssl/providers/fips/include",
+        "deps/openssl/openssl/providers/implementations/include",
+    ] + select(
+        {
+            ":target_linux_arm64": [
+                "deps/openssl/config/archs/linux-aarch64/no-asm",
+                "deps/openssl/config/archs/linux-aarch64/no-asm/crypto",
+                "deps/openssl/config/archs/linux-aarch64/no-asm/crypto/include/internal",
+                "deps/openssl/config/archs/linux-aarch64/no-asm/include",
+                "deps/openssl/config/archs/linux-aarch64/no-asm/providers/common/include",
+            ],
+            ":target_linux_x86_64": [
+                "deps/openssl/config/archs/linux-x86_64/no-asm",
+                "deps/openssl/config/archs/linux-x86_64/no-asm/crypto",
+                "deps/openssl/config/archs/linux-x86_64/no-asm/crypto/include/internal",
+                "deps/openssl/config/archs/linux-x86_64/no-asm/include",
+                "deps/openssl/config/archs/linux-x86_64/no-asm/providers/common/include",
+            ],
+            ":target_macos_arm64": [
+                "deps/openssl/config/archs/darwin64-arm64-cc/no-asm",
+                "deps/openssl/config/archs/darwin64-arm64-cc/no-asm/crypto",
+                "deps/openssl/config/archs/darwin64-arm64-cc/no-asm/crypto/include/internal",
+                "deps/openssl/config/archs/darwin64-arm64-cc/no-asm/include",
+                "deps/openssl/config/archs/darwin64-arm64-cc/no-asm/providers/common/include",
+            ],
+            ":target_macos_x86_64": [
+                "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm",
+                "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/crypto",
+                "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/crypto/include/internal",
+                "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/include",
+                "deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/providers/common/include",
+            ],
+        },
+        no_match_error = "openssl currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    linkopts = select(
+        {
+            ":target_linux": [
+                "-ldl",
+                "-pthread",
+            ],
+            ":target_macos": [],
+        },
+        no_match_error = "openssl currently supports Linux and macOS targets",
+    ),
 )
