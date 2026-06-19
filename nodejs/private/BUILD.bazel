@@ -16,6 +16,7 @@ exports_files([
     "repositories.bzl",
     "v8_requirements.txt",
     "versions.bzl",
+    "windows_resource.bzl",
 ])
 
 cc_binary(

@@ -23,6 +23,11 @@ load(
     "OPENSSL_NO_ASM_SOURCES",
 )
 load("@nodejs//nodejs/private:release_archive.bzl", "nodejs_release_archives")
+load(
+    "@nodejs//nodejs/private:windows_resource.bzl",
+    "windows_manifest_resource",
+    "windows_resource",
+)
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
@@ -712,9 +717,41 @@ cc_library(
     deps = [":libnode"],
 )
 
+windows_resource(
+    name = "node_windows_resource",
+    src = "src/res/node.rc",
+    out = "generated/windows/node.res",
+    include_anchors = [
+        "@windows_sdk//:winapifamily_header",
+        "@windows_sdk//:winresrc_header",
+        "src/node_version.h",
+        "src/res/node.ico",
+    ],
+    inputs = [
+        "@windows_sdk//:winsdk_resource_headers",
+        "src/node_version.h",
+        "src/res/node.ico",
+    ],
+    target_compatible_with = ["@platforms//os:windows"],
+)
+
+windows_manifest_resource(
+    name = "node_windows_manifest_resource",
+    out = "generated/windows/node_manifest.res",
+    manifest = "src/res/node.exe.extra.manifest",
+    target_compatible_with = ["@platforms//os:windows"],
+)
+
 cc_binary(
     name = "node",
     srcs = ["src/node_main.cc"],
+    additional_linker_inputs = select({
+        ":target_windows": [
+            ":node_windows_manifest_resource",
+            ":node_windows_resource",
+        ],
+        "//conditions:default": [],
+    }),
     copts = cxx20_copts(),
     linkopts = select(
         {
@@ -723,7 +760,10 @@ cc_binary(
                 "-Wl,--hash-style=sysv",
             ],
             ":target_macos": [],
-            ":target_windows": [],
+            ":target_windows": [
+                "$(location :node_windows_manifest_resource)",
+                "$(location :node_windows_resource)",
+            ],
         },
         no_match_error = "node currently supports Linux, macOS, and Windows targets",
     ),
