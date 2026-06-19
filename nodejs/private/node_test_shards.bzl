@@ -4,7 +4,7 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 def nodejs_upstream_test_shards(
         name,
-        suite,
+        suites,
         shards,
         node,
         root_status,
@@ -13,7 +13,7 @@ def nodejs_upstream_test_shards(
         test_sources,
         test_runner,
         test_directory_under_test_root = False):
-    """Creates deterministic shards for one upstream Node.js test suite."""
+    """Creates deterministic shards for upstream Node.js test suites."""
     tests = []
     for shard in range(shards):
         test_name = "{}_{}".format(name, shard)
@@ -27,8 +27,7 @@ def nodejs_upstream_test_shards(
                 "$(rootpath {})".format(getaddrinfo_library),
                 "--skip-tests={}".format(",".join(skip_tests)),
                 "--run={},{}".format(shard, shards),
-                suite,
-            ],
+            ] + suites,
             data = [
                 node,
                 root_status,

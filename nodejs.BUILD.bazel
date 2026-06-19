@@ -656,6 +656,16 @@ cc_library(
     deps = ["//deps/v8:node_addon_headers"],
 )
 
+cc_library(
+    name = "js_native_api_test_headers",
+    hdrs = [
+        "test/js-native-api/common-inl.h",
+        "test/js-native-api/common.h",
+        "test/js-native-api/entry_point.h",
+    ],
+    deps = [":node_addon_headers"],
+)
+
 filegroup(
     name = "node_test_root",
     srcs = ["test/root.status"],
@@ -685,6 +695,15 @@ py_binary(
         ":benchmark_napi_type_tag_binding_node",
         ":benchmark_napi_type_tag_check_binding_node",
         ":embedtest",
+        ":js_native_api_2_function_arguments_node",
+        ":js_native_api_3_callbacks_node",
+        ":js_native_api_4_object_factory_node",
+        ":js_native_api_5_function_factory_node",
+        ":js_native_api_6_object_wrap_myobject_basic_finalizer_node",
+        ":js_native_api_6_object_wrap_myobject_node",
+        ":js_native_api_6_object_wrap_nested_wrap_node",
+        ":js_native_api_7_factory_wrap_node",
+        ":js_native_api_8_passing_wrapped_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -803,6 +822,93 @@ node_addon(
     output = "test/addons/uv-handle-leak/build/Release/binding.node",
     srcs = ["test/addons/uv-handle-leak/binding.cc"],
     copts = ["-std=c++20"],
+)
+
+node_addon(
+    name = "js_native_api_2_function_arguments_node",
+    output = "test/js-native-api/2_function_arguments/build/Release/2_function_arguments.node",
+    srcs = ["test/js-native-api/2_function_arguments/2_function_arguments.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_3_callbacks_node",
+    output = "test/js-native-api/3_callbacks/build/Release/3_callbacks.node",
+    srcs = ["test/js-native-api/3_callbacks/3_callbacks.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_4_object_factory_node",
+    output = "test/js-native-api/4_object_factory/build/Release/4_object_factory.node",
+    srcs = ["test/js-native-api/4_object_factory/4_object_factory.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_5_function_factory_node",
+    output = "test/js-native-api/5_function_factory/build/Release/5_function_factory.node",
+    srcs = ["test/js-native-api/5_function_factory/5_function_factory.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_6_object_wrap_myobject_node",
+    output = "test/js-native-api/6_object_wrap/build/Release/myobject.node",
+    srcs = [
+        "test/js-native-api/6_object_wrap/myobject.cc",
+        "test/js-native-api/6_object_wrap/myobject.h",
+    ],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_6_object_wrap_myobject_basic_finalizer_node",
+    output = "test/js-native-api/6_object_wrap/build/Release/myobject_basic_finalizer.node",
+    srcs = [
+        "test/js-native-api/6_object_wrap/myobject.cc",
+        "test/js-native-api/6_object_wrap/myobject.h",
+    ],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_EXPERIMENTAL"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_6_object_wrap_nested_wrap_node",
+    output = "test/js-native-api/6_object_wrap/build/Release/nested_wrap.node",
+    srcs = [
+        "test/js-native-api/6_object_wrap/nested_wrap.cc",
+        "test/js-native-api/6_object_wrap/nested_wrap.h",
+    ],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_VERSION=10"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_7_factory_wrap_node",
+    output = "test/js-native-api/7_factory_wrap/build/Release/7_factory_wrap.node",
+    srcs = [
+        "test/js-native-api/7_factory_wrap/7_factory_wrap.cc",
+        "test/js-native-api/7_factory_wrap/myobject.cc",
+        "test/js-native-api/7_factory_wrap/myobject.h",
+    ],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_8_passing_wrapped_node",
+    output = "test/js-native-api/8_passing_wrapped/build/Release/8_passing_wrapped.node",
+    srcs = [
+        "test/js-native-api/8_passing_wrapped/8_passing_wrapped.cc",
+        "test/js-native-api/8_passing_wrapped/myobject.cc",
+        "test/js-native-api/8_passing_wrapped/myobject.h",
+    ],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
@@ -940,7 +1046,7 @@ sh_test(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_parallel_tests",
-    suite = "parallel",
+    suites = ["parallel"],
     shards = 16,
     node = ":node",
     root_status = ":node_test_root",
@@ -954,7 +1060,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sequential_tests",
-    suite = "sequential",
+    suites = ["sequential"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -966,7 +1072,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_async_hooks_tests",
-    suite = "async-hooks",
+    suites = ["async-hooks"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",
@@ -978,7 +1084,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_es_module_tests",
-    suite = "es-module",
+    suites = ["es-module"],
     shards = 8,
     node = ":node",
     root_status = ":node_test_root",
@@ -990,7 +1096,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_message_tests",
-    suite = "message",
+    suites = ["message"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1002,7 +1108,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_module_hooks_tests",
-    suite = "module-hooks",
+    suites = ["module-hooks"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",
@@ -1014,7 +1120,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_report_tests",
-    suite = "report",
+    suites = ["report"],
     shards = 2,
     node = ":node",
     root_status = ":node_test_root",
@@ -1026,7 +1132,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_test_runner_tests",
-    suite = "test-runner",
+    suites = ["test-runner"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",
@@ -1038,8 +1144,28 @@ nodejs_upstream_test_shards(
 )
 
 nodejs_upstream_test_shards(
+    name = "node_upstream_js_native_api_tutorial_tests",
+    suites = [
+        "js-native-api/2_function_arguments",
+        "js-native-api/3_callbacks",
+        "js-native-api/4_object_factory",
+        "js-native-api/5_function_factory",
+        "js-native-api/6_object_wrap",
+        "js-native-api/7_factory_wrap",
+        "js-native-api/8_passing_wrapped",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
     name = "node_upstream_abort_tests",
-    suite = "abort",
+    suites = ["abort"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1051,7 +1177,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_ffi_tests",
-    suite = "ffi",
+    suites = ["ffi"],
     shards = 2,
     node = ":node",
     root_status = ":node_test_root",
@@ -1063,7 +1189,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sqlite_tests",
-    suite = "sqlite",
+    suites = ["sqlite"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1075,7 +1201,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wasi_tests",
-    suite = "wasi",
+    suites = ["wasi"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",
@@ -1087,7 +1213,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wasm_allocation_tests",
-    suite = "wasm-allocation",
+    suites = ["wasm-allocation"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1099,7 +1225,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_pseudo_tty_tests",
-    suite = "pseudo-tty",
+    suites = ["pseudo-tty"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",
@@ -1111,7 +1237,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wpt_tests",
-    suite = "wpt",
+    suites = ["wpt"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1123,7 +1249,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_pummel_tests",
-    suite = "pummel",
+    suites = ["pummel"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1135,7 +1261,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_client_proxy_tests",
-    suite = "client-proxy",
+    suites = ["client-proxy"],
     shards = 8,
     node = ":node",
     root_status = ":node_test_root",
@@ -1147,7 +1273,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_test426_tests",
-    suite = "test426",
+    suites = ["test426"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1159,7 +1285,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_v8_updates_tests",
-    suite = "v8-updates",
+    suites = ["v8-updates"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1171,7 +1297,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_benchmark_tests",
-    suite = "benchmark",
+    suites = ["benchmark"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1183,7 +1309,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_benchmark_napi_test",
-    suite = "benchmark/test-benchmark-napi",
+    suites = ["benchmark/test-benchmark-napi"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1195,7 +1321,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_known_issues_tests",
-    suite = "known_issues",
+    suites = ["known_issues"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1207,7 +1333,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sea_tests",
-    suite = "sea",
+    suites = ["sea"],
     shards = 1,
     node = ":node",
     root_status = ":node_test_root",
@@ -1219,7 +1345,7 @@ nodejs_upstream_test_shards(
 
 nodejs_upstream_test_shards(
     name = "node_upstream_embedding_tests",
-    suite = "embedding",
+    suites = ["embedding"],
     shards = 4,
     node = ":node",
     root_status = ":node_test_root",

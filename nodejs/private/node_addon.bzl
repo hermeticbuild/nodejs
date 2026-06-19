@@ -2,7 +2,7 @@
 
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 
-def node_addon(name, output, srcs, copts = [], defines = []):
+def node_addon(name, output, srcs, copts = [], defines = [], deps = []):
     """Builds a shared library and copies it to an upstream .node path."""
     shared_library = name + "_shared_library"
     cc_binary(
@@ -18,7 +18,7 @@ def node_addon(name, output, srcs, copts = [], defines = []):
             no_match_error = "Node.js addons currently support Linux and macOS targets",
         ),
         linkshared = True,
-        deps = [":node_addon_headers"],
+        deps = [":node_addon_headers"] + deps,
     )
     native.genrule(
         name = name,

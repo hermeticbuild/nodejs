@@ -194,6 +194,11 @@ x86_64 shards:
 `NODE_TEST_DIR` under `/tmp` so absolute Unix-domain socket paths remain below
 Linux's 108-byte limit.
 
+`@nodejs_26_3_1//:node_upstream_js_native_api_tutorial_tests` builds the nine
+native addons used by the `2_function_arguments` through `8_passing_wrapped`
+directories and runs their ten JavaScript tests in one Linux x86_64 remote
+action.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 
