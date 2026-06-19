@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "bazel/release.bzl",
+    "bazel/release_metadata.json",
+    "common.gypi",
+    "configure.py",
+    "node.gyp",
+    "src/node_version.h",
+])
+
+filegroup(
+    name = "release_metadata",
+    srcs = ["bazel/release_metadata.json"],
+)
+
+filegroup(
+    name = "configure_audit_sources",
+    srcs = [
+        "common.gypi",
+        "configure.py",
+        "node.gyp",
+    ] + glob([
+        "tools/v8_gypfiles/*.gyp",
+        "tools/v8_gypfiles/*.gypi",
+    ]),
+)

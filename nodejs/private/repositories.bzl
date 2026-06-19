@@ -1,0 +1,131 @@
+"""Repository rule for an official Node.js source release."""
+
+_REQUIRED_SOURCE_FILES = [
+    "common.gypi",
+    "configure.py",
+    "deps/v8/BUILD.bazel",
+    "deps/v8/MODULE.bazel",
+    "deps/v8/bazel/defs.bzl",
+    "node.gyp",
+    "tools/test.py",
+]
+
+def _integer_define(repository_ctx, path, name):
+    prefix = "#define {} ".format(name)
+    values = []
+    for line in repository_ctx.read(path).splitlines():
+        stripped = line.strip()
+        if not stripped.startswith(prefix):
+            continue
+        value = stripped[len(prefix):].strip()
+        if value.isdigit():
+            values.append(int(value))
+    if len(values) != 1:
+        fail("{} must define {} as one integer; found {}".format(path, name, values))
+    return values[0]
+
+def _version(repository_ctx, path, names):
+    return ".".join([
+        str(_integer_define(repository_ctx, path, name))
+        for name in names
+    ])
+
+def _validate_release(repository_ctx):
+    for path in _REQUIRED_SOURCE_FILES:
+        if not repository_ctx.path(path).exists:
+            fail("Node.js {} source archive is missing {}".format(repository_ctx.attr.release, path))
+
+    node_version_path = "src/node_version.h"
+    node_version = _version(
+        repository_ctx,
+        node_version_path,
+        ["NODE_MAJOR_VERSION", "NODE_MINOR_VERSION", "NODE_PATCH_VERSION"],
+    )
+    if node_version != repository_ctx.attr.release:
+        fail("Node.js source version {} does not match requested {}".format(
+            node_version,
+            repository_ctx.attr.release,
+        ))
+    if _integer_define(repository_ctx, node_version_path, "NODE_VERSION_IS_RELEASE") != 1:
+        fail("Node.js {} is not marked as a release".format(repository_ctx.attr.release))
+
+    node_module_version = _integer_define(
+        repository_ctx,
+        node_version_path,
+        "NODE_MODULE_VERSION",
+    )
+    if node_module_version != repository_ctx.attr.node_module_version:
+        fail("Node.js {} module ABI is {}, expected {}".format(
+            repository_ctx.attr.release,
+            node_module_version,
+            repository_ctx.attr.node_module_version,
+        ))
+
+    v8_version = _version(
+        repository_ctx,
+        "deps/v8/include/v8-version.h",
+        ["V8_MAJOR_VERSION", "V8_MINOR_VERSION", "V8_BUILD_NUMBER", "V8_PATCH_LEVEL"],
+    )
+    if v8_version != repository_ctx.attr.v8_version:
+        fail("Node.js {} bundles V8 {}, expected {}".format(
+            repository_ctx.attr.release,
+            v8_version,
+            repository_ctx.attr.v8_version,
+        ))
+
+    uv_version = _version(
+        repository_ctx,
+        "deps/uv/include/uv/version.h",
+        ["UV_VERSION_MAJOR", "UV_VERSION_MINOR", "UV_VERSION_PATCH"],
+    )
+    if uv_version != repository_ctx.attr.uv_version:
+        fail("Node.js {} bundles libuv {}, expected {}".format(
+            repository_ctx.attr.release,
+            uv_version,
+            repository_ctx.attr.uv_version,
+        ))
+
+def _nodejs_source_repository_impl(repository_ctx):
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.urls,
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+    _validate_release(repository_ctx)
+
+    release_metadata = {
+        "node_module_version": repository_ctx.attr.node_module_version,
+        "release": repository_ctx.attr.release,
+        "uv_version": repository_ctx.attr.uv_version,
+        "v8_version": repository_ctx.attr.v8_version,
+    }
+    repository_ctx.file(
+        "bazel/release.bzl",
+        "NODEJS_RELEASE = struct(\n" +
+        "    node_module_version = {node_module_version},\n".format(
+            node_module_version = release_metadata["node_module_version"],
+        ) +
+        "    release = {release},\n".format(release = repr(release_metadata["release"])) +
+        "    uv_version = {uv_version},\n".format(uv_version = repr(release_metadata["uv_version"])) +
+        "    v8_version = {v8_version},\n".format(v8_version = repr(release_metadata["v8_version"])) +
+        ")\n",
+    )
+    repository_ctx.file(
+        "bazel/release_metadata.json",
+        json.encode_indent(release_metadata, indent = "  ") + "\n",
+    )
+    repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
+
+nodejs_source_repository = repository_rule(
+    implementation = _nodejs_source_repository_impl,
+    attrs = {
+        "build_file": attr.label(mandatory = True, allow_single_file = True),
+        "node_module_version": attr.int(mandatory = True),
+        "release": attr.string(mandatory = True),
+        "sha256": attr.string(mandatory = True),
+        "strip_prefix": attr.string(mandatory = True),
+        "urls": attr.string_list(mandatory = True),
+        "uv_version": attr.string(mandatory = True),
+        "v8_version": attr.string(mandatory = True),
+    },
+)

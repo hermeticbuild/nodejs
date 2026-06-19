@@ -1,0 +1,14 @@
+module(
+    name = "nodejs_unsupported_version_test",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "nodejs", version = "0.0.0")
+local_path_override(
+    module_name = "nodejs",
+    path = "../..",
+)
+
+nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
+nodejs.version(version = "26.3.2")
+use_repo(nodejs, "nodejs_26_3_2")

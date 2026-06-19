@@ -1,0 +1,31 @@
+module(
+    name = "nodejs",
+    version = "0.0.0",
+    bazel_compatibility = [">=9.1.1"],
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "llvm", version = "0.8.8")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "rules_cc_autoconf", version = "0.12.1")
+bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_shell", version = "0.6.1")
+
+archive_override(
+    module_name = "llvm",
+    integrity = "sha256-sSr0NUsY06DQwPoxgh+drMpOkeG/N7Lx+KxWkZTFUDM=",
+    strip_prefix = "hermetic-llvm-85d29dc776702879eb9cbcbe560428df7fd24e64",
+    urls = ["https://github.com/hermeticbuild/hermetic-llvm/archive/85d29dc776702879eb9cbcbe560428df7fd24e64.tar.gz"],
+)
+
+archive_override(
+    module_name = "rules_cc",
+    integrity = "sha256-yLVbuU8I/7wTSmCifWYUqY45Q5aMRqWZkkkX6uXaFio=",
+    strip_prefix = "rules_cc-cb995b18db7c855fe95cacf0a0e84fda8c58725d",
+    urls = ["https://github.com/ArchangelX360/rules_cc/archive/cb995b18db7c855fe95cacf0a0e84fda8c58725d.tar.gz"],
+)
+
+nodejs = use_extension("//nodejs:extensions.bzl", "nodejs", dev_dependency = True)
+nodejs.version(version = "26.3.1")
+use_repo(nodejs, "nodejs_26_3_1")
