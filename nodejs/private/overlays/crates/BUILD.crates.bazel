@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_rs//rs:rust_static_library.bzl", "rust_static_library")
+
 package(default_visibility = ["//visibility:public"])
 
 exports_files([
@@ -15,12 +18,18 @@ filegroup(
     ],
 )
 
-alias(
+rust_static_library(
     name = "temporal_capi",
-    actual = "//vendor/temporal_capi",
+    srcs = ["src/lib.rs"],
+    crate_name = "node_crates",
+    crate_root = "src/lib.rs",
+    edition = "2021",
+    deps = ["@nodejs_crates//:temporal_capi"],
 )
 
-alias(
+cc_library(
     name = "temporal_capi_cpp",
-    actual = "//vendor/temporal_capi:temporal_capi_cpp",
+    hdrs = glob(["vendor/temporal_capi/bindings/cpp/**/*.hpp"]),
+    strip_include_prefix = "vendor/temporal_capi/bindings/cpp",
+    deps = [":temporal_capi"],
 )

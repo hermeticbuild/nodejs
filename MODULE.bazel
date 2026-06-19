@@ -112,7 +112,7 @@ use_repo(nodejs, "nodejs_26_3_1", "nodejs_crates_26_3_1", "nodejs_icu_26_3_1", "
 
 nodejs_crates = use_extension("@rules_rs//rs:extensions.bzl", "crate", dev_dependency = True)
 nodejs_crates.from_cargo(
-    name = "nodejs_crates_generated",
+    name = "nodejs_crates",
     cargo_lock = "@nodejs_crates_26_3_1//:Cargo.lock",
     cargo_toml = "@nodejs_crates_26_3_1//:Cargo.toml",
     platform_triples = [
@@ -124,4 +124,4 @@ nodejs_crates.from_cargo(
     ],
     use_legacy_rules_rust_platforms = True,
 )
-use_repo(nodejs_crates, "nodejs_crates_generated")
+use_repo(nodejs_crates, "nodejs_crates")

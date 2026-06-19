@@ -9,11 +9,9 @@ load(
     "nodejs_v8_repository",
 )
 load("//nodejs/private:versions.bzl", "NODEJS_RELEASES")
-load("//nodejs/private/overlays/crates:files.bzl", "CRATES_BUILD_FILES")
 
 _BUILD_FILE = Label("//:nodejs.BUILD.bazel")
 _CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel")
-_CRATES_DEFS_FILE = Label("//nodejs/private/overlays/crates:rust_crate_defs.bzl")
 _ICU_BUILD_FILE = Label("//nodejs/private/overlays/icu:BUILD.icu.bazel")
 _NODEJS_PATCHES = [
     Label("//nodejs/private/patches/nodejs:histogram-windows-intrinsic.patch"),
@@ -82,8 +80,6 @@ def _nodejs_impl(module_ctx):
         nodejs_crates_repository(
             name = release.crates_repository_name,
             build_file = _CRATES_BUILD_FILE,
-            build_files = CRATES_BUILD_FILES,
-            defs_file = _CRATES_DEFS_FILE,
             sha256 = release.sha256,
             strip_prefix = release.crates_strip_prefix,
             urls = release.urls,
