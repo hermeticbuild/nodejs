@@ -200,18 +200,46 @@ _LIBUV_UNIX_SOURCES = [
     "deps/uv/src/unix/udp.c",
 ]
 
+_LIBUV_WINDOWS_SOURCES = [
+    "deps/uv/src/win/async.c",
+    "deps/uv/src/win/core.c",
+    "deps/uv/src/win/detect-wakeup.c",
+    "deps/uv/src/win/dl.c",
+    "deps/uv/src/win/error.c",
+    "deps/uv/src/win/fs-event.c",
+    "deps/uv/src/win/fs.c",
+    "deps/uv/src/win/getaddrinfo.c",
+    "deps/uv/src/win/getnameinfo.c",
+    "deps/uv/src/win/handle.c",
+    "deps/uv/src/win/loop-watcher.c",
+    "deps/uv/src/win/pipe.c",
+    "deps/uv/src/win/poll.c",
+    "deps/uv/src/win/process-stdio.c",
+    "deps/uv/src/win/process.c",
+    "deps/uv/src/win/signal.c",
+    "deps/uv/src/win/snprintf.c",
+    "deps/uv/src/win/stream.c",
+    "deps/uv/src/win/tcp.c",
+    "deps/uv/src/win/thread.c",
+    "deps/uv/src/win/tty.c",
+    "deps/uv/src/win/udp.c",
+    "deps/uv/src/win/util.c",
+    "deps/uv/src/win/winapi.c",
+    "deps/uv/src/win/winsock.c",
+]
+
 cc_library(
     name = "libuv",
-    srcs = _LIBUV_COMMON_SOURCES + _LIBUV_UNIX_SOURCES + select(
+    srcs = _LIBUV_COMMON_SOURCES + select(
         {
-            ":target_linux": [
+            ":target_linux": _LIBUV_UNIX_SOURCES + [
                 "deps/uv/src/unix/linux.c",
                 "deps/uv/src/unix/procfs-exepath.c",
                 "deps/uv/src/unix/proctitle.c",
                 "deps/uv/src/unix/random-getrandom.c",
                 "deps/uv/src/unix/random-sysctl-linux.c",
             ],
-            ":target_macos": [
+            ":target_macos": _LIBUV_UNIX_SOURCES + [
                 "deps/uv/src/unix/bsd-ifaddrs.c",
                 "deps/uv/src/unix/darwin-proctitle.c",
                 "deps/uv/src/unix/darwin.c",
@@ -220,32 +248,41 @@ cc_library(
                 "deps/uv/src/unix/proctitle.c",
                 "deps/uv/src/unix/random-getentropy.c",
             ],
+            ":target_windows": _LIBUV_WINDOWS_SOURCES,
         },
-        no_match_error = "libuv currently supports Linux and macOS targets",
+        no_match_error = "libuv currently supports Linux, macOS, and Windows targets",
     ),
     hdrs = glob([
         "deps/uv/include/**/*.h",
         "deps/uv/src/**/*.h",
     ]),
-    copts = [
-        "-fno-strict-aliasing",
-        "-Wno-unused-parameter",
-    ],
-    defines = [
-        "_FILE_OFFSET_BITS=64",
-        "_LARGEFILE_SOURCE",
-    ] + select(
+    copts = select({
+        ":target_windows": [],
+        "//conditions:default": [
+            "-fno-strict-aliasing",
+            "-Wno-unused-parameter",
+        ],
+    }),
+    defines = select(
         {
             ":target_linux": [
+                "_FILE_OFFSET_BITS=64",
                 "_GNU_SOURCE",
+                "_LARGEFILE_SOURCE",
                 "_POSIX_C_SOURCE=200112",
             ],
             ":target_macos": [
                 "_DARWIN_UNLIMITED_SELECT=1",
                 "_DARWIN_USE_64_BIT_INODE=1",
+                "_FILE_OFFSET_BITS=64",
+                "_LARGEFILE_SOURCE",
+            ],
+            ":target_windows": [
+                "_GNU_SOURCE",
+                "_WIN32_WINNT=0x0602",
             ],
         },
-        no_match_error = "libuv currently supports Linux and macOS targets",
+        no_match_error = "libuv currently supports Linux, macOS, and Windows targets",
     ),
     includes = [
         "deps/uv/include",
@@ -263,8 +300,20 @@ cc_library(
                 "-lm",
                 "-lpthread",
             ],
+            ":target_windows": [
+                "advapi32.lib",
+                "dbghelp.lib",
+                "iphlpapi.lib",
+                "ole32.lib",
+                "psapi.lib",
+                "shell32.lib",
+                "user32.lib",
+                "userenv.lib",
+                "uuid.lib",
+                "ws2_32.lib",
+            ],
         },
-        no_match_error = "libuv currently supports Linux and macOS targets",
+        no_match_error = "libuv currently supports Linux, macOS, and Windows targets",
     ),
 )
 
