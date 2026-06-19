@@ -68,6 +68,10 @@ encode/decode round trip.
 configuration from Node.js's bundled nghttp2 1.69.0. Its test checks the
 version API and creates a client session.
 
+`@nodejs_26_3_1//:zstd` builds the exact source list from Node.js's bundled
+zstd 1.5.7 without linking a host zstd library. Its test checks the version API
+and a compression/decompression round trip.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
