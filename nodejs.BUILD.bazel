@@ -607,7 +607,10 @@ cc_binary(
     copts = ["-std=c++20"],
     linkopts = select(
         {
-            ":target_linux": ["-Wl,--export-dynamic"],
+            ":target_linux": [
+                "-Wl,--export-dynamic",
+                "-Wl,--hash-style=sysv",
+            ],
             ":target_macos": [],
         },
         no_match_error = "node currently supports Linux and macOS targets",
@@ -733,6 +736,21 @@ py_binary(
         ":js_native_api_test_symbol_node",
         ":js_native_api_test_typedarray_node",
         ":js_native_api_test_typedarray_sharedarraybuffer_node",
+        ":node_api_1_hello_world_binding_node",
+        ":node_api_test_async_node",
+        ":node_api_test_env_teardown_gc_binding_node",
+        ":node_api_test_exception_node",
+        ":node_api_test_fatal_exception_node",
+        ":node_api_test_fatal_node",
+        ":node_api_test_general_node",
+        ":node_api_test_init_order_node",
+        ":node_api_test_null_init_node",
+        ":node_api_test_sea_addon_binding_node",
+        ":node_api_test_uv_loop_node",
+        ":node_api_test_uv_threadpool_size_node",
+        ":node_api_test_worker_buffer_callback_binding_node",
+        ":node_api_test_worker_terminate_finalization_node",
+        ":node_api_test_worker_terminate_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -1175,6 +1193,113 @@ node_addon(
 )
 
 node_addon(
+    name = "node_api_1_hello_world_binding_node",
+    output = "test/node-api/1_hello_world/build/Release/binding.node",
+    srcs = ["test/node-api/1_hello_world/binding.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_async_node",
+    output = "test/node-api/test_async/build/Release/test_async.node",
+    srcs = ["test/node-api/test_async/test_async.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_env_teardown_gc_binding_node",
+    output = "test/node-api/test_env_teardown_gc/build/Release/binding.node",
+    srcs = ["test/node-api/test_env_teardown_gc/binding.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_exception_node",
+    output = "test/node-api/test_exception/build/Release/test_exception.node",
+    srcs = ["test/node-api/test_exception/test_exception.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_fatal_node",
+    output = "test/node-api/test_fatal/build/Release/test_fatal.node",
+    srcs = ["test/node-api/test_fatal/test_fatal.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_fatal_exception_node",
+    output = "test/node-api/test_fatal_exception/build/Release/test_fatal_exception.node",
+    srcs = ["test/node-api/test_fatal_exception/test_fatal_exception.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_general_node",
+    output = "test/node-api/test_general/build/Release/test_general.node",
+    srcs = ["test/node-api/test_general/test_general.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_init_order_node",
+    output = "test/node-api/test_init_order/build/Release/test_init_order.node",
+    srcs = ["test/node-api/test_init_order/test_init_order.cc"],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_null_init_node",
+    output = "test/node-api/test_null_init/build/Release/test_null_init.node",
+    srcs = ["test/node-api/test_null_init/test_null_init.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_sea_addon_binding_node",
+    output = "test/node-api/test_sea_addon/build/Release/binding.node",
+    srcs = ["test/node-api/test_sea_addon/binding.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_uv_loop_node",
+    output = "test/node-api/test_uv_loop/build/Release/test_uv_loop.node",
+    srcs = ["test/node-api/test_uv_loop/test_uv_loop.cc"],
+    copts = ["-std=c++20"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_uv_threadpool_size_node",
+    output = "test/node-api/test_uv_threadpool_size/build/Release/test_uv_threadpool_size.node",
+    srcs = ["test/node-api/test_uv_threadpool_size/test_uv_threadpool_size.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_worker_buffer_callback_binding_node",
+    output = "test/node-api/test_worker_buffer_callback/build/Release/binding.node",
+    srcs = ["test/node-api/test_worker_buffer_callback/test_worker_buffer_callback.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_worker_terminate_node",
+    output = "test/node-api/test_worker_terminate/build/Release/test_worker_terminate.node",
+    srcs = ["test/node-api/test_worker_terminate/test_worker_terminate.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "node_api_test_worker_terminate_finalization_node",
+    output = "test/node-api/test_worker_terminate_finalization/build/Release/test_worker_terminate_finalization.node",
+    srcs = ["test/node-api/test_worker_terminate_finalization/test_worker_terminate_finalization.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
@@ -1456,6 +1581,34 @@ nodejs_upstream_test_shards(
 nodejs_upstream_test_shards(
     name = "node_upstream_js_native_api_tests",
     suites = ["js-native-api"],
+    shards = 2,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_node_api_default_compile_tests",
+    suites = [
+        "node-api/1_hello_world",
+        "node-api/test_async",
+        "node-api/test_env_teardown_gc",
+        "node-api/test_exception",
+        "node-api/test_fatal",
+        "node-api/test_fatal_exception",
+        "node-api/test_general",
+        "node-api/test_init_order",
+        "node-api/test_null_init",
+        "node-api/test_sea_addon",
+        "node-api/test_uv_loop",
+        "node-api/test_uv_threadpool_size",
+        "node-api/test_worker_buffer_callback",
+        "node-api/test_worker_terminate",
+        "node-api/test_worker_terminate_finalization",
+    ],
     shards = 2,
     node = ":node",
     root_status = ":node_test_root",

@@ -211,6 +211,16 @@ addons used by the upstream `js-native-api` suite and runs all 56 JavaScript
 tests in two Linux x86_64 remote shards. CI runs this complete target; the
 tutorial and value targets remain available for focused validation.
 
+`@nodejs_26_3_1//:node_upstream_node_api_default_compile_tests` builds 15
+single-target `node-api` addons whose `binding.gyp` targets use no `defines` or
+target-specific compiler flags, then runs their 23 JavaScript tests in two
+Linux x86_64 remote shards.
+
+`node_addon` passes `-UNDEBUG` because node-gyp addon targets do not inherit
+Bazel's `opt`-mode `NDEBUG` definition. The Linux `node` executable uses the
+SysV ELF hash table with `--export-dynamic`; this preserves Node-API symbol
+lookup after postject rewrites the PIE executable in `test_sea_addon`.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 

@@ -8,7 +8,7 @@ def node_addon(name, output, srcs, copts = [], defines = [], deps = []):
     cc_binary(
         name = shared_library,
         srcs = srcs,
-        copts = copts,
+        copts = ["-UNDEBUG"] + copts,
         defines = defines,
         linkopts = select(
             {
