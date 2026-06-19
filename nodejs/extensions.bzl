@@ -24,6 +24,7 @@ _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
     Label("//nodejs/private/patches/v8:temporal.patch"),
     Label("//nodejs/private/patches/v8:windows-defines.patch"),
+    Label("//nodejs/private/patches/v8:windows-arm64-cpu.patch"),
     Label("//nodejs/private/patches/v8:windows-libraries.patch"),
     Label("//nodejs/private/patches/v8:nodejs-config.patch"),
     Label("//nodejs/private/patches/v8:zlib.patch"),
