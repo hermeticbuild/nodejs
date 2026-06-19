@@ -19,9 +19,12 @@ _NODEJS_PATCHES = [
 _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast_float/src:BUILD.fast_float.bazel")
 _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:hermetic-toolchain.patch"),
+    Label("//nodejs/private/patches/v8:llvm-ml.patch"),
     Label("//nodejs/private/patches/v8:nodejs-icu.patch"),
     Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
     Label("//nodejs/private/patches/v8:temporal.patch"),
+    Label("//nodejs/private/patches/v8:windows-defines.patch"),
+    Label("//nodejs/private/patches/v8:windows-libraries.patch"),
     Label("//nodejs/private/patches/v8:nodejs-config.patch"),
     Label("//nodejs/private/patches/v8:zlib.patch"),
     Label("//nodejs/private/patches/v8:simd256.patch"),

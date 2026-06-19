@@ -1,0 +1,37 @@
+diff --git a/toolchain/args/windows/BUILD.bazel b/toolchain/args/windows/BUILD.bazel
+index 835974e..2dd34ec 100644
+--- a/toolchain/args/windows/BUILD.bazel
++++ b/toolchain/args/windows/BUILD.bazel
+@@ -89,26 +89,32 @@ cc_args(
+         # >>> referenced 285 more times
+         "/imsvc",
+         "{msvc_include}",
++        "-Xclang",
++        "-ivfsoverlay",
++        "-Xclang",
++        "{winsdk_vfs_overlay_directory}/windows_sdk_vfs_overlay.yaml",
+         "/imsvc",
+         "{winsdk_ucrt_include}",
+         "/imsvc",
+         "{winsdk_shared_include}",
+         "/imsvc",
+         "{winsdk_um_include}",
+         "/imsvc",
+         "{winsdk_winrt_include}",
+     ],
+     data = [
+         "@msvc_runtime//:msvc_include",
+         "@windows_sdk//:winsdk_shared_include",
+         "@windows_sdk//:winsdk_ucrt_include",
+         "@windows_sdk//:winsdk_um_include",
+         "@windows_sdk//:winsdk_winrt_include",
++        "@windows_sdk//:windows_sdk_vfs_overlay_directory",
+     ],
+     format = {
+         "msvc_include": "@msvc_runtime//:msvc_include",
++        "winsdk_vfs_overlay_directory": "@windows_sdk//:windows_sdk_vfs_overlay_directory",
+         "winsdk_ucrt_include": "@windows_sdk//:winsdk_ucrt_include",
+         "winsdk_shared_include": "@windows_sdk//:winsdk_shared_include",
+         "winsdk_um_include": "@windows_sdk//:winsdk_um_include",
+         "winsdk_winrt_include": "@windows_sdk//:winsdk_winrt_include",
+     },

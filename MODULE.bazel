@@ -21,6 +21,12 @@ bazel_dep(name = "rules_rs", version = "0.0.86")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "tar.bzl", version = "0.10.5")
 bazel_dep(name = "windows_support", version = "0.2.0")
+single_version_override(
+    module_name = "windows_support",
+    patch_strip = 1,
+    patches = ["//nodejs/private/patches/windows_support:windows-sdk-vfs-overlay.patch"],
+    version = "0.2.0",
+)
 
 msvc_runtime = use_extension("@windows_support//windows:extensions.bzl", "msvc_runtime")
 use_repo(msvc_runtime, "msvc_runtime")
@@ -34,6 +40,8 @@ archive_override(
     patch_strip = 1,
     patches = [
         "//nodejs/private/patches/llvm:msvc-cxx-standard.patch",
+        "//nodejs/private/patches/llvm:msvc-module-map.patch",
+        "//nodejs/private/patches/llvm:msvc-vfs-overlay.patch",
         "//nodejs/private/patches/llvm:msvc-runtime-features.patch",
         "//nodejs/private/patches/llvm:msvc-warning-level.patch",
     ],
@@ -80,6 +88,10 @@ pip.parse(
 use_repo(pip, "v8_python_deps")
 
 rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+rules_rust.patch(
+    patches = ["//nodejs/private/patches/rules_rs:windows-bcrypt-case.patch"],
+    strip = 1,
+)
 use_repo(rules_rust, "rules_rust")
 
 rust = use_extension(

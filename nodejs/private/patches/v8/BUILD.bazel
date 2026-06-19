@@ -1,9 +1,12 @@
 exports_files([
     "hermetic-toolchain.patch",
+    "llvm-ml.patch",
     "nodejs-config.patch",
     "nodejs-icu.patch",
     "nodejs-targets.patch",
     "simd256.patch",
     "temporal.patch",
+    "windows-defines.patch",
+    "windows-libraries.patch",
     "zlib.patch",
 ])

@@ -1,5 +1,7 @@
 exports_files([
     "msvc-cxx-standard.patch",
+    "msvc-module-map.patch",
+    "msvc-vfs-overlay.patch",
     "msvc-runtime-features.patch",
     "msvc-warning-level.patch",
 ])

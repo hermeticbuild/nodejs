@@ -55,7 +55,6 @@ _NODE_TARGET_LOCAL_DEFINES = [
     "OPENSSL_API_COMPAT=0x10100000L",
     "SQLITE_ENABLE_SESSION",
     "V8_DEPRECATION_WARNINGS=1",
-    "__POSIX__",
 ] + select(
     {
         ":target_x86_64": ["NODE_ARCH=\\\"x64\\\""],
@@ -64,10 +63,26 @@ _NODE_TARGET_LOCAL_DEFINES = [
     no_match_error = "Node.js currently supports x86_64 and arm64 targets",
 ) + select(
     {
-        ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
-        ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
+        ":target_linux": [
+            "NODE_PLATFORM=\\\"linux\\\"",
+            "__POSIX__",
+        ],
+        ":target_macos": [
+            "NODE_PLATFORM=\\\"darwin\\\"",
+            "__POSIX__",
+        ],
+        ":target_windows": [
+            "BUILDING_UV_SHARED=1",
+            "BUILDING_V8_SHARED=1",
+            "NODE_PLATFORM=\\\"win\\\"",
+            "NOMINMAX",
+            "WIN32",
+            "_CRT_NONSTDC_NO_DEPRECATE",
+            "_CRT_SECURE_NO_DEPRECATE",
+            "_HAS_EXCEPTIONS=0",
+        ],
     },
-    no_match_error = "Node.js currently supports Linux and macOS targets",
+    no_match_error = "Node.js currently supports Linux, macOS, and Windows targets",
 )
 
 config_setting(
@@ -260,8 +275,8 @@ cc_library(
             ],
             ":target_macos": _LIBUV_UNIX_SOURCES + [
                 "deps/uv/src/unix/bsd-ifaddrs.c",
-                "deps/uv/src/unix/darwin-proctitle.c",
                 "deps/uv/src/unix/darwin.c",
+                "deps/uv/src/unix/darwin-proctitle.c",
                 "deps/uv/src/unix/fsevents.c",
                 "deps/uv/src/unix/kqueue.c",
                 "deps/uv/src/unix/proctitle.c",
@@ -296,10 +311,7 @@ cc_library(
                 "_FILE_OFFSET_BITS=64",
                 "_LARGEFILE_SOURCE",
             ],
-            ":target_windows": [
-                "_GNU_SOURCE",
-                "_WIN32_WINNT=0x0602",
-            ],
+            ":target_windows": [],
         },
         no_match_error = "libuv currently supports Linux, macOS, and Windows targets",
     ),
@@ -334,6 +346,13 @@ cc_library(
         },
         no_match_error = "libuv currently supports Linux, macOS, and Windows targets",
     ),
+    local_defines = select({
+        ":target_windows": [
+            "_GNU_SOURCE",
+            "_WIN32_WINNT=0x0602",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_binary(
@@ -371,6 +390,7 @@ cc_binary(
 
 node_javascript(
     name = "node_javascript",
+    out = "generated/node_javascript.cc",
     config_gypi = ":config_gypi",
     dependency_files = [
         "//deps/v8:tools/splaytree.mjs",
@@ -398,7 +418,6 @@ node_javascript(
         allow_empty = True,
     ),
     node_js2c = ":node_js2c",
-    out = "generated/node_javascript.cc",
     root_marker = "node.gyp",
 )
 
@@ -568,20 +587,32 @@ cc_library(
         ":node_javascript",
     ],
     hdrs = glob(["src/**/*.h"]) + [
-        ":v8_inspector_protocol_json",
         "deps/postject/postject-api.h",
+        ":v8_inspector_protocol_json",
     ],
-    copts = cxx20_copts() + [
-        "-O3",
-        "-Werror=ctad-maybe-unsupported",
-        "-Werror=extra-semi",
-        "-Werror=undefined-inline",
-    ] + select(
+    copts = cxx20_copts() + select(
         {
-            ":target_linux": ["-fno-omit-frame-pointer"],
-            ":target_macos": [],
+            ":target_linux": [
+                "-O3",
+                "-Werror=ctad-maybe-unsupported",
+                "-Werror=extra-semi",
+                "-Werror=undefined-inline",
+                "-fno-omit-frame-pointer",
+            ],
+            ":target_macos": [
+                "-O3",
+                "-Werror=ctad-maybe-unsupported",
+                "-Werror=extra-semi",
+                "-Werror=undefined-inline",
+            ],
+            ":target_windows": [
+                "/O2",
+                "/clang:-Werror=ctad-maybe-unsupported",
+                "/clang:-Werror=extra-semi",
+                "/clang:-Werror=undefined-inline",
+            ],
         },
-        no_match_error = "libnode currently supports Linux and macOS targets",
+        no_match_error = "libnode currently supports Linux, macOS, and Windows targets",
     ),
     includes = [
         "deps/postject",
@@ -590,7 +621,6 @@ cc_library(
         "generated/node_inspector/src",
         "src",
     ],
-    local_defines = _NODE_TARGET_LOCAL_DEFINES,
     linkopts = select(
         {
             ":target_linux": [],
@@ -598,9 +628,16 @@ cc_library(
                 "-framework CoreFoundation",
                 "-framework Security",
             ],
+            ":target_windows": [
+                "dbghelp.lib",
+                "psapi.lib",
+                "winmm.lib",
+                "ws2_32.lib",
+            ],
         },
-        no_match_error = "libnode currently supports Linux and macOS targets",
+        no_match_error = "libnode currently supports Linux, macOS, and Windows targets",
     ),
+    local_defines = _NODE_TARGET_LOCAL_DEFINES,
     deps = [
         ":ada",
         ":brotli",
@@ -686,8 +723,9 @@ cc_binary(
                 "-Wl,--hash-style=sysv",
             ],
             ":target_macos": [],
+            ":target_windows": [],
         },
-        no_match_error = "node currently supports Linux and macOS targets",
+        no_match_error = "node currently supports Linux, macOS, and Windows targets",
     ),
     local_defines = ["NODE_WANT_INTERNALS=1"] + select(
         {
@@ -699,8 +737,9 @@ cc_binary(
         {
             ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
             ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
+            ":target_windows": ["NODE_PLATFORM=\\\"win\\\""],
         },
-        no_match_error = "node currently supports Linux and macOS targets",
+        no_match_error = "node currently supports Linux, macOS, and Windows targets",
     ),
     deps = [":node_snapshot"],
 )
@@ -736,8 +775,8 @@ cc_library(
 cc_library(
     name = "js_native_api_test_headers",
     hdrs = [
-        "test/js-native-api/common-inl.h",
         "test/js-native-api/common.h",
+        "test/js-native-api/common-inl.h",
         "test/js-native-api/entry_point.h",
     ],
     deps = [":node_addon_headers"],
@@ -768,13 +807,15 @@ copy_to_directory(
 py_binary(
     name = "node_test_runner",
     srcs = [
-        "@nodejs//nodejs/private:node_test_runner.py",
         "tools/test.py",
         "tools/utils.py",
+        "@nodejs//nodejs/private:node_test_runner.py",
     ],
     data = [
         "CHANGELOG.md",
         "deps/undici/src/package.json",
+        "src/node_options.cc",
+        "src/node_version.h",
         ":benchmark_napi_buffer_binding_node",
         ":benchmark_napi_buffer_v8_binding_node",
         ":benchmark_napi_create_object_with_properties_binding_node",
@@ -803,8 +844,8 @@ py_binary(
         ":js_native_api_test_cannot_run_js_node",
         ":js_native_api_test_constructor_node",
         ":js_native_api_test_conversions_node",
-        ":js_native_api_test_date_node",
         ":js_native_api_test_dataview_node",
+        ":js_native_api_test_date_node",
         ":js_native_api_test_error_node",
         ":js_native_api_test_exception_node",
         ":js_native_api_test_finalizer_node",
@@ -828,9 +869,9 @@ py_binary(
         ":js_native_api_test_typedarray_node",
         ":js_native_api_test_typedarray_sharedarraybuffer_node",
         ":node_api_1_hello_world_binding_node",
-        ":node_api_test_async_node",
         ":node_api_test_async_cleanup_hook_binding_node",
         ":node_api_test_async_context_binding_node",
+        ":node_api_test_async_node",
         ":node_api_test_buffer_finalizer_node",
         ":node_api_test_buffer_node",
         ":node_api_test_callback_scope_binding_node",
@@ -862,6 +903,8 @@ py_binary(
         ":node_api_test_worker_terminate_node",
         ":node_test_doc_api",
         ":node_test_doc_modules",
+        ":test/addons/register-signal-handler/build/Release/binding.node",
+        ":test/addons/uv-handle-leak/build/Release/binding.node",
         ":test_addon_async_cleanup_hook_binding_node",
         ":test_addon_async_hello_world_binding_node",
         ":test_addon_async_hooks_id_binding_node",
@@ -871,16 +914,16 @@ py_binary(
         ":test_addon_cppgc_object_binding_node",
         ":test_addon_dlopen_ping_pong_binding_node",
         ":test_addon_dlopen_ping_pong_ping_so",
+        ":test_addon_errno_exception_binding_node",
         ":test_addon_esm_binding_node",
         ":test_addon_esm_export_default_binding_node",
         ":test_addon_esm_export_primitive_binding_node",
         ":test_addon_esm_package_binding_node",
-        ":test_addon_errno_exception_binding_node",
         ":test_addon_force_context_aware_binding_node",
+        ":test_addon_heap_profiler_binding_node",
         ":test_addon_hello_world_2_binding_node",
         ":test_addon_hello_world_binding_node",
         ":test_addon_hello_world_function_export_binding_node",
-        ":test_addon_heap_profiler_binding_node",
         ":test_addon_load_long_path_binding_node",
         ":test_addon_make_callback_binding_node",
         ":test_addon_make_callback_domain_warning_binding_node",
@@ -892,15 +935,15 @@ py_binary(
         ":test_addon_node_module_version_binding_node",
         ":test_addon_non_node_context_binding_node",
         ":test_addon_not_a_binding_node",
+        ":test_addon_null_buffer_neuter_binding_node",
         ":test_addon_openssl_binding_node",
         ":test_addon_openssl_get_ssl_ctx_binding_node",
         ":test_addon_openssl_providers_binding_node",
         ":test_addon_openssl_test_engine",
-        ":test_addon_null_buffer_neuter_binding_node",
         ":test_addon_parse_encoding_binding_node",
+        ":test_addon_repl_domain_abort_binding_node",
         ":test_addon_report_api_binding_node",
         ":test_addon_report_fatalerror_binding_node",
-        ":test_addon_repl_domain_abort_binding_node",
         ":test_addon_request_interrupt_binding_node",
         ":test_addon_stringbytes_external_exceed_max_binding_node",
         ":test_addon_symlinked_module_binding_node",
@@ -908,11 +951,7 @@ py_binary(
         ":test_addon_worker_addon_binding_node",
         ":test_addon_worker_buffer_callback_binding_node",
         ":test_addon_zlib_binding_node",
-        ":test/addons/register-signal-handler/build/Release/binding.node",
-        ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
-        "src/node_options.cc",
-        "src/node_version.h",
     ] + glob(
         [
             "benchmark/**",
@@ -954,8 +993,8 @@ filegroup(
 
 cc_binary(
     name = "node_test_getaddrinfo.so",
-    additional_linker_inputs = ["@nodejs//nodejs/private:node_test_getaddrinfo.map"],
     srcs = ["@nodejs//nodejs/private:node_test_getaddrinfo.c"],
+    additional_linker_inputs = ["@nodejs//nodejs/private:node_test_getaddrinfo.map"],
     linkopts = [
         "-ldl",
         "-pthread",
@@ -1016,834 +1055,834 @@ cc_binary(
 
 node_addon(
     name = "register_signal_handler_binding_node",
-    output = "test/addons/register-signal-handler/build/Release/binding.node",
     srcs = ["test/addons/register-signal-handler/binding.cc"],
     copts = cxx20_copts(),
+    output = "test/addons/register-signal-handler/build/Release/binding.node",
 )
 
 node_addon(
     name = "uv_handle_leak_binding_node",
-    output = "test/addons/uv-handle-leak/build/Release/binding.node",
     srcs = ["test/addons/uv-handle-leak/binding.cc"],
     copts = cxx20_copts(),
+    output = "test/addons/uv-handle-leak/build/Release/binding.node",
 )
 
 node_addon(
     name = "js_native_api_2_function_arguments_node",
-    output = "test/js-native-api/2_function_arguments/build/Release/2_function_arguments.node",
     srcs = ["test/js-native-api/2_function_arguments/2_function_arguments.c"],
+    output = "test/js-native-api/2_function_arguments/build/Release/2_function_arguments.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_3_callbacks_node",
-    output = "test/js-native-api/3_callbacks/build/Release/3_callbacks.node",
     srcs = ["test/js-native-api/3_callbacks/3_callbacks.c"],
+    output = "test/js-native-api/3_callbacks/build/Release/3_callbacks.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_4_object_factory_node",
-    output = "test/js-native-api/4_object_factory/build/Release/4_object_factory.node",
     srcs = ["test/js-native-api/4_object_factory/4_object_factory.c"],
+    output = "test/js-native-api/4_object_factory/build/Release/4_object_factory.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_5_function_factory_node",
-    output = "test/js-native-api/5_function_factory/build/Release/5_function_factory.node",
     srcs = ["test/js-native-api/5_function_factory/5_function_factory.c"],
+    output = "test/js-native-api/5_function_factory/build/Release/5_function_factory.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_6_object_wrap_myobject_node",
-    output = "test/js-native-api/6_object_wrap/build/Release/myobject.node",
     srcs = [
         "test/js-native-api/6_object_wrap/myobject.cc",
         "test/js-native-api/6_object_wrap/myobject.h",
     ],
     copts = cxx20_copts(),
+    output = "test/js-native-api/6_object_wrap/build/Release/myobject.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_6_object_wrap_myobject_basic_finalizer_node",
-    output = "test/js-native-api/6_object_wrap/build/Release/myobject_basic_finalizer.node",
     srcs = [
         "test/js-native-api/6_object_wrap/myobject.cc",
         "test/js-native-api/6_object_wrap/myobject.h",
     ],
     copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "test/js-native-api/6_object_wrap/build/Release/myobject_basic_finalizer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_6_object_wrap_nested_wrap_node",
-    output = "test/js-native-api/6_object_wrap/build/Release/nested_wrap.node",
     srcs = [
         "test/js-native-api/6_object_wrap/nested_wrap.cc",
         "test/js-native-api/6_object_wrap/nested_wrap.h",
     ],
     copts = cxx20_copts(),
     defines = ["NAPI_VERSION=10"],
+    output = "test/js-native-api/6_object_wrap/build/Release/nested_wrap.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_7_factory_wrap_node",
-    output = "test/js-native-api/7_factory_wrap/build/Release/7_factory_wrap.node",
     srcs = [
         "test/js-native-api/7_factory_wrap/7_factory_wrap.cc",
         "test/js-native-api/7_factory_wrap/myobject.cc",
         "test/js-native-api/7_factory_wrap/myobject.h",
     ],
     copts = cxx20_copts(),
+    output = "test/js-native-api/7_factory_wrap/build/Release/7_factory_wrap.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_8_passing_wrapped_node",
-    output = "test/js-native-api/8_passing_wrapped/build/Release/8_passing_wrapped.node",
     srcs = [
         "test/js-native-api/8_passing_wrapped/8_passing_wrapped.cc",
         "test/js-native-api/8_passing_wrapped/myobject.cc",
         "test/js-native-api/8_passing_wrapped/myobject.h",
     ],
     copts = cxx20_copts(),
+    output = "test/js-native-api/8_passing_wrapped/build/Release/8_passing_wrapped.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_array_node",
-    output = "test/js-native-api/test_array/build/Release/test_array.node",
     srcs = ["test/js-native-api/test_array/test_array.c"],
+    output = "test/js-native-api/test_array/build/Release/test_array.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_bigint_node",
-    output = "test/js-native-api/test_bigint/build/Release/test_bigint.node",
     srcs = ["test/js-native-api/test_bigint/test_bigint.c"],
+    output = "test/js-native-api/test_bigint/build/Release/test_bigint.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_constructor_node",
-    output = "test/js-native-api/test_constructor/build/Release/test_constructor.node",
     srcs = [
         "test/js-native-api/test_constructor/test_constructor.c",
         "test/js-native-api/test_constructor/test_null.c",
         "test/js-native-api/test_constructor/test_null.h",
     ],
+    output = "test/js-native-api/test_constructor/build/Release/test_constructor.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_conversions_node",
-    output = "test/js-native-api/test_conversions/build/Release/test_conversions.node",
     srcs = [
         "test/js-native-api/test_conversions/test_conversions.c",
         "test/js-native-api/test_conversions/test_null.c",
         "test/js-native-api/test_conversions/test_null.h",
     ],
+    output = "test/js-native-api/test_conversions/build/Release/test_conversions.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_date_node",
-    output = "test/js-native-api/test_date/build/Release/test_date.node",
     srcs = ["test/js-native-api/test_date/test_date.c"],
+    output = "test/js-native-api/test_date/build/Release/test_date.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_error_node",
-    output = "test/js-native-api/test_error/build/Release/test_error.node",
     srcs = ["test/js-native-api/test_error/test_error.c"],
+    output = "test/js-native-api/test_error/build/Release/test_error.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_function_node",
-    output = "test/js-native-api/test_function/build/Release/test_function.node",
     srcs = ["test/js-native-api/test_function/test_function.c"],
+    output = "test/js-native-api/test_function/build/Release/test_function.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_new_target_node",
-    output = "test/js-native-api/test_new_target/build/Release/test_new_target.node",
     srcs = ["test/js-native-api/test_new_target/test_new_target.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/js-native-api/test_new_target/build/Release/test_new_target.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_number_node",
-    output = "test/js-native-api/test_number/build/Release/test_number.node",
     srcs = [
-        "test/js-native-api/test_number/test_number.c",
         "test/js-native-api/test_number/test_null.c",
         "test/js-native-api/test_number/test_null.h",
+        "test/js-native-api/test_number/test_number.c",
     ],
+    output = "test/js-native-api/test_number/build/Release/test_number.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_promise_node",
-    output = "test/js-native-api/test_promise/build/Release/test_promise.node",
     srcs = ["test/js-native-api/test_promise/test_promise.c"],
+    output = "test/js-native-api/test_promise/build/Release/test_promise.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_properties_node",
-    output = "test/js-native-api/test_properties/build/Release/test_properties.node",
     srcs = ["test/js-native-api/test_properties/test_properties.c"],
+    output = "test/js-native-api/test_properties/build/Release/test_properties.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_sharedarraybuffer_node",
-    output = "test/js-native-api/test_sharedarraybuffer/build/Release/test_sharedarraybuffer.node",
     srcs = ["test/js-native-api/test_sharedarraybuffer/test_sharedarraybuffer.c"],
+    output = "test/js-native-api/test_sharedarraybuffer/build/Release/test_sharedarraybuffer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_string_node",
-    output = "test/js-native-api/test_string/build/Release/test_string.node",
     srcs = [
-        "test/js-native-api/test_string/test_string.c",
         "test/js-native-api/test_string/test_null.c",
         "test/js-native-api/test_string/test_null.h",
+        "test/js-native-api/test_string/test_string.c",
     ],
     defines = ["NAPI_VERSION=10"],
+    output = "test/js-native-api/test_string/build/Release/test_string.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_symbol_node",
-    output = "test/js-native-api/test_symbol/build/Release/test_symbol.node",
     srcs = ["test/js-native-api/test_symbol/test_symbol.c"],
+    output = "test/js-native-api/test_symbol/build/Release/test_symbol.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_cannot_run_js_node",
-    output = "test/js-native-api/test_cannot_run_js/build/Release/test_cannot_run_js.node",
     srcs = ["test/js-native-api/test_cannot_run_js/test_cannot_run_js.c"],
     defines = ["NAPI_VERSION=10"],
+    output = "test/js-native-api/test_cannot_run_js/build/Release/test_cannot_run_js.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_pending_exception_node",
-    output = "test/js-native-api/test_cannot_run_js/build/Release/test_pending_exception.node",
     srcs = ["test/js-native-api/test_cannot_run_js/test_cannot_run_js.c"],
     defines = ["NAPI_VERSION=9"],
+    output = "test/js-native-api/test_cannot_run_js/build/Release/test_pending_exception.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_dataview_node",
-    output = "test/js-native-api/test_dataview/build/Release/test_dataview.node",
     srcs = ["test/js-native-api/test_dataview/test_dataview.c"],
     defines = [
         "NAPI_EXPERIMENTAL",
         "NODE_API_EXPERIMENTAL_NO_WARNING",
     ],
+    output = "test/js-native-api/test_dataview/build/Release/test_dataview.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_exception_node",
-    output = "test/js-native-api/test_exception/build/Release/test_exception.node",
     srcs = ["test/js-native-api/test_exception/test_exception.c"],
+    output = "test/js-native-api/test_exception/build/Release/test_exception.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_finalizer_node",
-    output = "test/js-native-api/test_finalizer/build/Release/test_finalizer.node",
     srcs = ["test/js-native-api/test_finalizer/test_finalizer.c"],
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "test/js-native-api/test_finalizer/build/Release/test_finalizer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_general_node",
-    output = "test/js-native-api/test_general/build/Release/test_general.node",
     srcs = ["test/js-native-api/test_general/test_general.c"],
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "test/js-native-api/test_general/build/Release/test_general.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_handle_scope_node",
-    output = "test/js-native-api/test_handle_scope/build/Release/test_handle_scope.node",
     srcs = ["test/js-native-api/test_handle_scope/test_handle_scope.c"],
+    output = "test/js-native-api/test_handle_scope/build/Release/test_handle_scope.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_instance_data_node",
-    output = "test/js-native-api/test_instance_data/build/Release/test_instance_data.node",
     srcs = ["test/js-native-api/test_instance_data/test_instance_data.c"],
+    output = "test/js-native-api/test_instance_data/build/Release/test_instance_data.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_object_node",
-    output = "test/js-native-api/test_object/build/Release/test_object.node",
     srcs = [
         "test/js-native-api/test_object/test_null.c",
-        "test/js-native-api/test_object/test_object.c",
         "test/js-native-api/test_object/test_null.h",
+        "test/js-native-api/test_object/test_object.c",
     ],
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "test/js-native-api/test_object/build/Release/test_object.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_object_exceptions_node",
-    output = "test/js-native-api/test_object/build/Release/test_exceptions.node",
     srcs = ["test/js-native-api/test_object/test_exceptions.c"],
+    output = "test/js-native-api/test_object/build/Release/test_exceptions.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_reference_node",
-    output = "test/js-native-api/test_reference/build/Release/test_reference.node",
     srcs = ["test/js-native-api/test_reference/test_reference.c"],
+    output = "test/js-native-api/test_reference/build/Release/test_reference.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_reference_finalizer_node",
-    output = "test/js-native-api/test_reference/build/Release/test_finalizer.node",
     srcs = ["test/js-native-api/test_reference/test_finalizer.c"],
+    output = "test/js-native-api/test_reference/build/Release/test_finalizer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_reference_double_free_node",
-    output = "test/js-native-api/test_reference_double_free/build/Release/test_reference_double_free.node",
     srcs = ["test/js-native-api/test_reference_double_free/test_reference_double_free.c"],
+    output = "test/js-native-api/test_reference_double_free/build/Release/test_reference_double_free.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_typedarray_node",
-    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray.node",
     srcs = ["test/js-native-api/test_typedarray/test_typedarray.c"],
+    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "js_native_api_test_typedarray_sharedarraybuffer_node",
-    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray_sharedarraybuffer.node",
     srcs = ["test/js-native-api/test_typedarray/test_typedarray_sharedarraybuffer.c"],
+    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray_sharedarraybuffer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_1_hello_world_binding_node",
-    output = "test/node-api/1_hello_world/build/Release/binding.node",
     srcs = ["test/node-api/1_hello_world/binding.c"],
+    output = "test/node-api/1_hello_world/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_async_node",
-    output = "test/node-api/test_async/build/Release/test_async.node",
     srcs = ["test/node-api/test_async/test_async.c"],
+    output = "test/node-api/test_async/build/Release/test_async.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_env_teardown_gc_binding_node",
-    output = "test/node-api/test_env_teardown_gc/build/Release/binding.node",
     srcs = ["test/node-api/test_env_teardown_gc/binding.c"],
+    output = "test/node-api/test_env_teardown_gc/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_exception_node",
-    output = "test/node-api/test_exception/build/Release/test_exception.node",
     srcs = ["test/node-api/test_exception/test_exception.c"],
+    output = "test/node-api/test_exception/build/Release/test_exception.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_fatal_node",
-    output = "test/node-api/test_fatal/build/Release/test_fatal.node",
     srcs = ["test/node-api/test_fatal/test_fatal.c"],
+    output = "test/node-api/test_fatal/build/Release/test_fatal.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_fatal_exception_node",
-    output = "test/node-api/test_fatal_exception/build/Release/test_fatal_exception.node",
     srcs = ["test/node-api/test_fatal_exception/test_fatal_exception.c"],
+    output = "test/node-api/test_fatal_exception/build/Release/test_fatal_exception.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_general_node",
-    output = "test/node-api/test_general/build/Release/test_general.node",
     srcs = ["test/node-api/test_general/test_general.c"],
+    output = "test/node-api/test_general/build/Release/test_general.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_init_order_node",
-    output = "test/node-api/test_init_order/build/Release/test_init_order.node",
     srcs = ["test/node-api/test_init_order/test_init_order.cc"],
     copts = cxx20_copts(),
+    output = "test/node-api/test_init_order/build/Release/test_init_order.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_null_init_node",
-    output = "test/node-api/test_null_init/build/Release/test_null_init.node",
     srcs = ["test/node-api/test_null_init/test_null_init.c"],
+    output = "test/node-api/test_null_init/build/Release/test_null_init.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_sea_addon_binding_node",
-    output = "test/node-api/test_sea_addon/build/Release/binding.node",
     srcs = ["test/node-api/test_sea_addon/binding.c"],
+    output = "test/node-api/test_sea_addon/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_uv_loop_node",
-    output = "test/node-api/test_uv_loop/build/Release/test_uv_loop.node",
     srcs = ["test/node-api/test_uv_loop/test_uv_loop.cc"],
     copts = cxx20_copts(),
+    output = "test/node-api/test_uv_loop/build/Release/test_uv_loop.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_uv_threadpool_size_node",
-    output = "test/node-api/test_uv_threadpool_size/build/Release/test_uv_threadpool_size.node",
     srcs = ["test/node-api/test_uv_threadpool_size/test_uv_threadpool_size.c"],
+    output = "test/node-api/test_uv_threadpool_size/build/Release/test_uv_threadpool_size.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_worker_buffer_callback_binding_node",
-    output = "test/node-api/test_worker_buffer_callback/build/Release/binding.node",
     srcs = ["test/node-api/test_worker_buffer_callback/test_worker_buffer_callback.c"],
+    output = "test/node-api/test_worker_buffer_callback/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_worker_terminate_node",
-    output = "test/node-api/test_worker_terminate/build/Release/test_worker_terminate.node",
     srcs = ["test/node-api/test_worker_terminate/test_worker_terminate.c"],
+    output = "test/node-api/test_worker_terminate/build/Release/test_worker_terminate.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_worker_terminate_finalization_node",
-    output = "test/node-api/test_worker_terminate_finalization/build/Release/test_worker_terminate_finalization.node",
     srcs = ["test/node-api/test_worker_terminate_finalization/test_worker_terminate_finalization.c"],
+    output = "test/node-api/test_worker_terminate_finalization/build/Release/test_worker_terminate_finalization.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_async_cleanup_hook_binding_node",
-    output = "test/node-api/test_async_cleanup_hook/build/Release/binding.node",
     srcs = ["test/node-api/test_async_cleanup_hook/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_async_cleanup_hook/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_async_context_binding_node",
-    output = "test/node-api/test_async_context/build/Release/binding.node",
     srcs = ["test/node-api/test_async_context/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_async_context/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_buffer_node",
-    output = "test/node-api/test_buffer/build/Release/test_buffer.node",
     srcs = ["test/node-api/test_buffer/test_buffer.c"],
     defines = [
         "NAPI_EXPERIMENTAL",
         "NODE_API_EXPERIMENTAL_NO_WARNING",
     ],
+    output = "test/node-api/test_buffer/build/Release/test_buffer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_buffer_finalizer_node",
-    output = "test/node-api/test_buffer/build/Release/test_finalizer.node",
     srcs = ["test/node-api/test_buffer/test_finalizer.c"],
+    output = "test/node-api/test_buffer/build/Release/test_finalizer.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_callback_scope_binding_node",
-    output = "test/node-api/test_callback_scope/build/Release/binding.node",
     srcs = ["test/node-api/test_callback_scope/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_callback_scope/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_cleanup_hook_binding_node",
-    output = "test/node-api/test_cleanup_hook/build/Release/binding.node",
     srcs = ["test/node-api/test_cleanup_hook/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_cleanup_hook/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_instance_data_node",
-    output = "test/node-api/test_instance_data/build/Release/test_instance_data.node",
     srcs = ["test/node-api/test_instance_data/test_instance_data.c"],
+    output = "test/node-api/test_instance_data/build/Release/test_instance_data.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_instance_data_set_then_ref_node",
-    output = "test/node-api/test_instance_data/build/Release/test_set_then_ref.node",
     srcs = [
         "test/node-api/test_instance_data/addon.c",
         "test/node-api/test_instance_data/test_set_then_ref.c",
     ],
+    output = "test/node-api/test_instance_data/build/Release/test_set_then_ref.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_instance_data_ref_then_set_node",
-    output = "test/node-api/test_instance_data/build/Release/test_ref_then_set.node",
     srcs = [
         "test/node-api/test_instance_data/addon.c",
         "test/node-api/test_instance_data/test_ref_then_set.c",
     ],
+    output = "test/node-api/test_instance_data/build/Release/test_ref_then_set.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_make_callback_binding_node",
-    output = "test/node-api/test_make_callback/build/Release/binding.node",
     srcs = ["test/node-api/test_make_callback/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_make_callback/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_make_callback_recurse_binding_node",
-    output = "test/node-api/test_make_callback_recurse/build/Release/binding.node",
     srcs = ["test/node-api/test_make_callback_recurse/binding.c"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/node-api/test_make_callback_recurse/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_reference_all_types_node",
-    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_all_types.node",
     srcs = ["test/node-api/test_reference_by_node_api_version/test_reference_by_node_api_version.c"],
     defines = ["NAPI_VERSION=10"],
+    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_all_types.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_reference_obj_only_node",
-    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_obj_only.node",
     srcs = ["test/node-api/test_reference_by_node_api_version/test_reference_by_node_api_version.c"],
     defines = ["NAPI_VERSION=9"],
+    output = "test/node-api/test_reference_by_node_api_version/build/Release/test_reference_obj_only.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_threadsafe_function_binding_node",
-    output = "test/node-api/test_threadsafe_function/build/Release/binding.node",
     srcs = ["test/node-api/test_threadsafe_function/binding.c"],
+    output = "test/node-api/test_threadsafe_function/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_threadsafe_function_uncaught_exception_v9_node",
-    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception_v9.node",
     srcs = ["test/node-api/test_threadsafe_function/test_uncaught_exception.c"],
     defines = ["NAPI_VERSION=9"],
+    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception_v9.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_threadsafe_function_uncaught_exception_node",
-    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception.node",
     srcs = ["test/node-api/test_threadsafe_function/test_uncaught_exception.c"],
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "test/node-api/test_threadsafe_function/build/Release/test_uncaught_exception.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_threadsafe_function_abort_binding_node",
-    output = "test/node-api/test_threadsafe_function_abort/build/Release/binding.node",
     srcs = ["test/node-api/test_threadsafe_function_abort/binding.cc"],
     copts = cxx20_copts(),
+    output = "test/node-api/test_threadsafe_function_abort/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_addon(
     name = "node_api_test_threadsafe_function_shutdown_binding_node",
-    output = "test/node-api/test_threadsafe_function_shutdown/build/Release/binding.node",
     srcs = ["test/node-api/test_threadsafe_function_shutdown/binding.cc"],
     copts = cxx20_copts(),
+    output = "test/node-api/test_threadsafe_function_shutdown/build/Release/binding.node",
     deps = [":js_native_api_test_headers"],
 )
 
 node_module_addon(
     name = "test_addon_async_cleanup_hook_binding_node",
-    output = "test/addons/async-cleanup-hook/build/Release/binding.node",
     srcs = ["test/addons/async-cleanup-hook/binding.cc"],
+    output = "test/addons/async-cleanup-hook/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_async_hello_world_binding_node",
-    output = "test/addons/async-hello-world/build/Release/binding.node",
     srcs = ["test/addons/async-hello-world/binding.cc"],
+    output = "test/addons/async-hello-world/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_async_hooks_id_binding_node",
-    output = "test/addons/async-hooks-id/build/Release/binding.node",
     srcs = ["test/addons/async-hooks-id/binding.cc"],
+    output = "test/addons/async-hooks-id/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_async_resource_binding_node",
-    output = "test/addons/async-resource/build/Release/binding.node",
     srcs = ["test/addons/async-resource/binding.cc"],
+    output = "test/addons/async-resource/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_hello_world_binding_node",
-    output = "test/addons/hello-world/build/Release/binding.node",
     srcs = ["test/addons/hello-world/binding.cc"],
+    output = "test/addons/hello-world/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_hello_world_2_binding_node",
-    output = "test/addons/hello-world-2/build/Release/binding.node",
     srcs = ["test/addons/hello-world-2/binding.cc"],
+    output = "test/addons/hello-world-2/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_hello_world_function_export_binding_node",
-    output = "test/addons/hello-world-function-export/build/Release/binding.node",
     srcs = ["test/addons/hello-world-function-export/binding.cc"],
+    output = "test/addons/hello-world-function-export/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_callback_scope_binding_node",
-    output = "test/addons/callback-scope/build/Release/binding.node",
     srcs = ["test/addons/callback-scope/binding.cc"],
+    output = "test/addons/callback-scope/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_force_context_aware_binding_node",
-    output = "test/addons/force-context-aware/build/Release/binding.node",
     srcs = ["test/addons/force-context-aware/binding.cc"],
+    output = "test/addons/force-context-aware/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_new_context_inspector_binding_node",
-    output = "test/addons/new-context-inspector/build/Release/binding.node",
     srcs = ["test/addons/new-context-inspector/binding.cc"],
+    output = "test/addons/new-context-inspector/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_new_isolate_addon_binding_node",
-    output = "test/addons/new-isolate-addon/build/Release/binding.node",
     srcs = ["test/addons/new-isolate-addon/binding.cc"],
+    output = "test/addons/new-isolate-addon/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_new_target_binding_node",
-    output = "test/addons/new-target/build/Release/binding.node",
     srcs = ["test/addons/new-target/binding.cc"],
+    output = "test/addons/new-target/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_non_node_context_binding_node",
-    output = "test/addons/non-node-context/build/Release/binding.node",
     srcs = ["test/addons/non-node-context/binding.cc"],
+    output = "test/addons/non-node-context/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_request_interrupt_binding_node",
-    output = "test/addons/request-interrupt/build/Release/binding.node",
     srcs = ["test/addons/request-interrupt/binding.cc"],
+    output = "test/addons/request-interrupt/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_worker_addon_binding_node",
-    output = "test/addons/worker-addon/build/Release/binding.node",
     srcs = ["test/addons/worker-addon/binding.cc"],
+    output = "test/addons/worker-addon/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_worker_buffer_callback_binding_node",
-    output = "test/addons/worker-buffer-callback/build/Release/binding.node",
     srcs = ["test/addons/worker-buffer-callback/binding.cc"],
+    output = "test/addons/worker-buffer-callback/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_buffer_free_callback_binding_node",
-    output = "test/addons/buffer-free-callback/build/Release/binding.node",
     srcs = ["test/addons/buffer-free-callback/binding.cc"],
+    output = "test/addons/buffer-free-callback/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_errno_exception_binding_node",
-    output = "test/addons/errno-exception/build/Release/binding.node",
     srcs = ["test/addons/errno-exception/binding.cc"],
+    output = "test/addons/errno-exception/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_make_callback_domain_warning_binding_node",
-    output = "test/addons/make-callback-domain-warning/build/Release/binding.node",
     srcs = ["test/addons/make-callback-domain-warning/binding.cc"],
+    output = "test/addons/make-callback-domain-warning/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_make_callback_recurse_binding_node",
-    output = "test/addons/make-callback-recurse/build/Release/binding.node",
     srcs = ["test/addons/make-callback-recurse/binding.cc"],
+    output = "test/addons/make-callback-recurse/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_make_callback_binding_node",
-    output = "test/addons/make-callback/build/Release/binding.node",
     srcs = ["test/addons/make-callback/binding.cc"],
+    output = "test/addons/make-callback/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_null_buffer_neuter_binding_node",
-    output = "test/addons/null-buffer-neuter/build/Release/binding.node",
     srcs = ["test/addons/null-buffer-neuter/binding.cc"],
+    output = "test/addons/null-buffer-neuter/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_parse_encoding_binding_node",
-    output = "test/addons/parse-encoding/build/Release/binding.node",
     srcs = ["test/addons/parse-encoding/binding.cc"],
+    output = "test/addons/parse-encoding/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_report_api_binding_node",
-    output = "test/addons/report-api/build/Release/binding.node",
     srcs = ["test/addons/report-api/binding.cc"],
+    output = "test/addons/report-api/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_report_fatalerror_binding_node",
-    output = "test/addons/report-fatalerror/build/Release/binding.node",
     srcs = ["test/addons/report-fatalerror/binding.cc"],
+    output = "test/addons/report-fatalerror/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_stringbytes_external_exceed_max_binding_node",
-    output = "test/addons/stringbytes-external-exceed-max/build/Release/binding.node",
     srcs = ["test/addons/stringbytes-external-exceed-max/binding.cc"],
+    output = "test/addons/stringbytes-external-exceed-max/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_cppgc_object_binding_node",
-    output = "test/addons/cppgc-object/build/Release/binding.node",
     srcs = ["test/addons/cppgc-object/binding.cc"],
+    output = "test/addons/cppgc-object/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_esm_export_default_binding_node",
-    output = "test/addons/esm-export-default/build/Release/binding-export-default.node",
     srcs = ["test/addons/esm-export-default/binding-export-default.cc"],
+    output = "test/addons/esm-export-default/build/Release/binding-export-default.node",
 )
 
 node_module_addon(
     name = "test_addon_esm_export_primitive_binding_node",
-    output = "test/addons/esm-export-primitive/build/Release/binding-export-primitive.node",
     srcs = ["test/addons/esm-export-primitive/binding-export-primitive.cc"],
+    output = "test/addons/esm-export-primitive/build/Release/binding-export-primitive.node",
 )
 
 node_module_addon(
     name = "test_addon_heap_profiler_binding_node",
-    output = "test/addons/heap-profiler/build/Release/binding.node",
     srcs = ["test/addons/heap-profiler/binding.cc"],
+    output = "test/addons/heap-profiler/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_load_long_path_binding_node",
-    output = "test/addons/load-long-path/build/Release/binding.node",
     srcs = ["test/addons/load-long-path/binding.cc"],
+    output = "test/addons/load-long-path/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_no_addons_binding_node",
-    output = "test/addons/no-addons/build/Release/binding.node",
     srcs = ["test/addons/hello-world/binding.cc"],
+    output = "test/addons/no-addons/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_node_module_version_binding_node",
-    output = "test/addons/node-module-version/build/Release/binding.node",
     srcs = ["test/addons/node-module-version/binding.cc"],
+    output = "test/addons/node-module-version/build/Release/binding.node",
 )
 
 node_addon(
     name = "test_addon_not_a_binding_node",
-    output = "test/addons/not-a-binding/build/Release/binding.node",
     srcs = ["test/addons/not-a-binding/not_a_binding.c"],
     copts = ["-Wno-cast-function-type"],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/addons/not-a-binding/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_repl_domain_abort_binding_node",
-    output = "test/addons/repl-domain-abort/build/Release/binding.node",
     srcs = ["test/addons/repl-domain-abort/binding.cc"],
+    output = "test/addons/repl-domain-abort/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_symlinked_module_binding_node",
-    output = "test/addons/symlinked-module/build/Release/binding.node",
     srcs = ["test/addons/symlinked-module/binding.cc"],
+    output = "test/addons/symlinked-module/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_uv_thread_name_binding_node",
-    output = "test/addons/uv-thread-name/build/Release/binding.node",
     srcs = ["test/addons/uv-thread-name/binding.cc"],
+    output = "test/addons/uv-thread-name/build/Release/binding.node",
 )
 
 node_module_addon(
     name = "test_addon_dlopen_ping_pong_binding_node",
-    output = "test/addons/dlopen-ping-pong/build/Release/binding.node",
     srcs = ["test/addons/dlopen-ping-pong/binding.cc"],
+    output = "test/addons/dlopen-ping-pong/build/Release/binding.node",
 )
 
 node_addon(
     name = "test_addon_dlopen_ping_pong_ping_so",
-    output = "test/addons/dlopen-ping-pong/build/Release/ping.so",
     srcs = ["test/addons/dlopen-ping-pong/ping.c"],
+    output = "test/addons/dlopen-ping-pong/build/Release/ping.so",
 )
 
 node_module_addon(
     name = "test_addon_esm_binding_node",
-    output = "test/addons/esm/build/Release/binding.node",
     srcs = ["test/addons/esm/binding.cc"],
+    output = "test/addons/esm/build/Release/binding.node",
 )
 
 genrule(
@@ -1855,132 +1894,132 @@ genrule(
 
 node_module_addon(
     name = "test_addon_openssl_binding_node",
-    output = "test/addons/openssl-binding/build/Release/binding.node",
     srcs = ["test/addons/openssl-binding/binding.cc"],
     copts = ["-Wno-deprecated-declarations"],
+    output = "test/addons/openssl-binding/build/Release/binding.node",
     deps = [":openssl_addon_headers"],
 )
 
 node_module_addon(
     name = "test_addon_openssl_get_ssl_ctx_binding_node",
-    output = "test/addons/openssl-get-ssl-ctx/build/Release/binding.node",
     srcs = ["test/addons/openssl-get-ssl-ctx/binding.cc"],
+    output = "test/addons/openssl-get-ssl-ctx/build/Release/binding.node",
     deps = [":openssl_addon_headers"],
 )
 
 node_module_addon(
     name = "test_addon_openssl_providers_binding_node",
-    output = "test/addons/openssl-providers/build/Release/binding.node",
     srcs = ["test/addons/openssl-providers/binding.cc"],
     copts = ["-Wno-deprecated-declarations"],
+    output = "test/addons/openssl-providers/build/Release/binding.node",
     deps = [":openssl_addon_headers"],
 )
 
 node_addon(
     name = "test_addon_openssl_test_engine",
-    output = "test/addons/openssl-test-engine/build/Release/testsetengine.engine",
     srcs = ["test/addons/openssl-test-engine/testsetengine.cc"],
     copts = cxx20_copts() + [
         "-Wno-cast-function-type",
         "-Wno-deprecated-declarations",
     ],
     defines = ["V8_DEPRECATION_WARNINGS=1"],
+    output = "test/addons/openssl-test-engine/build/Release/testsetengine.engine",
     deps = [":openssl_addon_headers"],
 )
 
 node_module_addon(
     name = "test_addon_zlib_binding_node",
-    output = "test/addons/zlib-binding/build/Release/binding.node",
     srcs = ["test/addons/zlib-binding/binding.cc"],
+    output = "test/addons/zlib-binding/build/Release/binding.node",
     deps = [":zlib_headers"],
 )
 
 node_addon(
     name = "benchmark_napi_buffer_binding_node",
-    output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
     copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "benchmark/napi/buffer/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_buffer_v8_binding_node",
-    output = "benchmark/napi/buffer/build/Release/binding_node_api_v8.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
     copts = cxx20_copts(),
     defines = ["NAPI_VERSION=8"],
+    output = "benchmark/napi/buffer/build/Release/binding_node_api_v8.node",
 )
 
 node_addon(
     name = "benchmark_napi_create_object_with_properties_binding_node",
-    output = "benchmark/napi/create_object_with_properties/build/Release/binding.node",
     srcs = ["benchmark/napi/create_object_with_properties/binding.cc"],
     copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "benchmark/napi/create_object_with_properties/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_define_properties_binding_node",
-    output = "benchmark/napi/define_properties/build/Release/binding.node",
     srcs = ["benchmark/napi/define_properties/binding.c"],
+    output = "benchmark/napi/define_properties/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_function_args_binding_node",
-    output = "benchmark/napi/function_args/build/Release/binding.node",
     srcs = ["benchmark/napi/function_args/binding.cc"],
     copts = cxx20_copts(),
+    output = "benchmark/napi/function_args/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_function_args_napi_binding_node",
-    output = "benchmark/napi/function_args/build/Release/napi_binding.node",
     srcs = ["benchmark/napi/function_args/napi_binding.c"],
+    output = "benchmark/napi/function_args/build/Release/napi_binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_function_call_binding_node",
-    output = "benchmark/napi/function_call/build/Release/binding.node",
     srcs = ["benchmark/napi/function_call/binding.cc"],
     copts = cxx20_copts(),
+    output = "benchmark/napi/function_call/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_function_call_napi_binding_node",
-    output = "benchmark/napi/function_call/build/Release/napi_binding.node",
     srcs = ["benchmark/napi/function_call/napi_binding.c"],
+    output = "benchmark/napi/function_call/build/Release/napi_binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_property_keys_binding_node",
-    output = "benchmark/napi/property_keys/build/Release/binding.node",
     srcs = ["benchmark/napi/property_keys/binding.cc"],
     copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
+    output = "benchmark/napi/property_keys/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_ref_addon_node",
-    output = "benchmark/napi/ref/build/Release/addon.node",
     srcs = ["benchmark/napi/ref/addon.c"],
+    output = "benchmark/napi/ref/build/Release/addon.node",
 )
 
 node_addon(
     name = "benchmark_napi_string_binding_node",
-    output = "benchmark/napi/string/build/Release/binding.node",
     srcs = ["benchmark/napi/string/binding.c"],
+    output = "benchmark/napi/string/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_type_tag_binding_node",
-    output = "benchmark/napi/type-tag/build/Release/binding.node",
     srcs = ["benchmark/napi/type-tag/binding.c"],
+    output = "benchmark/napi/type-tag/build/Release/binding.node",
 )
 
 node_addon(
     name = "benchmark_napi_type_tag_check_binding_node",
-    output = "benchmark/napi/type-tag-check/build/Release/binding.node",
     srcs = ["benchmark/napi/type-tag/binding.c"],
+    output = "benchmark/napi/type-tag-check/build/Release/binding.node",
 )
 
 sh_binary(
@@ -2003,6 +2042,7 @@ sh_binary(
 
 sh_test(
     name = "node_upstream_smoke_test",
+    timeout = "long",
     srcs = ["@nodejs//nodejs/private:node_test.sh"],
     args = [
         "$(rootpath :node_test_runner)",
@@ -2025,110 +2065,114 @@ sh_test(
     env = {"NODE_TEST_FLAKY_TESTS": "skip"},
     exec_properties = {"network": "off"},
     tags = ["requires-network"],
-    timeout = "long",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_parallel_tests",
-    suites = ["parallel"],
-    shards = 16,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 16,
     # nodejs/node#62471 does not make this test pass with the official
     # Node.js 26.3.1 macOS binary or the Bazel-built Linux binary.
     skip_tests = ["parallel/test-debugger-preserve-breaks"],
-    test_sources = ":node_test_sources",
+    suites = ["parallel"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sequential_tests",
-    suites = ["sequential"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["sequential"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_async_hooks_tests",
-    suites = ["async-hooks"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["async-hooks"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_es_module_tests",
-    suites = ["es-module"],
-    shards = 8,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 8,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["es-module"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_message_tests",
-    suites = ["message"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["message"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_module_hooks_tests",
-    suites = ["module-hooks"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["module-hooks"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_report_tests",
-    suites = ["report"],
-    shards = 2,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 2,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["report"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_test_runner_tests",
-    suites = ["test-runner"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = [],
-    test_sources = ":node_test_sources",
-    test_runner = ":node_test_runner",
+    suites = ["test-runner"],
     test_directory_under_test_root = True,
+    test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_js_native_api_tutorial_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "js-native-api/2_function_arguments",
         "js-native-api/3_callbacks",
@@ -2138,17 +2182,17 @@ nodejs_upstream_test_shards(
         "js-native-api/7_factory_wrap",
         "js-native-api/8_passing_wrapped",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_js_native_api_value_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "js-native-api/test_array",
         "js-native-api/test_bigint",
@@ -2165,29 +2209,29 @@ nodejs_upstream_test_shards(
         "js-native-api/test_string",
         "js-native-api/test_symbol",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_js_native_api_tests",
-    suites = ["js-native-api"],
-    shards = 2,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 2,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["js-native-api"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_node_api_default_compile_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 2,
+    skip_tests = [],
     suites = [
         "node-api/1_hello_world",
         "node-api/test_async",
@@ -2205,29 +2249,29 @@ nodejs_upstream_test_shards(
         "node-api/test_worker_terminate",
         "node-api/test_worker_terminate_finalization",
     ],
-    shards = 2,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_node_api_tests",
-    suites = ["node-api"],
-    shards = 2,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 2,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["node-api"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_async_hello_world_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/async-cleanup-hook",
         "addons/async-hello-world",
@@ -2237,17 +2281,17 @@ nodejs_upstream_test_shards(
         "addons/hello-world-2",
         "addons/hello-world-function-export",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_context_worker_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/callback-scope",
         "addons/force-context-aware",
@@ -2259,17 +2303,17 @@ nodejs_upstream_test_shards(
         "addons/worker-addon",
         "addons/worker-buffer-callback",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_callback_conversion_report_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/buffer-free-callback",
         "addons/errno-exception",
@@ -2282,17 +2326,17 @@ nodejs_upstream_test_shards(
         "addons/report-fatalerror",
         "addons/stringbytes-external-exceed-max",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_module_loading_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/esm-export-default",
         "addons/esm-export-primitive",
@@ -2302,49 +2346,49 @@ nodejs_upstream_test_shards(
         "addons/not-a-binding",
         "addons/symlinked-module",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_cppgc_profiler_repl_uv_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/cppgc-object",
         "addons/heap-profiler",
         "addons/repl-domain-abort",
         "addons/uv-thread-name",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_dlopen_esm_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/dlopen-ping-pong",
         "addons/esm",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_openssl_zlib_tests",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    node = ":node",
+    root_status = ":node_test_root",
+    shards = 1,
+    skip_tests = [],
     suites = [
         "addons/openssl-binding",
         "addons/openssl-client-cert-engine",
@@ -2354,229 +2398,224 @@ nodejs_upstream_test_shards(
         "addons/openssl-test-engine",
         "addons/zlib-binding",
     ],
-    shards = 1,
-    node = ":node",
-    root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
-    skip_tests = [],
-    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_addon_tests",
-    suites = ["addons"],
-    shards = 2,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 2,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["addons"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_abort_tests",
-    suites = ["abort"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["abort"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_ffi_tests",
-    suites = ["ffi"],
-    shards = 2,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 2,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["ffi"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sqlite_tests",
-    suites = ["sqlite"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["sqlite"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wasi_tests",
-    suites = ["wasi"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = ["wasi/test-wasi-readdir"],
-    test_sources = ":node_test_sources",
+    suites = ["wasi"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wasm_allocation_tests",
-    suites = ["wasm-allocation"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["wasm-allocation"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_pseudo_tty_tests",
-    suites = ["pseudo-tty"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["pseudo-tty"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_wpt_tests",
-    suites = ["wpt"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["wpt"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_pummel_tests",
-    suites = ["pummel"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["pummel"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_client_proxy_tests",
-    suites = ["client-proxy"],
-    shards = 8,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 8,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["client-proxy"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_test426_tests",
-    suites = ["test426"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["test426"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_v8_updates_tests",
-    suites = ["v8-updates"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["v8-updates"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_benchmark_tests",
-    suites = ["benchmark"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = ["benchmark/test-benchmark-napi"],
-    test_sources = ":node_test_sources",
+    suites = ["benchmark"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_benchmark_napi_test",
-    suites = ["benchmark/test-benchmark-napi"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["benchmark/test-benchmark-napi"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_known_issues_tests",
-    suites = ["known_issues"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["known_issues"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_sea_tests",
-    suites = ["sea"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["sea"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_embedding_tests",
-    suites = ["embedding"],
-    shards = 4,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 4,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["embedding"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 nodejs_upstream_test_shards(
     name = "node_upstream_doctool_tests",
-    suites = ["doctool"],
-    shards = 1,
+    getaddrinfo_library = ":node_test_getaddrinfo",
     node = ":node",
     root_status = ":node_test_root",
-    getaddrinfo_library = ":node_test_getaddrinfo",
+    shards = 1,
     skip_tests = [],
-    test_sources = ":node_test_sources",
+    suites = ["doctool"],
     test_runner = ":node_test_runner",
+    test_sources = ":node_test_sources",
 )
 
 cc_library(
@@ -2773,6 +2812,25 @@ cc_library(
         ],
     }),
     defines = ["CARES_STATICLIB"],
+    includes = [
+        "deps/cares/include",
+        "deps/cares/src/lib",
+        "deps/cares/src/lib/include",
+    ] + select(
+        {
+            ":target_linux": ["deps/cares/config/linux"],
+            ":target_macos": ["deps/cares/config/darwin"],
+            ":target_windows": [],
+        },
+        no_match_error = "cares currently supports Linux, macOS, and Windows targets",
+    ),
+    linkopts = select({
+        ":target_windows": [
+            "iphlpapi.lib",
+            "ws2_32.lib",
+        ],
+        "//conditions:default": [],
+    }),
     local_defines = select(
         {
             ":target_linux": [
@@ -2796,25 +2854,6 @@ cc_library(
         },
         no_match_error = "cares currently supports Linux, macOS, and Windows targets",
     ),
-    includes = [
-        "deps/cares/include",
-        "deps/cares/src/lib",
-        "deps/cares/src/lib/include",
-    ] + select(
-        {
-            ":target_linux": ["deps/cares/config/linux"],
-            ":target_macos": ["deps/cares/config/darwin"],
-            ":target_windows": [],
-        },
-        no_match_error = "cares currently supports Linux, macOS, and Windows targets",
-    ),
-    linkopts = select({
-        ":target_windows": [
-            "iphlpapi.lib",
-            "ws2_32.lib",
-        ],
-        "//conditions:default": [],
-    }),
 )
 
 cc_library(
@@ -3111,7 +3150,6 @@ cc_library(
 
 cc_library(
     name = "openssl_addon_headers",
-    defines = ["OPENSSL_NO_ASM"],
     hdrs = glob([
         "deps/openssl/config/*.h",
         "deps/openssl/openssl/include/**/*.h",
@@ -3126,6 +3164,7 @@ cc_library(
         },
         no_match_error = "openssl_addon_headers currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
+    defines = ["OPENSSL_NO_ASM"],
     includes = ["deps/openssl/openssl/include"] + select(
         {
             ":target_linux_arm64": ["deps/openssl/config/archs/linux-aarch64/no-asm/include"],
@@ -3157,17 +3196,6 @@ cc_library(
         "deps/openssl/openssl/**/*.h",
         "deps/openssl/openssl/**/*.inc",
     ]),
-    textual_hdrs = [
-        "deps/openssl/openssl/crypto/LPdir_nyi.c",
-        "deps/openssl/openssl/crypto/LPdir_unix.c",
-        "deps/openssl/openssl/crypto/LPdir_vms.c",
-        "deps/openssl/openssl/crypto/LPdir_win.c",
-        "deps/openssl/openssl/crypto/LPdir_win32.c",
-        "deps/openssl/openssl/crypto/LPdir_wince.c",
-        "deps/openssl/openssl/crypto/des/ncbc_enc.c",
-        "deps/openssl/openssl/engines/e_capi_err.c",
-        "deps/openssl/openssl/providers/implementations/macs/blake2_mac_impl.c",
-    ],
     copts = select(
         {
             ":target_linux": [
@@ -3176,40 +3204,6 @@ cc_library(
             ],
             ":target_macos": ["-Wno-missing-field-initializers"],
             ":target_windows": ["/clang:-Wno-missing-field-initializers"],
-        },
-        no_match_error = "openssl currently supports Linux, macOS, and Windows targets",
-    ),
-    local_defines = [
-        "MODULESDIR=\\\"/dev/null\\\"",
-        "OPENSSL_API_COMPAT=0x10100001L",
-        "OPENSSL_NO_ASM",
-        "OPENSSL_NO_HW",
-        "STATIC_LEGACY",
-    ] + select(
-        {
-            ":target_linux_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_arm64"],
-            ":target_linux_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_x86_64"],
-            ":target_macos_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_arm64"],
-            ":target_macos_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_x86_64"],
-            ":target_windows_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["windows_arm64"],
-            ":target_windows_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["windows_x86_64"],
-        },
-        no_match_error = "openssl currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
-    ) + select(
-        {
-            ":target_linux": [
-                "ENGINESDIR=\\\"/dev/null\\\"",
-                "OPENSSLDIR=\\\"/etc/ssl\\\"",
-                "TERMIOS",
-            ],
-            ":target_macos": [
-                "ENGINESDIR=\\\"/dev/null\\\"",
-                "OPENSSLDIR=\\\"/System/Library/OpenSSL/\\\"",
-            ],
-            ":target_windows": [
-                "ENGINESDIR=\\\"NUL\\\"",
-                "OPENSSLDIR=\\\"NUL\\\"",
-            ],
         },
         no_match_error = "openssl currently supports Linux, macOS, and Windows targets",
     ),
@@ -3289,6 +3283,51 @@ cc_library(
         },
         no_match_error = "openssl currently supports Linux, macOS, and Windows targets",
     ),
+    local_defines = [
+        "MODULESDIR=\\\"/dev/null\\\"",
+        "OPENSSL_API_COMPAT=0x10100001L",
+        "OPENSSL_NO_ASM",
+        "OPENSSL_NO_HW",
+        "STATIC_LEGACY",
+    ] + select(
+        {
+            ":target_linux_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_arm64"],
+            ":target_linux_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["linux_x86_64"],
+            ":target_macos_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_arm64"],
+            ":target_macos_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["macos_x86_64"],
+            ":target_windows_arm64": OPENSSL_NO_ASM_PLATFORM_DEFINES["windows_arm64"],
+            ":target_windows_x86_64": OPENSSL_NO_ASM_PLATFORM_DEFINES["windows_x86_64"],
+        },
+        no_match_error = "openssl currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
+    ) + select(
+        {
+            ":target_linux": [
+                "ENGINESDIR=\\\"/dev/null\\\"",
+                "OPENSSLDIR=\\\"/etc/ssl\\\"",
+                "TERMIOS",
+            ],
+            ":target_macos": [
+                "ENGINESDIR=\\\"/dev/null\\\"",
+                "OPENSSLDIR=\\\"/System/Library/OpenSSL/\\\"",
+            ],
+            ":target_windows": [
+                "ENGINESDIR=\\\"NUL\\\"",
+                "OPENSSLDIR=\\\"NUL\\\"",
+            ],
+        },
+        no_match_error = "openssl currently supports Linux, macOS, and Windows targets",
+    ),
+    textual_hdrs = [
+        "deps/openssl/openssl/crypto/LPdir_nyi.c",
+        "deps/openssl/openssl/crypto/LPdir_unix.c",
+        "deps/openssl/openssl/crypto/LPdir_vms.c",
+        "deps/openssl/openssl/crypto/LPdir_win.c",
+        "deps/openssl/openssl/crypto/LPdir_win32.c",
+        "deps/openssl/openssl/crypto/LPdir_wince.c",
+        "deps/openssl/openssl/crypto/des/ncbc_enc.c",
+        "deps/openssl/openssl/engines/e_capi_err.c",
+        "deps/openssl/openssl/providers/implementations/macs/blake2_mac_impl.c",
+    ],
 )
 
 cc_library(
@@ -3301,6 +3340,10 @@ cc_library(
     copts = cxx20_copts(),
     defines = ["NCRYPTO_BSSL_LIBDECREPIT_MISSING=1"],
     includes = ["deps/ncrypto"],
+    local_defines = select({
+        ":target_windows": ["NOMINMAX"],
+        "//conditions:default": [],
+    }),
     deps = [":openssl"],
 )
 
@@ -3510,11 +3553,11 @@ cc_library(
         },
         no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
     ),
-    textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
     copts = select({
         ":target_windows": [],
         "//conditions:default": ["-fvisibility=hidden"],
     }),
+    defines = ["FFI_STATIC_BUILD"],
     includes = [
         "deps/libffi/include",
         "deps/libffi/src",
@@ -3528,14 +3571,14 @@ cc_library(
         },
         no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
     ),
-    defines = ["FFI_STATIC_BUILD"],
+    textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
 )
 
 nodejs_release_archives(
     name = "release_archives",
-    version = "26.3.1",
     config_gypi = ":config_gypi",
     node = ":node",
+    version = "26.3.1",
 )
 
 cc_library(
@@ -3608,13 +3651,13 @@ cc_library(
     includes = [
         "deps/LIEF",
         "deps/LIEF/include",
+        "deps/LIEF/include/LIEF/third-party",
+        "deps/LIEF/include/LIEF/third-party/internal",
         "deps/LIEF/src",
+        "deps/LIEF/third-party/frozen/include",
         "deps/LIEF/third-party/mbedtls/include",
         "deps/LIEF/third-party/mbedtls/library",
         "deps/LIEF/third-party/spdlog/include",
-        "deps/LIEF/third-party/frozen/include",
-        "deps/LIEF/include/LIEF/third-party",
-        "deps/LIEF/include/LIEF/third-party/internal",
     ],
     local_defines = [
         "LIEF_STATIC",

@@ -1,0 +1,37 @@
+diff --git a/toolchain/llvm/llvm.bzl b/toolchain/llvm/llvm.bzl
+--- a/toolchain/llvm/llvm.bzl
++++ b/toolchain/llvm/llvm.bzl
+@@ -271,29 +271,31 @@ def llvm_toolchain(
+     include_path(
+         name = "windows_target_headers",
+         srcs = [
+             ":builtin_resource_dir",
+-            "@llvm//runtimes/libcxx:libcxx_headers_include_search_directory",
+-            "@llvm//runtimes/libcxx:libcxxabi_headers_include_search_directory",
+         ] + select({
+             "@llvm//platforms/config:abi_gnu": [
++                "@llvm//runtimes/libcxx:libcxx_headers_include_search_directory",
++                "@llvm//runtimes/libcxx:libcxxabi_headers_include_search_directory",
+                 "@mingw//:mingw_generated_headers_crt_directory",
+                 "@mingw//:mingw_w64_headers_include_directory",
+                 "@mingw//:mingw_w64_headers_crt_directory",
+                 "@mingw//:mingw_w64_winpthreads_include_directory",
+             ],
+             "@llvm//platforms/config:abi_gnullvm": [
++                "@llvm//runtimes/libcxx:libcxx_headers_include_search_directory",
++                "@llvm//runtimes/libcxx:libcxxabi_headers_include_search_directory",
+                 "@mingw//:mingw_generated_headers_crt_directory",
+                 "@mingw//:mingw_w64_headers_include_directory",
+                 "@mingw//:mingw_w64_headers_crt_directory",
+                 "@mingw//:mingw_w64_winpthreads_include_directory",
+             ],
+             "@llvm//platforms/config:abi_msvc": [
+                 "@msvc_runtime//:msvc_include",
+                 "@windows_sdk//:winsdk_ucrt_include",
+                 "@windows_sdk//:winsdk_shared_include",
+                 "@windows_sdk//:winsdk_um_include",
+                 "@windows_sdk//:winsdk_winrt_include",
+             ],
+             "//conditions:default": [],  # TODO: why is that needed?
+         }),
+     )

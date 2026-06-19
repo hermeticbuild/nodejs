@@ -1,0 +1,26 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -4081,5 +4081,13 @@ filegroup(
+ )
+
++genrule(
++    name = "push_registers_masm_x64",
++    srcs = ["src/heap/base/asm/x64/push_registers_masm.asm"],
++    outs = ["push_registers_masm_x64.obj"],
++    cmd = "$(execpath @llvm//tools:llvm-ml) --m64 /c /Fo$@ $(location src/heap/base/asm/x64/push_registers_masm.asm)",
++    tools = ["@llvm//tools:llvm-ml"],
++)
++
+ filegroup(
+     name = "v8_heap_base_files",
+     srcs = [
+@@ -4109,7 +4117,7 @@ filegroup(
+         "@v8//bazel/config:is_inline_asm_riscv64": ["src/heap/base/asm/riscv64/push_registers_asm.cc"],
+         "@v8//bazel/config:is_inline_asm_ppc64le": ["src/heap/base/asm/ppc/push_registers_asm.cc"],
+         "@v8//bazel/config:is_msvc_asm_ia32": ["src/heap/base/asm/ia32/push_registers_asm.cc"],
+-        "@v8//bazel/config:is_msvc_asm_x64": ["src/heap/base/asm/x64/push_registers_masm.asm"],
++        "@v8//bazel/config:is_msvc_asm_x64": [":push_registers_masm_x64"],
+         "@v8//bazel/config:is_msvc_asm_arm64": ["src/heap/base/asm/arm64/push_registers_asm.cc"],
+     }),
+ )

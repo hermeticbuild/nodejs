@@ -10,7 +10,7 @@ diff --git a/BUILD.bazel b/BUILD.bazel
      ] + select({
          ":nodejs_linux_x64": ["ENABLE_GDB_JIT_INTERFACE"],
          "//conditions:default": [],
-@@ -4600,6 +4601,39 @@ cc_library(
+@@ -4600,6 +4601,42 @@ cc_library(
      ],
  )
  
@@ -44,13 +44,16 @@ diff --git a/BUILD.bazel b/BUILD.bazel
 +        "third_party/zlib",
 +        "third_party/zlib/google",
 +    ],
-+    local_defines = ["ZLIB_IMPLEMENTATION"],
++    local_defines = [
++        "CPU_NO_SIMD",
++        "ZLIB_IMPLEMENTATION",
++    ],
 +)
 +
  cc_library(
    name = "simdutf",
    srcs = ["third_party/simdutf/simdutf.cpp"],
-@@ -4648,8 +4682,9 @@ v8_library(
+@@ -4648,8 +4685,9 @@ v8_library(
          ":lib_dragonbox",
          "//third_party/fast_float/src:fast_float",
          ":lib_fp16",

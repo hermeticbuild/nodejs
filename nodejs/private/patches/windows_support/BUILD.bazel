@@ -1,0 +1,3 @@
+exports_files([
+    "windows-sdk-vfs-overlay.patch",
+])

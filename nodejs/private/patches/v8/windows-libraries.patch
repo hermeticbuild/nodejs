@@ -1,0 +1,16 @@
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+index 31062455c..219db612e 100644
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -181,8 +181,8 @@ def v8_config(
+         linkopts = select({
+             "@v8//bazel/config:is_windows": [
+-                "Winmm.lib",
+-                "DbgHelp.lib",
+-                "Advapi32.lib",
++                "winmm.lib",
++                "dbghelp.lib",
++                "advapi32.lib",
+             ],
+             "@v8//bazel/config:is_macos": ["-pthread"],
+             "//conditions:default": ["-Wl,--no-as-needed -ldl -pthread"],

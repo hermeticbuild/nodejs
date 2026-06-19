@@ -1,0 +1,155 @@
+diff --git a/windows/private/extensions/windows_sdk.bzl b/windows/private/extensions/windows_sdk.bzl
+index ddbfa36..bf73ac0 100644
+--- a/windows/private/extensions/windows_sdk.bzl
++++ b/windows/private/extensions/windows_sdk.bzl
+@@ -12,6 +12,8 @@ _ARCH_PACKAGES = {
+     "x64": "Microsoft.Windows.SDK.CPP.x64",
+ }
+ _CASE_SENSITIVITY_PROBE = ".windows_sdk_case_sensitivity_probe"
++_VFS_OVERLAY = "windows_sdk_vfs_overlay.yaml"
++_LOWERCASE_SYSROOT_DIR = "sysroot_lowercase"
+
+ def _basename(path):
+     path_str = str(path).replace("\\", "/")
+@@ -120,6 +121,35 @@ def _relative_to_repo_root(repository_ctx, path):
+         return abs_path[len(repo_root) + 1:]
+     return abs_path
+
++def _write_vfs_overlay(repository_ctx, sysroot_dir, include_version):
++    roots = []
++    for include_root in [
++        "{}/base/c/Include/{}/ucrt".format(sysroot_dir, include_version),
++        "{}/base/c/Include/{}/shared".format(sysroot_dir, include_version),
++        "{}/base/c/Include/{}/um".format(sysroot_dir, include_version),
++        "{}/base/c/Include/{}/winrt".format(sysroot_dir, include_version),
++    ]:
++        files = []
++        _collect_files_recursive(repository_ctx.path(include_root), files)
++        for src_rel in sorted([_relative_to_repo_root(repository_ctx, f) for f in files]):
++            roots.append({
++                "external-contents": src_rel,
++                "name": src_rel,
++                "type": "file",
++            })
++
++    repository_ctx.file(
++        _VFS_OVERLAY,
++        json.encode({
++            "case-sensitive": False,
++            "overlay-relative": True,
++            "root-relative": "overlay-dir",
++            "roots": roots,
++            "use-external-names": False,
++            "version": 0,
++        }),
++    )
++
+ def _repository_fs_is_case_sensitive(repository_ctx):
+     probe_path = repository_ctx.path(_CASE_SENSITIVITY_PROBE)
+     if not probe_path.exists:
+@@ -169,6 +199,23 @@ def _apply_transformations(repository_ctx):
+
+             repository_ctx.symlink(src_rel, dst_rel)
+             created[dst_rel] = True
+
++def _write_lowercase_library_aliases(repository_ctx, sysroot_dir, architectures):
++    seen_architectures = {}
++    for arch in architectures:
++        if seen_architectures.get(arch, False):
++            continue
++        seen_architectures[arch] = True
++
++        for library_kind in ["ucrt", "um"]:
++            source_dir = "{}/{}/c/{}/{}".format(sysroot_dir, arch, library_kind, arch)
++            files = []
++            _collect_files_recursive(repository_ctx.path(source_dir), files)
++            for src_rel in sorted([_relative_to_repo_root(repository_ctx, f) for f in files]):
++                if not src_rel.lower().endswith(".lib"):
++                    continue
++                dst_rel = "{}/{}/c/{}/{}/{}".format(_LOWERCASE_SYSROOT_DIR, arch, library_kind, arch, _basename(src_rel).lower())
++                repository_ctx.symlink(src_rel, dst_rel)
++
+ def _windows_sdk_repository_impl(repository_ctx):
+     if not repository_ctx.attr.windows_sdk_version:
+@@ -205,6 +252,8 @@ def _windows_sdk_repository_impl(repository_ctx):
+     )
+
+     _apply_transformations(repository_ctx)
++    _write_vfs_overlay(repository_ctx, _SYSROOT_DIR, include_version)
+     _keep_exposed_windows_sdk_files(repository_ctx, _SYSROOT_DIR, include_version, requested_architectures)
++    _write_lowercase_library_aliases(repository_ctx, _SYSROOT_DIR, requested_architectures)
+
+     repository_ctx.template(
+diff --git a/windows/private/extensions/windows_sdk.BUILD.bazel b/windows/private/extensions/windows_sdk.BUILD.bazel
+index ba49555..47aa61f 100644
+--- a/windows/private/extensions/windows_sdk.BUILD.bazel
++++ b/windows/private/extensions/windows_sdk.BUILD.bazel
+@@ -5,6 +5,13 @@ load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+ package(default_visibility = ["//visibility:public"])
+
++exports_files(["windows_sdk_vfs_overlay.yaml"])
++
++directory(
++    name = "windows_sdk_vfs_overlay_directory",
++    srcs = ["windows_sdk_vfs_overlay.yaml"],
++)
++
+ config_setting(
+     name = "windows_aarch64",
+     constraint_values = [
+@@ -139,18 +146,50 @@ subdirectory(
+     path = "__WINSDK_DIR__/x64/c/um/x64",
+ )
+
++directory(
++    name = "winsdk_lowercase_lib_files",
++    srcs = glob(
++        ["sysroot_lowercase/**"],
++        allow_empty = True,
++    ),
++)
++
++subdirectory(
++    name = "winsdk_ucrt_lib_arm64_lowercase",
++    parent = ":winsdk_lowercase_lib_files",
++    path = "sysroot_lowercase/arm64/c/ucrt/arm64",
++)
++
++subdirectory(
++    name = "winsdk_ucrt_lib_x64_lowercase",
++    parent = ":winsdk_lowercase_lib_files",
++    path = "sysroot_lowercase/x64/c/ucrt/x64",
++)
++
++subdirectory(
++    name = "winsdk_um_lib_arm64_lowercase",
++    parent = ":winsdk_lowercase_lib_files",
++    path = "sysroot_lowercase/arm64/c/um/arm64",
++)
++
++subdirectory(
++    name = "winsdk_um_lib_x64_lowercase",
++    parent = ":winsdk_lowercase_lib_files",
++    path = "sysroot_lowercase/x64/c/um/x64",
++)
++
+ alias(
+     name = "winsdk_ucrt_lib",
+     actual = select({
+-        ":windows_aarch64": ":winsdk_ucrt_lib_arm64",
+-        "//conditions:default": ":winsdk_ucrt_lib_x64",
++        ":windows_aarch64": ":winsdk_ucrt_lib_arm64_lowercase",
++        "//conditions:default": ":winsdk_ucrt_lib_x64_lowercase",
+     }),
+ )
+
+ alias(
+     name = "winsdk_um_lib",
+     actual = select({
+-        ":windows_aarch64": ":winsdk_um_lib_arm64",
+-        "//conditions:default": ":winsdk_um_lib_x64",
++        ":windows_aarch64": ":winsdk_um_lib_arm64_lowercase",
++        "//conditions:default": ":winsdk_um_lib_x64_lowercase",
+     }),
+ )

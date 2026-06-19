@@ -1,0 +1,15 @@
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -102,6 +102,11 @@ def _default_args():
+             "@v8//bazel/config:is_windows": [
+                 "UNICODE",
+                 "_UNICODE",
++                "WIN32",
++                "_CRT_NONSTDC_NO_DEPRECATE",
++                "_CRT_SECURE_NO_DEPRECATE",
++                "_HAS_EXCEPTIONS=0",
++                "NOMINMAX",
+                 "_CRT_RAND_S",
+                 "_WIN32_WINNT=0x0A00",  # Override bazel default to Windows 10
+             ],
