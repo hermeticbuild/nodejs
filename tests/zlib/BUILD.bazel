@@ -1,0 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "zlib_test",
+    srcs = ["zlib_test.c"],
+    deps = ["@nodejs_26_3_1//:zlib"],
+)

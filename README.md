@@ -46,6 +46,11 @@ toolchains build x86_64 and arm64 variants for both operating systems.
 bundled libuv and V8 simdutf sources. `//tests/js2c:node_js2c_test` verifies
 that `node_js2c` embeds JavaScript, ES module, and `config.gypi` inputs.
 
+`@nodejs_26_3_1//:zlib` builds Node.js's bundled zlib 1.3.1 sources with the
+x86-64 and arm64 SIMD source sets and release preprocessor definitions.
+`//tests/zlib:zlib_test` verifies compression, decompression, and the bundled
+zlib version.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which

@@ -13,6 +13,16 @@ config_setting(
     constraint_values = ["@platforms//os:macos"],
 )
 
+config_setting(
+    name = "target_x86_64",
+    constraint_values = ["@platforms//cpu:x86_64"],
+)
+
+config_setting(
+    name = "target_arm64",
+    constraint_values = ["@platforms//cpu:aarch64"],
+)
+
 exports_files([
     "bazel/release.bzl",
     "bazel/release_metadata.json",
@@ -173,4 +183,128 @@ cc_binary(
         ":libuv",
         "@v8//:simdutf",
     ],
+)
+
+cc_library(
+    name = "zlib_headers",
+    hdrs = glob([
+        "deps/zlib/*.h",
+        "deps/zlib/contrib/optimizations/*.h",
+    ]),
+    includes = ["deps/zlib"],
+)
+
+cc_library(
+    name = "zlib_adler32_simd",
+    srcs = ["deps/zlib/adler32_simd.c"],
+    copts = select(
+        {
+            ":target_x86_64": ["-mssse3"],
+            ":target_arm64": [],
+        },
+        no_match_error = "zlib_adler32_simd currently supports x86_64 and arm64 targets",
+    ),
+    defines = select(
+        {
+            ":target_x86_64": [
+                "ADLER32_SIMD_SSSE3",
+                "X86_NOT_WINDOWS",
+            ],
+            ":target_arm64": ["ADLER32_SIMD_NEON"],
+        },
+        no_match_error = "zlib_adler32_simd currently supports x86_64 and arm64 targets",
+    ),
+    deps = [":zlib_headers"],
+)
+
+cc_library(
+    name = "zlib_data_chunk_simd",
+    srcs = [
+        "deps/zlib/contrib/optimizations/inffast_chunk.c",
+        "deps/zlib/contrib/optimizations/inflate.c",
+    ],
+    defines = select(
+        {
+            ":target_x86_64": [
+                "DEFLATE_CHUNK_WRITE_64LE",
+                "INFLATE_CHUNK_READ_64LE",
+                "INFLATE_CHUNK_SIMD_SSE2",
+            ],
+            ":target_arm64": [
+                "DEFLATE_CHUNK_WRITE_64LE",
+                "INFLATE_CHUNK_READ_64LE",
+                "INFLATE_CHUNK_SIMD_NEON",
+            ],
+        },
+        no_match_error = "zlib_data_chunk_simd currently supports x86_64 and arm64 targets",
+    ),
+    deps = [":zlib_headers"],
+)
+
+cc_library(
+    name = "zlib_arm_crc32",
+    srcs = ["deps/zlib/crc32_simd.c"],
+    defines = ["CRC32_ARMV8_CRC32"] + select(
+        {
+            ":target_linux": ["ARMV8_OS_LINUX"],
+            ":target_macos": ["ARMV8_OS_MACOS"],
+        },
+        no_match_error = "zlib_arm_crc32 currently supports Linux and macOS targets",
+    ),
+    target_compatible_with = ["@platforms//cpu:aarch64"],
+    deps = [":zlib_headers"],
+)
+
+cc_library(
+    name = "zlib",
+    srcs = [
+        "deps/zlib/adler32.c",
+        "deps/zlib/compress.c",
+        "deps/zlib/cpu_features.c",
+        "deps/zlib/crc32.c",
+        "deps/zlib/deflate.c",
+        "deps/zlib/gzclose.c",
+        "deps/zlib/gzlib.c",
+        "deps/zlib/gzread.c",
+        "deps/zlib/gzwrite.c",
+        "deps/zlib/infback.c",
+        "deps/zlib/inffast.c",
+        "deps/zlib/inftrees.c",
+        "deps/zlib/trees.c",
+        "deps/zlib/uncompr.c",
+        "deps/zlib/zutil.c",
+    ],
+    copts = ["-Wno-implicit-fallthrough"],
+    defines = ["HAVE_HIDDEN"] + select(
+        {
+            ":target_x86_64": [
+                "DEFLATE_SLIDE_HASH_SSE2",
+                "INFLATE_CHUNK_READ_64LE",
+            ],
+            ":target_arm64": [
+                "DEFLATE_SLIDE_HASH_NEON",
+                "INFLATE_CHUNK_READ_64LE",
+                "__ARM_NEON__",
+            ],
+        },
+        no_match_error = "zlib currently supports x86_64 and arm64 targets",
+    ) + select(
+        {
+            ":target_linux": [],
+            ":target_macos": ["USE_FILE32API"],
+        },
+        no_match_error = "zlib currently supports Linux and macOS targets",
+    ),
+    includes = ["deps/zlib"],
+    deps = [
+        ":zlib_adler32_simd",
+        ":zlib_data_chunk_simd",
+        ":zlib_headers",
+    ] + select(
+        {
+            ":target_x86_64": [],
+            ":target_arm64": [":zlib_arm_crc32"],
+        },
+        no_match_error = "zlib currently supports x86_64 and arm64 targets",
+    ),
 )
