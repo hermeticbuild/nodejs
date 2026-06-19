@@ -185,6 +185,7 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
+            //tests/node:node_snapshot_test \
             //tests/node:node_test
 
       - name: Test Rust 1.82 toolchain

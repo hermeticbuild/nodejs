@@ -25,6 +25,44 @@ load("@v8_python_deps//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
 
+_NODE_TARGET_LOCAL_DEFINES = [
+    "HAVE_AMARO=1",
+    "HAVE_FFI=1",
+    "HAVE_INSPECTOR=1",
+    "HAVE_LIEF=1",
+    "HAVE_OPENSSL=1",
+    "HAVE_QUIC=0",
+    "HAVE_SQLITE=1",
+    "ICU_NO_USER_DATA_OVERRIDE",
+    "NAPI_EXPERIMENTAL=1",
+    "NODE_API_EXPERIMENTAL_NO_WARNING=1",
+    "NODE_BUNDLED_ZLIB",
+    "NODE_BUNDLED_ZSTD",
+    "NODE_HAVE_I18N_SUPPORT=1",
+    "NODE_OPENSSL_CONF_NAME=nodejs_conf",
+    "NODE_OPENSSL_SYSTEM_CERT_PATH=\\\"\\\"",
+    "NODE_RELEASE_URLBASE=\\\"https://nodejs.org/download/release/\\\"",
+    "NODE_SHARED_FFI=0",
+    "NODE_USE_V8_PLATFORM=1",
+    "NODE_WANT_INTERNALS=1",
+    "OPENSSL_API_COMPAT=0x10100000L",
+    "SQLITE_ENABLE_SESSION",
+    "V8_DEPRECATION_WARNINGS=1",
+    "__POSIX__",
+] + select(
+    {
+        ":target_x86_64": ["NODE_ARCH=\\\"x64\\\""],
+        ":target_arm64": ["NODE_ARCH=\\\"arm64\\\""],
+    },
+    no_match_error = "Node.js currently supports x86_64 and arm64 targets",
+) + select(
+    {
+        ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
+        ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
+    },
+    no_match_error = "Node.js currently supports Linux and macOS targets",
+)
+
 config_setting(
     name = "target_linux",
     constraint_values = ["@platforms//os:linux"],
@@ -468,43 +506,7 @@ cc_library(
         "generated/node_inspector/src",
         "src",
     ],
-    local_defines = [
-        "HAVE_AMARO=1",
-        "HAVE_FFI=1",
-        "HAVE_INSPECTOR=1",
-        "HAVE_LIEF=1",
-        "HAVE_OPENSSL=1",
-        "HAVE_QUIC=0",
-        "HAVE_SQLITE=1",
-        "ICU_NO_USER_DATA_OVERRIDE",
-        "NAPI_EXPERIMENTAL=1",
-        "NODE_API_EXPERIMENTAL_NO_WARNING=1",
-        "NODE_BUNDLED_ZLIB",
-        "NODE_BUNDLED_ZSTD",
-        "NODE_HAVE_I18N_SUPPORT=1",
-        "NODE_OPENSSL_CONF_NAME=nodejs_conf",
-        "NODE_OPENSSL_SYSTEM_CERT_PATH=\\\"\\\"",
-        "NODE_RELEASE_URLBASE=\\\"https://nodejs.org/download/release/\\\"",
-        "NODE_SHARED_FFI=0",
-        "NODE_USE_V8_PLATFORM=1",
-        "NODE_WANT_INTERNALS=1",
-        "OPENSSL_API_COMPAT=0x10100000L",
-        "SQLITE_ENABLE_SESSION",
-        "V8_DEPRECATION_WARNINGS=1",
-        "__POSIX__",
-    ] + select(
-        {
-            ":target_x86_64": ["NODE_ARCH=\\\"x64\\\""],
-            ":target_arm64": ["NODE_ARCH=\\\"arm64\\\""],
-        },
-        no_match_error = "libnode currently supports x86_64 and arm64 targets",
-    ) + select(
-        {
-            ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
-            ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
-        },
-        no_match_error = "libnode currently supports Linux and macOS targets",
-    ),
+    local_defines = _NODE_TARGET_LOCAL_DEFINES,
     linkopts = select(
         {
             ":target_linux": [],
@@ -551,6 +553,45 @@ cc_library(
 )
 
 cc_binary(
+    name = "node_mksnapshot",
+    srcs = ["tools/snapshot/node_mksnapshot.cc"],
+    copts = ["-std=c++20"],
+    local_defines = _NODE_TARGET_LOCAL_DEFINES + ["NODE_USE_NODE_CODE_CACHE=1"],
+    deps = [":node_snapshot_stub"],
+)
+
+genrule(
+    name = "node_snapshot_source_linux_x86_64",
+    srcs = [":node_mksnapshot"],
+    outs = ["generated/linux_x86_64/node_snapshot.cc"],
+    cmd = "$(location :node_mksnapshot) $@",
+)
+
+genrule(
+    name = "node_snapshot_source_runner",
+    srcs = [":node_mksnapshot"],
+    outs = ["generated/runner/node_snapshot.cc"],
+    cmd = "$(location :node_mksnapshot) $@",
+    tags = ["no-remote-exec"],
+)
+
+filegroup(
+    name = "node_snapshot_source",
+    srcs = select({
+        ":target_linux_x86_64": [":node_snapshot_source_linux_x86_64"],
+        "//conditions:default": [":node_snapshot_source_runner"],
+    }),
+)
+
+cc_library(
+    name = "node_snapshot",
+    srcs = [":node_snapshot_source"],
+    copts = ["-std=c++20"],
+    local_defines = _NODE_TARGET_LOCAL_DEFINES,
+    deps = [":libnode"],
+)
+
+cc_binary(
     name = "node",
     srcs = ["src/node_main.cc"],
     copts = ["-std=c++20"],
@@ -567,7 +608,7 @@ cc_binary(
         },
         no_match_error = "node currently supports Linux and macOS targets",
     ),
-    deps = [":node_snapshot_stub"],
+    deps = [":node_snapshot"],
 )
 
 cc_library(

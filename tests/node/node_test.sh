@@ -10,7 +10,9 @@ platform="$3"
 if [[ "$arch" == "x64" && "$platform" == "linux" ]]; then
   "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'
 else
-  ! "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'
+  if "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'; then
+    exit 1
+  fi
 fi
 
 "$node" - "$arch" "$platform" <<'JS'
@@ -33,6 +35,8 @@ assert.equal(process.arch, expectedArch);
 assert.equal(process.platform, expectedPlatform);
 assert.equal(process.config.variables.node_use_ffi, true);
 assert.equal(process.config.variables.node_use_lief, true);
+assert.equal(process.config.variables.node_use_node_code_cache, true);
+assert.equal(process.config.variables.node_use_node_snapshot, true);
 assert.equal(typeof Temporal, 'object');
 assert.equal(Temporal.Instant.from('1970-01-01T00:00:00Z').epochMilliseconds, 0);
 assert.equal(

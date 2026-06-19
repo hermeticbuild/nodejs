@@ -26,3 +26,10 @@ sh_test(
     ),
     data = ["@nodejs_26_3_1//:node"],
 )
+
+sh_test(
+    name = "node_snapshot_test",
+    srcs = ["node_snapshot_test.sh"],
+    args = ["$(rootpath @nodejs_26_3_1//:node_snapshot_source)"],
+    data = ["@nodejs_26_3_1//:node_snapshot_source"],
+)
