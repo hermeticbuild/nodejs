@@ -101,6 +101,7 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
+            //tests/brotli:brotli_test \
             //tests/cares:cares_test \
             //tests/histogram:histogram_test \
             //tests/llhttp:llhttp_test \

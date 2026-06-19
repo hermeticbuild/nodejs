@@ -60,6 +60,10 @@ bundled version.
 bundled hdr-histogram 0.11.9 and nbytes 0.1.4 sources. Their tests verify value
 recording, percentile lookup, byte swapping, and the bundled versions.
 
+`@nodejs_26_3_1//:brotli` builds the exact common, encoder, and decoder sources
+from Node.js's bundled Brotli 1.2.0. `//tests/brotli:brotli_test` verifies an
+encode/decode round trip.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
