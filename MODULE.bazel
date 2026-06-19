@@ -33,6 +33,7 @@ archive_override(
     integrity = "sha256-sSr0NUsY06DQwPoxgh+drMpOkeG/N7Lx+KxWkZTFUDM=",
     patch_strip = 1,
     patches = [
+        "//nodejs/private/patches/llvm:msvc-cxx-standard.patch",
         "//nodejs/private/patches/llvm:msvc-runtime-features.patch",
         "//nodejs/private/patches/llvm:msvc-warning-level.patch",
     ],

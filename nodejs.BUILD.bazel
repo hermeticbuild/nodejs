@@ -1,4 +1,5 @@
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@nodejs//nodejs/private:compiler_options.bzl", "cxx20_copts")
 load(
     "@nodejs//nodejs/private:lief_sources.bzl",
     "LIEF_SOURCES",
@@ -327,7 +328,7 @@ cc_binary(
         "tools/executable_wrapper.h",
         "tools/js2c.cc",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NODE_JS2C_USE_STRING_LITERALS"],
     includes = [
         "src",
@@ -340,8 +341,9 @@ cc_binary(
                 "-framework CoreFoundation",
                 "-framework Security",
             ],
+            ":target_windows": [],
         },
-        no_match_error = "node_js2c currently supports Linux and macOS targets",
+        no_match_error = "node_js2c currently supports Linux, macOS, and Windows targets",
     ),
     deps = [
         ":libuv",
@@ -525,7 +527,7 @@ cc_library(
         "deps/inspector_protocol/crdtp/status.cc",
     ],
     hdrs = glob(["deps/inspector_protocol/crdtp/*.h"]),
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     includes = ["deps/inspector_protocol"],
 )
 
@@ -551,9 +553,8 @@ cc_library(
         ":v8_inspector_protocol_json",
         "deps/postject/postject-api.h",
     ],
-    copts = [
+    copts = cxx20_copts() + [
         "-O3",
-        "-std=c++20",
         "-Werror=ctad-maybe-unsupported",
         "-Werror=extra-semi",
         "-Werror=undefined-inline",
@@ -613,14 +614,14 @@ cc_library(
 cc_library(
     name = "node_snapshot_stub",
     srcs = ["src/node_snapshot_stub.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":libnode"],
 )
 
 cc_binary(
     name = "node_mksnapshot",
     srcs = ["tools/snapshot/node_mksnapshot.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     local_defines = _NODE_TARGET_LOCAL_DEFINES + ["NODE_USE_NODE_CODE_CACHE=1"],
     deps = [":node_snapshot_stub"],
 )
@@ -651,7 +652,7 @@ filegroup(
 cc_library(
     name = "node_snapshot",
     srcs = [":node_snapshot_source"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     local_defines = _NODE_TARGET_LOCAL_DEFINES,
     deps = [":libnode"],
 )
@@ -659,7 +660,7 @@ cc_library(
 cc_binary(
     name = "node",
     srcs = ["src/node_main.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     linkopts = select(
         {
             ":target_linux": [
@@ -692,7 +693,7 @@ cc_binary(
         "test/embedding/embedtest.cc",
         "tools/executable_wrapper.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     includes = [
         "test/embedding",
         "tools",
@@ -999,14 +1000,14 @@ node_addon(
     name = "register_signal_handler_binding_node",
     output = "test/addons/register-signal-handler/build/Release/binding.node",
     srcs = ["test/addons/register-signal-handler/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
 )
 
 node_addon(
     name = "uv_handle_leak_binding_node",
     output = "test/addons/uv-handle-leak/build/Release/binding.node",
     srcs = ["test/addons/uv-handle-leak/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
 )
 
 node_addon(
@@ -1044,7 +1045,7 @@ node_addon(
         "test/js-native-api/6_object_wrap/myobject.cc",
         "test/js-native-api/6_object_wrap/myobject.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1055,7 +1056,7 @@ node_addon(
         "test/js-native-api/6_object_wrap/myobject.cc",
         "test/js-native-api/6_object_wrap/myobject.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
     deps = [":js_native_api_test_headers"],
 )
@@ -1067,7 +1068,7 @@ node_addon(
         "test/js-native-api/6_object_wrap/nested_wrap.cc",
         "test/js-native-api/6_object_wrap/nested_wrap.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_VERSION=10"],
     deps = [":js_native_api_test_headers"],
 )
@@ -1080,7 +1081,7 @@ node_addon(
         "test/js-native-api/7_factory_wrap/myobject.cc",
         "test/js-native-api/7_factory_wrap/myobject.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1092,7 +1093,7 @@ node_addon(
         "test/js-native-api/8_passing_wrapped/myobject.cc",
         "test/js-native-api/8_passing_wrapped/myobject.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1383,7 +1384,7 @@ node_addon(
     name = "node_api_test_init_order_node",
     output = "test/node-api/test_init_order/build/Release/test_init_order.node",
     srcs = ["test/node-api/test_init_order/test_init_order.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1405,7 +1406,7 @@ node_addon(
     name = "node_api_test_uv_loop_node",
     output = "test/node-api/test_uv_loop/build/Release/test_uv_loop.node",
     srcs = ["test/node-api/test_uv_loop/test_uv_loop.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1573,7 +1574,7 @@ node_addon(
     name = "node_api_test_threadsafe_function_abort_binding_node",
     output = "test/node-api/test_threadsafe_function_abort/build/Release/binding.node",
     srcs = ["test/node-api/test_threadsafe_function_abort/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1581,7 +1582,7 @@ node_addon(
     name = "node_api_test_threadsafe_function_shutdown_binding_node",
     output = "test/node-api/test_threadsafe_function_shutdown/build/Release/binding.node",
     srcs = ["test/node-api/test_threadsafe_function_shutdown/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = [":js_native_api_test_headers"],
 )
 
@@ -1861,8 +1862,7 @@ node_addon(
     name = "test_addon_openssl_test_engine",
     output = "test/addons/openssl-test-engine/build/Release/testsetengine.engine",
     srcs = ["test/addons/openssl-test-engine/testsetengine.cc"],
-    copts = [
-        "-std=c++20",
+    copts = cxx20_copts() + [
         "-Wno-cast-function-type",
         "-Wno-deprecated-declarations",
     ],
@@ -1881,7 +1881,7 @@ node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
 )
 
@@ -1889,7 +1889,7 @@ node_addon(
     name = "benchmark_napi_buffer_v8_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding_node_api_v8.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_VERSION=8"],
 )
 
@@ -1897,7 +1897,7 @@ node_addon(
     name = "benchmark_napi_create_object_with_properties_binding_node",
     output = "benchmark/napi/create_object_with_properties/build/Release/binding.node",
     srcs = ["benchmark/napi/create_object_with_properties/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
 )
 
@@ -1911,7 +1911,7 @@ node_addon(
     name = "benchmark_napi_function_args_binding_node",
     output = "benchmark/napi/function_args/build/Release/binding.node",
     srcs = ["benchmark/napi/function_args/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
 )
 
 node_addon(
@@ -1924,7 +1924,7 @@ node_addon(
     name = "benchmark_napi_function_call_binding_node",
     output = "benchmark/napi/function_call/build/Release/binding.node",
     srcs = ["benchmark/napi/function_call/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
 )
 
 node_addon(
@@ -1937,7 +1937,7 @@ node_addon(
     name = "benchmark_napi_property_keys_binding_node",
     output = "benchmark/napi/property_keys/build/Release/binding.node",
     srcs = ["benchmark/napi/property_keys/binding.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NAPI_EXPERIMENTAL"],
 )
 
@@ -2755,7 +2755,7 @@ cc_library(
     name = "nbytes",
     srcs = ["deps/nbytes/src/nbytes.cpp"],
     hdrs = ["deps/nbytes/include/nbytes.h"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     includes = ["deps/nbytes/include"],
 )
 
@@ -2981,7 +2981,7 @@ cc_library(
         "deps/ada/ada.h",
         "deps/ada/ada_c.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["ADA_USE_SIMDUTF=1"],
     includes = ["deps/ada"],
     deps = ["@v8//:simdutf"],
@@ -2994,7 +2994,7 @@ cc_library(
         "deps/merve/merve.h",
         "deps/merve/merve_c.h",
     ],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["MERVE_USE_SIMDUTF=1"],
     includes = ["deps/merve"],
     deps = ["@v8//:simdutf"],
@@ -3004,7 +3004,7 @@ cc_library(
     name = "simdjson",
     srcs = ["deps/simdjson/simdjson.cpp"],
     hdrs = ["deps/simdjson/simdjson.h"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     includes = ["deps/simdjson"],
 )
 
@@ -3159,7 +3159,7 @@ cc_library(
         "deps/ncrypto/ncrypto.cc",
     ],
     hdrs = ["deps/ncrypto/ncrypto.h"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     defines = ["NCRYPTO_BSSL_LIBDECREPIT_MISSING=1"],
     includes = ["deps/ncrypto"],
     deps = [":openssl"],

@@ -1,6 +1,7 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 
 exports_files([
+    "compiler_options.bzl",
     "lief_sources.bzl",
     "node_addon.bzl",
     "node_javascript.bzl",

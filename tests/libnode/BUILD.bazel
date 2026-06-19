@@ -1,8 +1,9 @@
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("//nodejs/private:compiler_options.bzl", "cxx20_copts")
 
 cc_test(
     name = "libnode_test",
     srcs = ["libnode_test.cc"],
-    copts = ["-std=c++20"],
+    copts = cxx20_copts(),
     deps = ["@nodejs_26_3_1//:node_snapshot_stub"],
 )
