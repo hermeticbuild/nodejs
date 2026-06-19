@@ -103,6 +103,7 @@ rust.toolchain(
     edition = "2021",
     extra_target_triples = [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
         "aarch64-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-msvc",
@@ -129,6 +130,7 @@ nodejs_crates.from_cargo(
     cargo_toml = "@nodejs_crates_26_3_1//:Cargo.toml",
     platform_triples = [
         "aarch64-apple-darwin",
+        "aarch64-pc-windows-msvc",
         "aarch64-unknown-linux-gnu",
         "x86_64-apple-darwin",
         "x86_64-pc-windows-msvc",

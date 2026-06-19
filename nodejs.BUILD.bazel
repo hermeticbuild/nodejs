@@ -3474,6 +3474,17 @@ genrule(
 )
 
 genrule(
+    name = "libffi_headers_windows_arm64",
+    outs = [
+        "generated/libffi/windows_arm64/ffi.h",
+        "generated/libffi/windows_arm64/fficonfig.h",
+        "generated/libffi/windows_arm64/ffitarget.h",
+    ],
+    cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/windows_arm64 --target-arch arm64 --os win",
+    tools = [":libffi_generate_headers"],
+)
+
+genrule(
     name = "libffi_headers_windows_x86_64",
     outs = [
         "generated/libffi/windows_x86_64/ffi.h",
@@ -3482,6 +3493,63 @@ genrule(
     ],
     cmd = "$(execpath :libffi_generate_headers) --output-dir $(RULEDIR)/generated/libffi/windows_x86_64 --target-arch x64 --os win",
     tools = [":libffi_generate_headers"],
+)
+
+py_binary(
+    name = "libffi_preprocess_asm",
+    srcs = ["deps/libffi/preprocess_asm.py"],
+    main = "deps/libffi/preprocess_asm.py",
+)
+
+genrule(
+    name = "libffi_windows_arm64_asm",
+    srcs = [
+        ":generated/libffi/windows_arm64/ffi.h",
+        ":generated/libffi/windows_arm64/fficonfig.h",
+        ":generated/libffi/windows_arm64/ffitarget.h",
+        "@windows_sdk//:ksarm64_header",
+        "deps/libffi/include/ffi_cfi.h",
+        "deps/libffi/src/aarch64/internal.h",
+        "deps/libffi/src/aarch64/win64_armasm.S",
+    ],
+    outs = [
+        "generated/libffi/windows_arm64/win64_armasm.asm",
+        "generated/libffi/windows_arm64/win64_armasm.obj",
+    ],
+    cmd = "exit 1",
+    cmd_bat = """
+for %%I in ("$(execpath @msvc_runtime//:armasm64)") do set "PATH=%%~dpI;%PATH%"
+set "CC=$(execpath @llvm//tools:clang-cl)"
+for %%I in ("$(execpath :generated/libffi/windows_arm64/ffi.h)") do set "FFI_GENERATED_INCLUDE=%%~dpI"
+for %%I in ("$(execpath deps/libffi/include/ffi_cfi.h)") do set "FFI_INCLUDE=%%~dpI"
+for %%I in ("$(execpath deps/libffi/src/aarch64/internal.h)") do set "FFI_AARCH64_INCLUDE=%%~dpI"
+for %%I in ("$(execpath @windows_sdk//:ksarm64_header)") do set "WINDOWS_SDK_SHARED_INCLUDE=%%~dpI"
+"$(execpath :libffi_preprocess_asm)" ^
+  --input "$(execpath deps/libffi/src/aarch64/win64_armasm.S)" ^
+  --output "$(execpath :generated/libffi/windows_arm64/win64_armasm.asm)" ^
+  --include-dir "%FFI_INCLUDE%" ^
+  --include-dir "%FFI_AARCH64_INCLUDE%" ^
+  --include-dir "%FFI_GENERATED_INCLUDE%" ^
+  --include-dir "%WINDOWS_SDK_SHARED_INCLUDE%" ^
+  --define FFI_STATIC_BUILD ^
+  --assemble "$(execpath :generated/libffi/windows_arm64/win64_armasm.obj)"
+""",
+    exec_compatible_with = [
+        "@platforms//cpu:aarch64",
+        "@platforms//os:windows",
+    ],
+    tags = ["no-remote"],
+    tools = [
+        ":libffi_preprocess_asm",
+        "@llvm//tools:clang-cl",
+        "@msvc_runtime//:armasm64",
+        "@msvc_runtime//:armasm64_runtime_files",
+    ],
+)
+
+filegroup(
+    name = "libffi_windows_arm64_asm_object",
+    srcs = [":generated/libffi/windows_arm64/win64_armasm.obj"],
 )
 
 cc_library(
@@ -3516,12 +3584,16 @@ cc_library(
                 "deps/libffi/src/x86/unix64.S",
                 "deps/libffi/src/x86/win64.S",
             ],
+            ":target_windows_arm64": [
+                "deps/libffi/src/aarch64/ffi.c",
+                ":libffi_windows_arm64_asm_object",
+            ],
             ":target_windows_x86_64": [
                 "deps/libffi/src/x86/ffiw64.c",
                 "deps/libffi/src/x86/win64.S",
             ],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
+        no_match_error = "libffi currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
     hdrs = glob([
         "deps/libffi/include/*.h",
@@ -3548,13 +3620,18 @@ cc_library(
                 ":generated/libffi/macos_x86_64/fficonfig.h",
                 ":generated/libffi/macos_x86_64/ffitarget.h",
             ],
+            ":target_windows_arm64": [
+                ":generated/libffi/windows_arm64/ffi.h",
+                ":generated/libffi/windows_arm64/fficonfig.h",
+                ":generated/libffi/windows_arm64/ffitarget.h",
+            ],
             ":target_windows_x86_64": [
                 ":generated/libffi/windows_x86_64/ffi.h",
                 ":generated/libffi/windows_x86_64/fficonfig.h",
                 ":generated/libffi/windows_x86_64/ffitarget.h",
             ],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
+        no_match_error = "libffi currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
     copts = select({
         ":target_windows": [],
@@ -3570,9 +3647,10 @@ cc_library(
             ":target_linux_x86_64": ["generated/libffi/linux_x86_64"],
             ":target_macos_arm64": ["generated/libffi/macos_arm64"],
             ":target_macos_x86_64": ["generated/libffi/macos_x86_64"],
+            ":target_windows_arm64": ["generated/libffi/windows_arm64"],
             ":target_windows_x86_64": ["generated/libffi/windows_x86_64"],
         },
-        no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets and Windows x86_64 targets",
+        no_match_error = "libffi currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
     textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
 )
