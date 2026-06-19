@@ -90,7 +90,7 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_26_3_1//:libuv
 
-      - name: Test bundled libuv and zlib
+      - name: Test bundled C dependencies
         run: |
           bazel test \
             --config=ci \
@@ -101,6 +101,8 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
+            //tests/cares:cares_test \
+            //tests/llhttp:llhttp_test \
             //tests/libuv:libuv_version_test \
             //tests/zlib:zlib_test
 

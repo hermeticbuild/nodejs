@@ -308,3 +308,52 @@ cc_library(
         no_match_error = "zlib currently supports x86_64 and arm64 targets",
     ),
 )
+
+cc_library(
+    name = "llhttp",
+    srcs = [
+        "deps/llhttp/src/api.c",
+        "deps/llhttp/src/http.c",
+        "deps/llhttp/src/llhttp.c",
+    ],
+    hdrs = ["deps/llhttp/include/llhttp.h"],
+    includes = ["deps/llhttp/include"],
+)
+
+cc_library(
+    name = "cares",
+    srcs = glob(["deps/cares/src/lib/**/*.c"]),
+    hdrs = glob([
+        "deps/cares/config/darwin/*.h",
+        "deps/cares/config/linux/*.h",
+        "deps/cares/include/*.h",
+        "deps/cares/src/lib/**/*.h",
+    ]),
+    copts = [
+        "-pedantic",
+        "-std=gnu11",
+        "-Wall",
+        "-Wextra",
+        "-Wno-error=deprecated-declarations",
+        "-Wno-unused-parameter",
+    ],
+    defines = [
+        "CARES_STATICLIB",
+        "HAVE_CONFIG_H",
+        "_DARWIN_USE_64_BIT_INODE=1",
+        "_FILE_OFFSET_BITS=64",
+        "_GNU_SOURCE",
+        "_LARGEFILE_SOURCE",
+    ],
+    includes = [
+        "deps/cares/include",
+        "deps/cares/src/lib",
+        "deps/cares/src/lib/include",
+    ] + select(
+        {
+            ":target_linux": ["deps/cares/config/linux"],
+            ":target_macos": ["deps/cares/config/darwin"],
+        },
+        no_match_error = "cares currently supports Linux and macOS targets",
+    ),
+)

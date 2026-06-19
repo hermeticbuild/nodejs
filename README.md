@@ -51,6 +51,11 @@ x86-64 and arm64 SIMD source sets and release preprocessor definitions.
 `//tests/zlib:zlib_test` verifies compression, decompression, and the bundled
 zlib version.
 
+`@nodejs_26_3_1//:llhttp` and `@nodejs_26_3_1//:cares` build Node.js's bundled
+llhttp 9.4.2 and c-ares 1.34.6 sources. `//tests/llhttp:llhttp_test` parses an
+HTTP request, and `//tests/cares:cares_test` initializes c-ares and checks the
+bundled version.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which

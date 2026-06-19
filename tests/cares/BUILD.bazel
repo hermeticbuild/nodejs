@@ -1,0 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "cares_test",
+    srcs = ["cares_test.c"],
+    deps = ["@nodejs_26_3_1//:cares"],
+)
