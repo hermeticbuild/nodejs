@@ -247,8 +247,7 @@ jobs:
             @nodejs_26_3_1//:node_upstream_embedding_tests \
             @nodejs_26_3_1//:node_upstream_es_module_tests \
             @nodejs_26_3_1//:node_upstream_ffi_tests \
-            @nodejs_26_3_1//:node_upstream_js_native_api_tutorial_tests \
-            @nodejs_26_3_1//:node_upstream_js_native_api_value_tests \
+            @nodejs_26_3_1//:node_upstream_js_native_api_tests \
             @nodejs_26_3_1//:node_upstream_known_issues_tests \
             @nodejs_26_3_1//:node_upstream_message_tests \
             @nodejs_26_3_1//:node_upstream_module_hooks_tests \

@@ -706,18 +706,33 @@ py_binary(
         ":js_native_api_8_passing_wrapped_node",
         ":js_native_api_test_array_node",
         ":js_native_api_test_bigint_node",
+        ":js_native_api_test_cannot_run_js_node",
         ":js_native_api_test_constructor_node",
         ":js_native_api_test_conversions_node",
         ":js_native_api_test_date_node",
+        ":js_native_api_test_dataview_node",
         ":js_native_api_test_error_node",
+        ":js_native_api_test_exception_node",
+        ":js_native_api_test_finalizer_node",
         ":js_native_api_test_function_node",
+        ":js_native_api_test_general_node",
+        ":js_native_api_test_handle_scope_node",
+        ":js_native_api_test_instance_data_node",
         ":js_native_api_test_new_target_node",
         ":js_native_api_test_number_node",
+        ":js_native_api_test_object_exceptions_node",
+        ":js_native_api_test_object_node",
+        ":js_native_api_test_pending_exception_node",
         ":js_native_api_test_promise_node",
         ":js_native_api_test_properties_node",
+        ":js_native_api_test_reference_double_free_node",
+        ":js_native_api_test_reference_finalizer_node",
+        ":js_native_api_test_reference_node",
         ":js_native_api_test_sharedarraybuffer_node",
         ":js_native_api_test_string_node",
         ":js_native_api_test_symbol_node",
+        ":js_native_api_test_typedarray_node",
+        ":js_native_api_test_typedarray_sharedarraybuffer_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -1042,6 +1057,124 @@ node_addon(
 )
 
 node_addon(
+    name = "js_native_api_test_cannot_run_js_node",
+    output = "test/js-native-api/test_cannot_run_js/build/Release/test_cannot_run_js.node",
+    srcs = ["test/js-native-api/test_cannot_run_js/test_cannot_run_js.c"],
+    defines = ["NAPI_VERSION=10"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_pending_exception_node",
+    output = "test/js-native-api/test_cannot_run_js/build/Release/test_pending_exception.node",
+    srcs = ["test/js-native-api/test_cannot_run_js/test_cannot_run_js.c"],
+    defines = ["NAPI_VERSION=9"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_dataview_node",
+    output = "test/js-native-api/test_dataview/build/Release/test_dataview.node",
+    srcs = ["test/js-native-api/test_dataview/test_dataview.c"],
+    defines = [
+        "NAPI_EXPERIMENTAL",
+        "NODE_API_EXPERIMENTAL_NO_WARNING",
+    ],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_exception_node",
+    output = "test/js-native-api/test_exception/build/Release/test_exception.node",
+    srcs = ["test/js-native-api/test_exception/test_exception.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_finalizer_node",
+    output = "test/js-native-api/test_finalizer/build/Release/test_finalizer.node",
+    srcs = ["test/js-native-api/test_finalizer/test_finalizer.c"],
+    defines = ["NAPI_EXPERIMENTAL"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_general_node",
+    output = "test/js-native-api/test_general/build/Release/test_general.node",
+    srcs = ["test/js-native-api/test_general/test_general.c"],
+    defines = ["NAPI_EXPERIMENTAL"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_handle_scope_node",
+    output = "test/js-native-api/test_handle_scope/build/Release/test_handle_scope.node",
+    srcs = ["test/js-native-api/test_handle_scope/test_handle_scope.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_instance_data_node",
+    output = "test/js-native-api/test_instance_data/build/Release/test_instance_data.node",
+    srcs = ["test/js-native-api/test_instance_data/test_instance_data.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_object_node",
+    output = "test/js-native-api/test_object/build/Release/test_object.node",
+    srcs = [
+        "test/js-native-api/test_object/test_null.c",
+        "test/js-native-api/test_object/test_object.c",
+        "test/js-native-api/test_object/test_null.h",
+    ],
+    defines = ["NAPI_EXPERIMENTAL"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_object_exceptions_node",
+    output = "test/js-native-api/test_object/build/Release/test_exceptions.node",
+    srcs = ["test/js-native-api/test_object/test_exceptions.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_reference_node",
+    output = "test/js-native-api/test_reference/build/Release/test_reference.node",
+    srcs = ["test/js-native-api/test_reference/test_reference.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_reference_finalizer_node",
+    output = "test/js-native-api/test_reference/build/Release/test_finalizer.node",
+    srcs = ["test/js-native-api/test_reference/test_finalizer.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_reference_double_free_node",
+    output = "test/js-native-api/test_reference_double_free/build/Release/test_reference_double_free.node",
+    srcs = ["test/js-native-api/test_reference_double_free/test_reference_double_free.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_typedarray_node",
+    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray.node",
+    srcs = ["test/js-native-api/test_typedarray/test_typedarray.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
+    name = "js_native_api_test_typedarray_sharedarraybuffer_node",
+    output = "test/js-native-api/test_typedarray/build/Release/test_typedarray_sharedarraybuffer.node",
+    srcs = ["test/js-native-api/test_typedarray/test_typedarray_sharedarraybuffer.c"],
+    deps = [":js_native_api_test_headers"],
+)
+
+node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
     srcs = ["benchmark/napi/buffer/binding.cc"],
@@ -1312,6 +1445,18 @@ nodejs_upstream_test_shards(
         "js-native-api/test_symbol",
     ],
     shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_js_native_api_tests",
+    suites = ["js-native-api"],
+    shards = 2,
     node = ":node",
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",

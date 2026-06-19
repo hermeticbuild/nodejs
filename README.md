@@ -206,6 +206,11 @@ addons for `test_array`, `test_bigint`, `test_constructor`, `test_conversions`,
 `test_symbol`, then runs their 20 JavaScript tests in one Linux x86_64 remote
 action.
 
+`@nodejs_26_3_1//:node_upstream_js_native_api_tests` builds all 38 native
+addons used by the upstream `js-native-api` suite and runs all 56 JavaScript
+tests in two Linux x86_64 remote shards. CI runs this complete target; the
+tutorial and value targets remain available for focused validation.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 
