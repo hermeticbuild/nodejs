@@ -4,8 +4,9 @@ module(
     bazel_compatibility = [">=9.1.1"],
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "abseil-cpp", version = "20250814.0")
+bazel_dep(name = "bazel_lib", version = "3.2.2")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "bzip2", version = "1.0.8.bcr.4")
 bazel_dep(name = "highway", version = "1.2.0")
 bazel_dep(name = "llvm", version = "0.8.8")
@@ -15,6 +16,7 @@ bazel_dep(name = "rules_cc_autoconf", version = "0.12.1")
 bazel_dep(name = "rules_python", version = "1.7.0")
 bazel_dep(name = "rules_rust", version = "0.70.0")
 bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "tar.bzl", version = "0.10.5")
 
 archive_override(
     module_name = "llvm",

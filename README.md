@@ -4,9 +4,10 @@ This module is building Node.js release artifacts from the official Node.js
 source archive with hermetic Bazel toolchains and declared Bazel actions. The
 only supported release is Node.js 26.3.1.
 
-The initial public contract selects and validates the upstream source archive.
-Compilation targets, release archives, and the complete upstream test matrix
-will be added against this exact source contract.
+The public contract selects and validates the upstream source archive, builds
+the Node.js executable, and creates Linux and macOS release archives. The
+complete upstream test matrix is still being added against this exact source
+contract.
 
 ## Select Node.js 26.3.1
 
@@ -119,3 +120,32 @@ archive. It contains Node.js's Cargo lockfile, vendored crates, patched `resb`
 crate, `temporal_capi`, and `temporal_rs`. Rust targets use the pinned Rust
 1.82.0 toolchain for Linux x86_64, Linux arm64, macOS x86_64, macOS arm64, and
 Windows x86_64.
+
+`@nodejs_26_3_1//:libnode` builds the Node.js 26.3.1 implementation with the
+bundled dependencies. `@nodejs_26_3_1//:node` builds the executable and embeds
+the ICU data, Node.js startup snapshot, and built-in JavaScript code cache.
+`//tests/node:node_test` exercises the release version, V8, ICU, Temporal,
+OpenSSL, inspector, SQLite, promises, and `AsyncLocalStorage`.
+
+`@nodejs_26_3_1//:release_tree` stages the upstream binary distribution
+layout. `@nodejs_26_3_1//:release_archives_tar_gz` and
+`@nodejs_26_3_1//:release_archives_tar_xz` create the platform-specific
+`node-v26.3.1-<platform>.tar.gz` and `node-v26.3.1-<platform>.tar.xz` files.
+The archives contain `node`, npm 11.16.0, the public Node.js and dependency
+headers, debugger files, and the `node(1)` manual. Node.js 26.3.1 disables
+Corepack in its release configuration, so the archives do not contain
+Corepack. `tar.bzl` creates both deterministic archives with hermetic
+`bsdtar`.
+
+Build release archives with the optimized release configuration and a runner
+that matches the target operating system and architecture:
+
+```console
+bazel build --config=release \
+  --platforms=@llvm//platforms:macos_aarch64 \
+  @nodejs_26_3_1//:release_archives
+```
+
+`//tests/release:release_archive_test` verifies the official 5,714-entry
+layout, normalized metadata, gzip/xz equivalence, and relocated execution of
+`node`, `npm`, and `npx`.

@@ -20,6 +20,9 @@ common:ci --experimental_ui_max_stdouterr_bytes=8388608
 common:ci --show_timestamps
 test:ci --test_summary=terse
 
+build:release --compilation_mode=opt
+build:release --copt=-O3
+
 # A module should not require direct declarations for unused transitive dependencies.
 common --check_direct_dependencies=off
 

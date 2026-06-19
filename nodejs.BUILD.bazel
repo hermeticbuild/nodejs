@@ -18,6 +18,7 @@ load(
     "OPENSSL_NO_ASM_PLATFORM_SOURCES",
     "OPENSSL_NO_ASM_SOURCES",
 )
+load("@nodejs//nodejs/private:release_archive.bzl", "nodejs_release_archives")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
@@ -81,6 +82,11 @@ config_setting(
 config_setting(
     name = "target_arm64",
     constraint_values = ["@platforms//cpu:aarch64"],
+)
+
+config_setting(
+    name = "release_build",
+    values = {"compilation_mode": "opt"},
 )
 
 config_setting(
@@ -1369,6 +1375,13 @@ cc_library(
         no_match_error = "libffi currently supports Linux and macOS x86_64 and arm64 targets",
     ),
     local_defines = ["FFI_STATIC_BUILD"],
+)
+
+nodejs_release_archives(
+    name = "release_archives",
+    version = "26.3.1",
+    config_gypi = ":config_gypi",
+    node = ":node",
 )
 
 cc_library(

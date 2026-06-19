@@ -1,0 +1,22 @@
+load("@rules_python//python:defs.bzl", "py_test")
+
+py_test(
+    name = "release_archive_test",
+    srcs = ["release_archive_test.py"],
+    args = [
+        "$(rootpath @nodejs_26_3_1//:release_archives_tar_gz)",
+        "$(rootpath @nodejs_26_3_1//:release_archives_tar_xz)",
+    ] + select(
+        {
+            "@nodejs_26_3_1//:target_linux_arm64": ["node-v26.3.1-linux-arm64"],
+            "@nodejs_26_3_1//:target_linux_x86_64": ["node-v26.3.1-linux-x64"],
+            "@nodejs_26_3_1//:target_macos_arm64": ["node-v26.3.1-darwin-arm64"],
+            "@nodejs_26_3_1//:target_macos_x86_64": ["node-v26.3.1-darwin-x64"],
+        },
+        no_match_error = "release_archive_test currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    data = [
+        "@nodejs_26_3_1//:release_archives_tar_gz",
+        "@nodejs_26_3_1//:release_archives_tar_xz",
+    ],
+)

@@ -18,6 +18,8 @@ _V8_EXPORTED_FILES = [
     "tools/codemap.mjs",
     "tools/consarray.mjs",
     "tools/csvparser.mjs",
+    "tools/gdbinit",
+    "tools/lldb_commands.py",
     "tools/logreader.mjs",
     "tools/profile.mjs",
     "tools/profile_view.mjs",
@@ -130,7 +132,7 @@ def _nodejs_source_repository_impl(repository_ctx):
 
     v8_build_path = "deps/v8/BUILD.bazel"
     v8_build = repository_ctx.read(v8_build_path)
-    v8_build += "\nexports_files({})\n".format(repr(_V8_EXPORTED_FILES))
+    v8_build += "\nexports_files({} + glob([\"include/**/*.h\"]))\n".format(repr(_V8_EXPORTED_FILES))
     repository_ctx.file(v8_build_path, v8_build)
     _validate_release(repository_ctx)
 
