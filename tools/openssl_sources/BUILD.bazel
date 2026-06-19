@@ -8,8 +8,12 @@ py_binary(
         "--linux-x86-64=$(rootpath @nodejs_26_3_1//:deps/openssl/config/archs/linux-x86_64/no-asm/openssl.gypi)",
         "--macos-arm64=$(rootpath @nodejs_26_3_1//:deps/openssl/config/archs/darwin64-arm64-cc/no-asm/openssl.gypi)",
         "--macos-x86-64=$(rootpath @nodejs_26_3_1//:deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/openssl.gypi)",
+        "--windows-arm64=$(rootpath @nodejs_26_3_1//:deps/openssl/config/archs/VC-WIN64-ARM/no-asm/openssl.gypi)",
+        "--windows-x86-64=$(rootpath @nodejs_26_3_1//:deps/openssl/config/archs/VC-WIN64A/no-asm/openssl.gypi)",
     ],
     data = [
+        "@nodejs_26_3_1//:deps/openssl/config/archs/VC-WIN64-ARM/no-asm/openssl.gypi",
+        "@nodejs_26_3_1//:deps/openssl/config/archs/VC-WIN64A/no-asm/openssl.gypi",
         "@nodejs_26_3_1//:deps/openssl/config/archs/darwin64-arm64-cc/no-asm/openssl.gypi",
         "@nodejs_26_3_1//:deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/openssl.gypi",
         "@nodejs_26_3_1//:deps/openssl/config/archs/linux-aarch64/no-asm/openssl.gypi",

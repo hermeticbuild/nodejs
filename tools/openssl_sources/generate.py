@@ -29,6 +29,8 @@ def main() -> None:
     parser.add_argument("--linux-x86-64", required=True, type=Path)
     parser.add_argument("--macos-arm64", required=True, type=Path)
     parser.add_argument("--macos-x86-64", required=True, type=Path)
+    parser.add_argument("--windows-arm64", required=True, type=Path)
+    parser.add_argument("--windows-x86-64", required=True, type=Path)
     arguments = parser.parse_args()
 
     gypi_by_platform = {
@@ -36,6 +38,8 @@ def main() -> None:
         "linux_x86_64": _read_gypi(arguments.linux_x86_64),
         "macos_arm64": _read_gypi(arguments.macos_arm64),
         "macos_x86_64": _read_gypi(arguments.macos_x86_64),
+        "windows_arm64": _read_gypi(arguments.windows_arm64),
+        "windows_x86_64": _read_gypi(arguments.windows_x86_64),
     }
 
     common_sources_with_duplicates = gypi_by_platform["linux_x86_64"]["variables"][
@@ -45,18 +49,26 @@ def main() -> None:
         not source.endswith(".c") for source in common_sources_with_duplicates
     ):
         raise ValueError("openssl_sources must contain only C sources")
-    for platform, gypi in gypi_by_platform.items():
-        if (
-            gypi["variables"].get("openssl_sources")
-            != common_sources_with_duplicates
-        ):
-            raise ValueError(f"{platform} openssl_sources differs from linux_x86_64")
     common_sources = list(dict.fromkeys(common_sources_with_duplicates))
+    common_source_set = set(common_sources)
 
     platform_sources: dict[str, list[str]] = {}
     platform_defines: dict[str, list[str]] = {}
     for platform, gypi in gypi_by_platform.items():
         variables = gypi["variables"]
+        platform_common_sources = variables.get("openssl_sources")
+        if not platform_common_sources:
+            raise ValueError(f"{platform} openssl_sources is empty")
+        missing_common_sources = common_source_set - set(platform_common_sources)
+        if missing_common_sources:
+            raise ValueError(
+                f"{platform} openssl_sources is missing {sorted(missing_common_sources)}"
+            )
+        extra_common_sources = [
+            source
+            for source in dict.fromkeys(platform_common_sources)
+            if source not in common_source_set
+        ]
         generated_source_key = next(
             key for key in variables if key.startswith("openssl_sources_")
         )
@@ -77,6 +89,8 @@ def main() -> None:
         if non_c_sources != expected_non_c_sources:
             raise ValueError(f"unexpected {platform} non-C sources: {non_c_sources}")
         platform_sources[platform] = [
+            _source_path(source) for source in extra_common_sources
+        ] + [
             _source_path(source)
             for source in generated_sources
             if source.endswith(".c")
