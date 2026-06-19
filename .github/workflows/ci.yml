@@ -101,6 +101,7 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
+            //tests/ada:ada_test \
             //tests/brotli:brotli_test \
             //tests/cares:cares_test \
             //tests/histogram:histogram_test \
@@ -108,6 +109,8 @@ jobs:
             //tests/libuv:libuv_version_test \
             //tests/nbytes:nbytes_test \
             //tests/nghttp2:nghttp2_test \
+            //tests/merve:merve_test \
+            //tests/simdjson:simdjson_test \
             //tests/sqlite:sqlite_test \
             //tests/uvwasi:uvwasi_test \
             //tests/zlib:zlib_test \

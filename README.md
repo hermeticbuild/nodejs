@@ -79,6 +79,11 @@ and a compression/decompression round trip.
 upstream release feature definitions. Its test verifies FTS5 and session
 support and executes an in-memory query.
 
+`@nodejs_26_3_1//:ada`, `@nodejs_26_3_1//:merve`, and
+`@nodejs_26_3_1//:simdjson` build Node.js's bundled Ada 3.4.4, merve 1.2.2, and
+simdjson 4.6.4 sources. Their tests parse a URL, analyze CommonJS exports, and
+read a JSON field.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
