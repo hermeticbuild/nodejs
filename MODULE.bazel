@@ -66,6 +66,12 @@ use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")
 
+cargo_bazel = use_extension(
+    "@rules_rust//crate_universe/private:internal_extensions.bzl",
+    "cu_nr",
+)
+use_repo(cargo_bazel, "cargo_bazel_bootstrap")
+
 nodejs = use_extension("//nodejs:extensions.bzl", "nodejs", dev_dependency = True)
 nodejs.version(version = "26.3.1")
 use_repo(nodejs, "nodejs_26_3_1", "nodejs_crates_26_3_1", "nodejs_icu_26_3_1", "v8")

@@ -15,20 +15,7 @@ filegroup(
     ],
 )
 
-filegroup(
-    name = "vendored_sources",
-    srcs = glob([
-        "patches/resb/**",
-        "vendor/**",
-    ]),
-)
-
-filegroup(
-    name = "temporal_capi_sources",
-    srcs = glob(["vendor/temporal_capi/**"]),
-)
-
-filegroup(
-    name = "temporal_rs_sources",
-    srcs = glob(["vendor/temporal_rs/**"]),
+alias(
+    name = "temporal_capi",
+    actual = "//vendor/temporal_capi",
 )

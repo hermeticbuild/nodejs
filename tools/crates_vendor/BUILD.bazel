@@ -1,0 +1,32 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
+
+crates_vendor(
+    name = "generate",
+    cargo_bazel = "@cargo_bazel_bootstrap//:cargo-bazel",
+    cargo_lockfile = "@nodejs_crates_26_3_1//:Cargo.lock",
+    manifests = ["@nodejs_crates_26_3_1//:Cargo.toml"],
+    mode = "local",
+    supported_platform_triples = [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu",
+    ],
+    tags = ["manual"],
+    vendor_path = "generated",
+)
+
+py_binary(
+    name = "install",
+    srcs = ["install_build_files.py"],
+    args = [
+        "--buildifier=$(rootpath @rules_rust//crate_universe/private/vendor:buildifier)",
+    ],
+    data = [
+        "@rules_rust//crate_universe/private/vendor:buildifier",
+    ],
+    main = "install_build_files.py",
+    tags = ["manual"],
+)

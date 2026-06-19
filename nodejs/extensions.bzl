@@ -8,6 +8,7 @@ load(
     "nodejs_v8_repository",
 )
 load("//nodejs/private:versions.bzl", "NODEJS_RELEASES")
+load("//nodejs/private/overlays/crates:files.bzl", "CRATES_BUILD_FILES")
 
 _BUILD_FILE = Label("//:nodejs.BUILD.bazel")
 _CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel")
@@ -61,6 +62,7 @@ def _nodejs_impl(module_ctx):
         nodejs_crates_repository(
             name = release.crates_repository_name,
             build_file = _CRATES_BUILD_FILE,
+            build_files = CRATES_BUILD_FILES,
             sha256 = release.sha256,
             strip_prefix = release.crates_strip_prefix,
             urls = release.urls,

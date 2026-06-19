@@ -1,1 +1,6 @@
-exports_files(["BUILD.crates.bazel"])
+exports_files(
+    [
+        "BUILD.crates.bazel",
+        "files.bzl",
+    ] + glob(["build_files/*.bazel"]),
+)
