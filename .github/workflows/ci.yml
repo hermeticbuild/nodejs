@@ -243,6 +243,8 @@ jobs:
             @nodejs_26_3_1//:node_upstream_addon_async_hello_world_tests \
             @nodejs_26_3_1//:node_upstream_addon_callback_conversion_report_tests \
             @nodejs_26_3_1//:node_upstream_addon_context_worker_tests \
+            @nodejs_26_3_1//:node_upstream_addon_cppgc_profiler_repl_uv_tests \
+            @nodejs_26_3_1//:node_upstream_addon_module_loading_tests \
             @nodejs_26_3_1//:node_upstream_async_hooks_tests \
             @nodejs_26_3_1//:node_upstream_benchmark_napi_test \
             @nodejs_26_3_1//:node_upstream_benchmark_tests \

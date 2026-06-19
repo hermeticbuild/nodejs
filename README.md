@@ -241,6 +241,15 @@ ten legacy `NODE_MODULE` addons for buffer callbacks, callback recursion,
 encoding and errno conversion, reports, and external string and buffer limits,
 then runs their 17 JavaScript tests in one Linux x86_64 remote action.
 
+`@nodejs_26_3_1//:node_upstream_addon_module_loading_tests` builds seven addon
+fixtures for ESM exports, long paths, `--no-addons`, module-version rejection,
+missing self-registration, and symlinked loading, then runs their ten JavaScript
+tests in one Linux x86_64 remote action.
+
+`@nodejs_26_3_1//:node_upstream_addon_cppgc_profiler_repl_uv_tests` builds the
+`cppgc-object`, `heap-profiler`, `repl-domain-abort`, and `uv-thread-name`
+addons and runs their four JavaScript tests in one Linux x86_64 remote action.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 
