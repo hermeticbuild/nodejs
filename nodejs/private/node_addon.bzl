@@ -26,3 +26,27 @@ def node_addon(name, output, srcs, copts = [], defines = [], deps = []):
         outs = [output],
         cmd = "cp $< $@",
     )
+
+def node_module_addon(
+        name,
+        output,
+        srcs,
+        module_name = "binding",
+        copts = [],
+        defines = [],
+        deps = []):
+    """Builds a legacy NODE_MODULE addon using test/addons/common.gypi."""
+    node_addon(
+        name = name,
+        output = output,
+        srcs = srcs,
+        copts = [
+            "-std=c++20",
+            "-Wno-cast-function-type",
+        ] + copts,
+        defines = [
+            "NODE_GYP_MODULE_NAME={}".format(module_name),
+            "V8_DEPRECATION_WARNINGS=1",
+        ] + defines,
+        deps = deps,
+    )

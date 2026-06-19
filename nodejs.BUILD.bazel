@@ -3,7 +3,7 @@ load(
     "LIEF_SOURCES",
     "LIEF_THIRD_PARTY_SOURCES",
 )
-load("@nodejs//nodejs/private:node_addon.bzl", "node_addon")
+load("@nodejs//nodejs/private:node_addon.bzl", "node_addon", "node_module_addon")
 load("@nodejs//nodejs/private:node_javascript.bzl", "node_javascript")
 load(
     "@nodejs//nodejs/private:node_sources.bzl",
@@ -773,9 +773,18 @@ py_binary(
         ":test_addon_async_hello_world_binding_node",
         ":test_addon_async_hooks_id_binding_node",
         ":test_addon_async_resource_binding_node",
+        ":test_addon_callback_scope_binding_node",
+        ":test_addon_force_context_aware_binding_node",
         ":test_addon_hello_world_2_binding_node",
         ":test_addon_hello_world_binding_node",
         ":test_addon_hello_world_function_export_binding_node",
+        ":test_addon_new_context_inspector_binding_node",
+        ":test_addon_new_isolate_addon_binding_node",
+        ":test_addon_new_target_binding_node",
+        ":test_addon_non_node_context_binding_node",
+        ":test_addon_request_interrupt_binding_node",
+        ":test_addon_worker_addon_binding_node",
+        ":test_addon_worker_buffer_callback_binding_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -1472,102 +1481,100 @@ node_addon(
     deps = [":js_native_api_test_headers"],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_async_cleanup_hook_binding_node",
     output = "test/addons/async-cleanup-hook/build/Release/binding.node",
     srcs = ["test/addons/async-cleanup-hook/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_async_hello_world_binding_node",
     output = "test/addons/async-hello-world/build/Release/binding.node",
     srcs = ["test/addons/async-hello-world/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_async_hooks_id_binding_node",
     output = "test/addons/async-hooks-id/build/Release/binding.node",
     srcs = ["test/addons/async-hooks-id/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_async_resource_binding_node",
     output = "test/addons/async-resource/build/Release/binding.node",
     srcs = ["test/addons/async-resource/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_hello_world_binding_node",
     output = "test/addons/hello-world/build/Release/binding.node",
     srcs = ["test/addons/hello-world/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_hello_world_2_binding_node",
     output = "test/addons/hello-world-2/build/Release/binding.node",
     srcs = ["test/addons/hello-world-2/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
 )
 
-node_addon(
+node_module_addon(
     name = "test_addon_hello_world_function_export_binding_node",
     output = "test/addons/hello-world-function-export/build/Release/binding.node",
     srcs = ["test/addons/hello-world-function-export/binding.cc"],
-    copts = [
-        "-std=c++20",
-        "-Wno-cast-function-type",
-    ],
-    defines = [
-        "NODE_GYP_MODULE_NAME=binding",
-        "V8_DEPRECATION_WARNINGS=1",
-    ],
+)
+
+node_module_addon(
+    name = "test_addon_callback_scope_binding_node",
+    output = "test/addons/callback-scope/build/Release/binding.node",
+    srcs = ["test/addons/callback-scope/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_force_context_aware_binding_node",
+    output = "test/addons/force-context-aware/build/Release/binding.node",
+    srcs = ["test/addons/force-context-aware/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_new_context_inspector_binding_node",
+    output = "test/addons/new-context-inspector/build/Release/binding.node",
+    srcs = ["test/addons/new-context-inspector/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_new_isolate_addon_binding_node",
+    output = "test/addons/new-isolate-addon/build/Release/binding.node",
+    srcs = ["test/addons/new-isolate-addon/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_new_target_binding_node",
+    output = "test/addons/new-target/build/Release/binding.node",
+    srcs = ["test/addons/new-target/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_non_node_context_binding_node",
+    output = "test/addons/non-node-context/build/Release/binding.node",
+    srcs = ["test/addons/non-node-context/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_request_interrupt_binding_node",
+    output = "test/addons/request-interrupt/build/Release/binding.node",
+    srcs = ["test/addons/request-interrupt/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_worker_addon_binding_node",
+    output = "test/addons/worker-addon/build/Release/binding.node",
+    srcs = ["test/addons/worker-addon/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_worker_buffer_callback_binding_node",
+    output = "test/addons/worker-buffer-callback/build/Release/binding.node",
+    srcs = ["test/addons/worker-buffer-callback/binding.cc"],
 )
 
 node_addon(
@@ -1911,6 +1918,28 @@ nodejs_upstream_test_shards(
         "addons/hello-world",
         "addons/hello-world-2",
         "addons/hello-world-function-export",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_context_worker_tests",
+    suites = [
+        "addons/callback-scope",
+        "addons/force-context-aware",
+        "addons/new-context-inspector",
+        "addons/new-isolate-addon",
+        "addons/new-target",
+        "addons/non-node-context",
+        "addons/request-interrupt",
+        "addons/worker-addon",
+        "addons/worker-buffer-callback",
     ],
     shards = 1,
     node = ":node",
