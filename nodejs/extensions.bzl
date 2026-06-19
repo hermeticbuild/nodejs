@@ -19,6 +19,7 @@ _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:nodejs-icu.patch"),
     Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
     Label("//nodejs/private/patches/v8:temporal.patch"),
+    Label("//nodejs/private/patches/v8:nodejs-config.patch"),
 ]
 
 def _nodejs_impl(module_ctx):

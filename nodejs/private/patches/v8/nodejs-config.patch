@@ -1,0 +1,191 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -97,18 +97,21 @@ v8_flag(name = "v8_code_comments")
+ 
+ v8_flag(
+     name = "v8_deprecation_warnings",
+-    default = True,
++    default = False,
+ )
+ 
+ v8_flag(
+     name = "v8_imminent_deprecation_warnings",
+-    default = True,
++    default = False,
+ )
+ 
+ v8_flag(name = "v8_enable_backtrace")
+ 
+ v8_flag(name = "v8_enable_debug_code")
+ 
+-v8_flag(name = "v8_enable_disassembler")
++v8_flag(
++    name = "v8_enable_disassembler",
++    default = True,
++)
+ 
+ v8_flag(name = "v8_enable_local_handle_zapping")
+@@ -131,6 +134,9 @@ v8_flag(
+     default = True,
+ )
+ 
+-v8_flag(name = "v8_enable_object_print")
++v8_flag(
++    name = "v8_enable_object_print",
++    default = True,
++)
+ 
+ v8_flag(name = "v8_enable_slow_dchecks")
+@@ -140,7 +146,7 @@ v8_flag(name = "v8_enable_snapshot_native_code_counters")
+ 
+ v8_flag(
+   name = "v8_enable_static_roots",
+-  default = True,
++  default = False,
+ )
+ 
+ v8_flag(name = "v8_enable_trace_maps")
+@@ -164,7 +170,7 @@ v8_flag(
+ 
+ v8_flag(
+     name = "v8_enable_undefined_double",
+-    default = True,
++    default = False,
+ )
+ 
+ v8_flag(name = "v8_enable_experimental_tq_to_tsa")
+@@ -236,7 +242,7 @@ v8_flag(
+ 
+ v8_flag(
+     name = "v8_enable_seeded_array_index_hash",
+-    default = False,
++    default = True,
+ )
+ 
+ selects.config_setting_group(
+@@ -308,7 +314,7 @@ v8_int(
+ # If no explicit value for v8_enable_pointer_compression, we set it to 'none'.
+ v8_string(
+     name = "v8_enable_pointer_compression",
+-    default = "none",
++    default = "False",
+ )
+ 
+ # Default setting for v8_enable_pointer_compression.
+@@ -359,7 +365,7 @@ selects.config_setting_group(
+ # Pointer cage, true by default if v8_enable_pointer_compression.
+ v8_flag(
+     name = "v8_enable_pointer_compression_shared_cage",
+-    default = True,
++    default = False,
+ )
+ 
+ # Enable shared cage if v8_enable_pointer_compression
+@@ -389,7 +395,7 @@ selects.config_setting_group(
+ # cage.
+ v8_flag(
+     name = "v8_enable_external_code_space",
+-    default = True,
++    default = False,
+ )
+ 
+ # Enable support for external code range if enable_pointer_compression_shared_cage and
+@@ -449,13 +455,11 @@ v8_flag(
+     default = False,
+ )
+ 
+-# Default setting for v8_enable_short_builtin_calls when target is x64.
+-# Disable short calls when pointer compression is not enabled.
++# Node.js enables short builtin calls for x64 without pointer compression.
+ selects.config_setting_group(
+     name = "v8_target_x64_default_short_builtin_calls",
+     match_all = [
+         ":v8_enable_short_builtin_calls_is_none",
+         "@v8//bazel/config:v8_target_x64",
+-        ":is_v8_enable_pointer_compression",
+     ],
+ )
+@@ -474,10 +478,17 @@ selects.config_setting_group(
+     match_any = [
+         ":v8_enable_short_builtin_calls_is_true",
+         ":v8_target_x64_default_short_builtin_calls",
+-        ":v8_target_arm64_default_short_builtin_calls",
+     ],
+ )
+ 
++selects.config_setting_group(
++    name = "nodejs_linux_x64",
++    match_all = [
++        "@v8//bazel/config:is_linux",
++        "@v8//bazel/config:v8_target_x64",
++    ],
++)
++
+ # Enable -rdynamic.
+ selects.config_setting_group(
+     name = "should_add_rdynamic",
+@@ -523,14 +534,25 @@ v8_config(
+         "v8_enable_undefined_double": "V8_ENABLE_UNDEFINED_DOUBLE",
+     },
+     defines = [
+         "GOOGLE3",
+         "V8_ADVANCED_BIGINT_ALGORITHMS",
++        "V8_ALLOCATION_FOLDING",
++        "V8_ALLOCATION_SITE_TRACKING",
++        "V8_ATOMIC_OBJECT_FIELD_WRITES",
+         "V8_CONCURRENT_MARKING",
+-        "V8_ENABLE_SPARKPLUG",
+-        "V8_ENABLE_EXTENSIBLE_RO_SNAPSHOT",
+         "V8_ENABLE_CONTINUATION_PRESERVED_EMBEDDER_DATA",
++        "V8_ENABLE_JAVASCRIPT_PROMISE_HOOKS",
++        "V8_ENABLE_LEAPTIERING",
++        "V8_ENABLE_REGEXP_INTERPRETER_THREADED_DISPATCH",
++        "V8_ENABLE_SPARKPLUG",
++        "V8_EMBEDDER_STRING=\"-node.20\"",
++        "V8_PROMISE_INTERNAL_FIELD_COUNT=1",
+         "V8_TLS_USED_IN_LIBRARY",
++        "V8_USE_SIPHASH",
+     ] + select({
++        ":nodejs_linux_x64": ["ENABLE_GDB_JIT_INTERFACE"],
++        "//conditions:default": [],
++    }) + select({
+         "@v8//bazel/config:is_debug": [
+             "DEBUG",
+             "V8_ENABLE_CHECKS",
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -553,6 +553,6 @@ def build_config_content(cpu, icu):
+         ("arch", arch),
+         ("asan", "false"),
+-        ("atomic_object_field_writes", "false"),
++        ("atomic_object_field_writes", "true"),
+         ("cet_shadow_stack", "false"),
+         ("cfi", "false"),
+         ("clang_coverage", "false"),
+@@ -561,6 +561,6 @@ def build_config_content(cpu, icu):
+         ("code_comments", "false"),
+         ("component_build", "false"),
+-        ("concurrent_marking", "false"),
++        ("concurrent_marking", "true"),
+         ("current_cpu", cpu),
+         ("dcheck_always_on", "false"),
+         ("debug_code", "false"),
+@@ -579,7 +579,7 @@ def build_config_content(cpu, icu):
+         ("has_jitless", "false"),
+         ("has_maglev", "true"),
+         ("has_turbofan", "true"),
+-        ("has_webassembly", "false"),
++        ("has_webassembly", "true"),
+         ("has_wasm_interpreter", "false"),
+         ("i18n", icu),
+         ("is_android", "false"),
+@@ -598,6 +598,6 @@ def build_config_content(cpu, icu):
+         ("official_build", "false"),
+         ("pointer_compression_shared_cage", "false"),
+-        ("pointer_compression", "true"),
++        ("pointer_compression", "false"),
+         ("runtime_call_stats", "false"),
+         ("sandbox", "false"),
+         ("sandbox_hardware_support", "false"),

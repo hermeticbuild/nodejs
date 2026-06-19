@@ -1,0 +1,8 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "v8_config_test",
+    srcs = ["v8_config_test.cc"],
+    copts = ["-std=c++20"],
+    deps = ["@v8//:v8_icu"],
+)
