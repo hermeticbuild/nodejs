@@ -15,7 +15,7 @@ bazel_dep(name = "nodejs", version = "<module version>")
 
 nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
 nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1")
+use_repo(nodejs, "nodejs_26_3_1", "nodejs_icu_26_3_1", "v8")
 ```
 
 `@nodejs_26_3_1//:release_metadata` contains the checked Node.js, Node module
@@ -41,3 +41,8 @@ Run `tools/configure_check_audit.sh` to update the inventory. Run
 26.3.1 archive. The target uses the upstream source lists, preprocessor
 definitions, and system libraries for Linux and macOS. The hermetic LLVM
 toolchains build x86_64 and arm64 variants for both operating systems.
+
+`@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
+because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
+projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
+decompresses `icudt78l.dat.bz2` with the hermetic `@bzip2//:bzip2` executable.

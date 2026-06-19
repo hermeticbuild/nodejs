@@ -5,6 +5,9 @@ module(
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "abseil-cpp", version = "20250814.0")
+bazel_dep(name = "bzip2", version = "1.0.8.bcr.4")
+bazel_dep(name = "highway", version = "1.2.0")
 bazel_dep(name = "llvm", version = "0.8.8")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.19")
@@ -26,6 +29,25 @@ archive_override(
     urls = ["https://github.com/ArchangelX360/rules_cc/archive/cb995b18db7c855fe95cacf0a0e84fda8c58725d.tar.gz"],
 )
 
+single_version_override(
+    module_name = "highway",
+    patch_strip = 1,
+    patches = ["//nodejs/private/patches/highway:rules-cc.patch"],
+    version = "1.2.0",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.11")
+use_repo(python, "python_3_11")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "v8_python_deps",
+    python_version = "3.11",
+    requirements_lock = "//nodejs/private:v8_requirements.txt",
+)
+use_repo(pip, "v8_python_deps")
+
 nodejs = use_extension("//nodejs:extensions.bzl", "nodejs", dev_dependency = True)
 nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1")
+use_repo(nodejs, "nodejs_26_3_1", "nodejs_icu_26_3_1", "v8")

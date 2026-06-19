@@ -1,0 +1,6 @@
+diff --git a/bazel/defs.bzl b/bazel/defs.bzl
+--- a/bazel/defs.bzl
++++ b/bazel/defs.bzl
+@@ -100 +100 @@ def _default_args():
+-        deps = [":define_flags", "@libcxx//:libc++"],
++        deps = [":define_flags"],

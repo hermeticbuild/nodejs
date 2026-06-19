@@ -1,0 +1,110 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+genrule(
+    name = "icudata",
+    srcs = ["source/data/in/icudt78l.dat.bz2"],
+    outs = ["common/icudtl.dat"],
+    cmd = "$(execpath @bzip2//:bzip2) -dc $(location source/data/in/icudt78l.dat.bz2) >$@",
+    tools = ["@bzip2"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "icuuc",
+    srcs = glob([
+        "source/common/**/*.h",
+        "source/common/**/*.cpp",
+    ]),
+    copts = select({
+        "@platforms//os:windows": [
+            "/wd4005",
+            "/wd4068",
+            "/wd4267",
+            "/utf-8",
+        ],
+        "//conditions:default": [
+            "-Wno-deprecated-declarations",
+        ],
+    }),
+    data = [":icudata"],
+    defines = [
+        "HAVE_DLOPEN=0",
+        "UCONFIG_ONLY_HTML_CONVERSION=1",
+        "U_CHARSET_IS_UTF8=1",
+        "U_USING_ICU_NAMESPACE=0",
+        "U_ENABLE_DYLOAD=0",
+        "USE_CHROMIUM_ICU=1",
+        "U_ENABLE_TRACING=1",
+        "U_ENABLE_RESOURCE_TRACING=0",
+        "UNISTR_FROM_STRING_EXPLICIT=",
+        "UNISTR_FROM_CHAR_EXPLICIT=",
+    ] + select({
+        "@platforms//os:windows": [
+            "U_STATIC_IMPLEMENTATION",
+            "UNICODE",
+            "_UNICODE",
+        ],
+        "//conditions:default": [],
+    }),
+    includes = [
+        "source/common",
+        "source/i18n",
+    ],
+    local_defines = [
+        "U_COMMON_IMPLEMENTATION",
+        "U_ICUDATAENTRY_IN_COMMON",
+    ],
+    tags = ["requires-rtti"],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "icui18n",
+    srcs = glob([
+        "source/i18n/**/*.h",
+        "source/i18n/**/*.cpp",
+    ]),
+    copts = select({
+        "@platforms//os:windows": [
+            "/wd4005",
+            "/wd4068",
+            "/wd4267",
+            "/utf-8",
+        ],
+        "//conditions:default": [
+            "-Wno-deprecated-declarations",
+        ],
+    }),
+    local_defines = ["U_I18N_IMPLEMENTATION"],
+    deps = [":icuuc"],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "icu",
+    srcs = [
+        "source/stubdata/stubdata.cpp",
+        "source/stubdata/stubdata.h",
+    ],
+    hdrs = glob([
+        "source/common/unicode/*.h",
+        "source/i18n/unicode/*.h",
+    ]),
+    copts = select({
+        "@platforms//os:windows": [
+            "/wd4005",
+            "/wd4068",
+            "/wd4267",
+            "/utf-8",
+        ],
+        "//conditions:default": [],
+    }),
+    include_prefix = "third_party/icu",
+    local_defines = ["U_COMMON_IMPLEMENTATION"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":icui18n",
+        ":icuuc",
+    ],
+    alwayslink = True,
+)

@@ -17,6 +17,22 @@ jobs:
       - name: Check configure audit
         run: tools/configure_check_audit.sh --check
 
+      - name: Check bundled V8 and ICU target graphs
+        run: >-
+          bazel query
+          --lockfile_mode=error
+          'deps(@v8//:v8ci) + deps(@nodejs_icu_26_3_1//:icu)'
+          >/dev/null
+
+      - name: Build bundled ICU
+        run: |
+          bazel build \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            @nodejs_icu_26_3_1//:icu
+
       - name: Check unsupported Node.js version
         working-directory: tests/unsupported_version
         run: |

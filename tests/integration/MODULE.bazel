@@ -21,4 +21,4 @@ local_path_override(
 
 nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
 nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1")
+use_repo(nodejs, "nodejs_26_3_1", "nodejs_icu_26_3_1", "v8")

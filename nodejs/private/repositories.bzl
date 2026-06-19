@@ -129,3 +129,54 @@ nodejs_source_repository = repository_rule(
         "v8_version": attr.string(mandatory = True),
     },
 )
+
+def _nodejs_v8_repository_impl(repository_ctx):
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.urls,
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+    for patch in repository_ctx.attr.patches:
+        repository_ctx.patch(repository_ctx.path(patch), strip = 1)
+    repository_ctx.file(
+        "third_party/fast_float/src/BUILD.bazel",
+        repository_ctx.read(repository_ctx.attr.fast_float_build_file),
+    )
+
+nodejs_v8_repository = repository_rule(
+    implementation = _nodejs_v8_repository_impl,
+    attrs = {
+        "fast_float_build_file": attr.label(mandatory = True, allow_single_file = True),
+        "patches": attr.label_list(allow_files = True),
+        "sha256": attr.string(mandatory = True),
+        "strip_prefix": attr.string(mandatory = True),
+        "urls": attr.string_list(mandatory = True),
+    },
+)
+
+def _nodejs_icu_repository_impl(repository_ctx):
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.urls,
+        sha256 = repository_ctx.attr.sha256,
+        stripPrefix = repository_ctx.attr.strip_prefix,
+    )
+
+    # These BUILD.bazel files make ICU source directories subpackages, which
+    # excludes their files from the BUILD.icu.bazel root globs.
+    for build_file in [
+        "source/common/BUILD.bazel",
+        "source/i18n/BUILD.bazel",
+        "source/stubdata/BUILD.bazel",
+    ]:
+        repository_ctx.delete(build_file)
+    repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
+
+nodejs_icu_repository = repository_rule(
+    implementation = _nodejs_icu_repository_impl,
+    attrs = {
+        "build_file": attr.label(mandatory = True, allow_single_file = True),
+        "sha256": attr.string(mandatory = True),
+        "strip_prefix": attr.string(mandatory = True),
+        "urls": attr.string_list(mandatory = True),
+    },
+)
