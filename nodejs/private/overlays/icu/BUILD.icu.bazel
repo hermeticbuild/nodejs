@@ -50,6 +50,10 @@ cc_library(
         "source/common",
         "source/i18n",
     ],
+    linkopts = select({
+        "@platforms//os:windows": ["advapi32.lib"],
+        "//conditions:default": [],
+    }),
     local_defines = [
         "U_COMMON_IMPLEMENTATION",
         "U_ICUDATAENTRY_IN_COMMON",
@@ -96,8 +100,9 @@ genrule(
         {
             "@platforms//os:linux": "$(execpath :genccode) -q -a gcc -e icudt78 -f icudt78_dat -d $(@D) $(location :icudata_file)",
             "@platforms//os:macos": "$(execpath :genccode) -q -a gcc-darwin -e icudt78 -f icudt78_dat -d $(@D) $(location :icudata_file)",
+            "@platforms//os:windows": "$(execpath :genccode) -q -a gcc-mingw64 -e icudt78 -f icudt78_dat -d $(@D) $(location :icudata_file)",
         },
-        no_match_error = "icudata_assembly currently supports Linux and macOS targets",
+        no_match_error = "icudata_assembly currently supports Linux, macOS, and Windows targets",
     ),
     tools = [":genccode"],
 )
