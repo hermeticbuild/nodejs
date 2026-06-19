@@ -773,16 +773,26 @@ py_binary(
         ":test_addon_async_hello_world_binding_node",
         ":test_addon_async_hooks_id_binding_node",
         ":test_addon_async_resource_binding_node",
+        ":test_addon_buffer_free_callback_binding_node",
         ":test_addon_callback_scope_binding_node",
+        ":test_addon_errno_exception_binding_node",
         ":test_addon_force_context_aware_binding_node",
         ":test_addon_hello_world_2_binding_node",
         ":test_addon_hello_world_binding_node",
         ":test_addon_hello_world_function_export_binding_node",
+        ":test_addon_make_callback_binding_node",
+        ":test_addon_make_callback_domain_warning_binding_node",
+        ":test_addon_make_callback_recurse_binding_node",
         ":test_addon_new_context_inspector_binding_node",
         ":test_addon_new_isolate_addon_binding_node",
         ":test_addon_new_target_binding_node",
         ":test_addon_non_node_context_binding_node",
+        ":test_addon_null_buffer_neuter_binding_node",
+        ":test_addon_parse_encoding_binding_node",
+        ":test_addon_report_api_binding_node",
+        ":test_addon_report_fatalerror_binding_node",
         ":test_addon_request_interrupt_binding_node",
+        ":test_addon_stringbytes_external_exceed_max_binding_node",
         ":test_addon_worker_addon_binding_node",
         ":test_addon_worker_buffer_callback_binding_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
@@ -1577,6 +1587,66 @@ node_module_addon(
     srcs = ["test/addons/worker-buffer-callback/binding.cc"],
 )
 
+node_module_addon(
+    name = "test_addon_buffer_free_callback_binding_node",
+    output = "test/addons/buffer-free-callback/build/Release/binding.node",
+    srcs = ["test/addons/buffer-free-callback/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_errno_exception_binding_node",
+    output = "test/addons/errno-exception/build/Release/binding.node",
+    srcs = ["test/addons/errno-exception/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_make_callback_domain_warning_binding_node",
+    output = "test/addons/make-callback-domain-warning/build/Release/binding.node",
+    srcs = ["test/addons/make-callback-domain-warning/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_make_callback_recurse_binding_node",
+    output = "test/addons/make-callback-recurse/build/Release/binding.node",
+    srcs = ["test/addons/make-callback-recurse/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_make_callback_binding_node",
+    output = "test/addons/make-callback/build/Release/binding.node",
+    srcs = ["test/addons/make-callback/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_null_buffer_neuter_binding_node",
+    output = "test/addons/null-buffer-neuter/build/Release/binding.node",
+    srcs = ["test/addons/null-buffer-neuter/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_parse_encoding_binding_node",
+    output = "test/addons/parse-encoding/build/Release/binding.node",
+    srcs = ["test/addons/parse-encoding/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_report_api_binding_node",
+    output = "test/addons/report-api/build/Release/binding.node",
+    srcs = ["test/addons/report-api/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_report_fatalerror_binding_node",
+    output = "test/addons/report-fatalerror/build/Release/binding.node",
+    srcs = ["test/addons/report-fatalerror/binding.cc"],
+)
+
+node_module_addon(
+    name = "test_addon_stringbytes_external_exceed_max_binding_node",
+    output = "test/addons/stringbytes-external-exceed-max/build/Release/binding.node",
+    srcs = ["test/addons/stringbytes-external-exceed-max/binding.cc"],
+)
+
 node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
@@ -1940,6 +2010,29 @@ nodejs_upstream_test_shards(
         "addons/request-interrupt",
         "addons/worker-addon",
         "addons/worker-buffer-callback",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_callback_conversion_report_tests",
+    suites = [
+        "addons/buffer-free-callback",
+        "addons/errno-exception",
+        "addons/make-callback-domain-warning",
+        "addons/make-callback-recurse",
+        "addons/make-callback",
+        "addons/null-buffer-neuter",
+        "addons/parse-encoding",
+        "addons/report-api",
+        "addons/report-fatalerror",
+        "addons/stringbytes-external-exceed-max",
     ],
     shards = 1,
     node = ":node",

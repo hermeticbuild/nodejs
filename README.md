@@ -236,6 +236,11 @@ action.
 and workers, then runs their 15 JavaScript tests in one Linux x86_64 remote
 action.
 
+`@nodejs_26_3_1//:node_upstream_addon_callback_conversion_report_tests` builds
+ten legacy `NODE_MODULE` addons for buffer callbacks, callback recursion,
+encoding and errno conversion, reports, and external string and buffer limits,
+then runs their 17 JavaScript tests in one Linux x86_64 remote action.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 
