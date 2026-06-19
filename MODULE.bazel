@@ -96,8 +96,8 @@ rust.toolchain(
         "x86_64-pc-windows-msvc",
         "x86_64-unknown-linux-gnu",
     ],
-    rustfmt_version = "1.82.0",
-    versions = ["1.82.0"],
+    rustfmt_version = "1.92.0",
+    versions = ["1.92.0"],
 )
 use_repo(rust, "rust_toolchains")
 
