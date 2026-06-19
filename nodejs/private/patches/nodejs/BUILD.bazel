@@ -1,3 +1,4 @@
 exports_files([
     "histogram-windows-intrinsic.patch",
+    "libffi-clang-cl-inline-asm.patch",
 ])

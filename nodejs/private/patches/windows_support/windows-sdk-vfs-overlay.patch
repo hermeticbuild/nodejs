@@ -157,78 +157,13 @@ index ba49555..47aa61f 100644
 +        "//conditions:default": ":winsdk_um_lib_x64_lowercase",
      }),
  )
-diff --git a/windows/private/extensions/msvc_runtime.bzl b/windows/private/extensions/msvc_runtime.bzl
---- a/windows/private/extensions/msvc_runtime.bzl
-+++ b/windows/private/extensions/msvc_runtime.bzl
-@@ -204,13 +204,24 @@ def _keep_exposed_runtime_files(repository_ctx, sysroot_dir, msvc_version, archi
-     _keep_only_children(
-         repository_ctx,
-         repository_ctx.path("{}/Contents/VC/Tools/MSVC/{}".format(sysroot_dir, msvc_version)),
--        ["include", "lib"],
-+        ["bin", "include", "lib"],
-     )
-     _keep_only_children(
-         repository_ctx,
-         repository_ctx.path("{}/Contents/VC/Tools/MSVC/{}/lib".format(sysroot_dir, msvc_version)),
-         architectures,
-     )
-+    bin_dir = "{}/Contents/VC/Tools/MSVC/{}/bin".format(sysroot_dir, msvc_version)
-+    _keep_only_children(
-+        repository_ctx,
-+        repository_ctx.path(bin_dir),
-+        ["Hostx64"],
-+    )
-+    _keep_only_children(
-+        repository_ctx,
-+        repository_ctx.path("{}/Hostx64".format(bin_dir)),
-+        architectures,
-+    )
--
-+
- def _msvc_runtime_repository_impl(repository_ctx):
-     _check_msvc_license_requirements(repository_ctx)
-diff --git a/windows/private/extensions/msvc_runtime.BUILD.bazel b/windows/private/extensions/msvc_runtime.BUILD.bazel
---- a/windows/private/extensions/msvc_runtime.BUILD.bazel
-+++ b/windows/private/extensions/msvc_runtime.BUILD.bazel
-@@ -13,6 +13,22 @@ config_setting(
-     ],
- )
--
-+
-+filegroup(
-+    name = "armasm64",
-+    srcs = glob(
-+        ["__MSVC_RUNTIME_DIR__/Contents/VC/Tools/MSVC/__MSVC_VERSION__/bin/Hostx64/arm64/armasm64.exe"],
-+        allow_empty = False,
-+    ),
-+)
-+
-+filegroup(
-+    name = "armasm64_runtime_files",
-+    srcs = glob(
-+        ["__MSVC_RUNTIME_DIR__/Contents/VC/Tools/MSVC/__MSVC_VERSION__/bin/Hostx64/arm64/**"],
-+        allow_empty = False,
-+    ),
-+)
-+
- directory(
-     name = "sysroot_files",
-     srcs = glob(
 diff --git a/windows/private/extensions/windows_sdk.BUILD.bazel b/windows/private/extensions/windows_sdk.BUILD.bazel
 --- a/windows/private/extensions/windows_sdk.BUILD.bazel
 +++ b/windows/private/extensions/windows_sdk.BUILD.bazel
-@@ -55,6 +55,22 @@ subdirectory(
+@@ -55,6 +55,14 @@ subdirectory(
      path = "__WINSDK_DIR__/base/c/Include/__WINSDK_INCLUDE_VERSION__/shared",
  )
 -
-+
-+filegroup(
-+    name = "ksarm64_header",
-+    srcs = glob(
-+        ["__WINSDK_DIR__/base/c/Include/__WINSDK_INCLUDE_VERSION__/shared/ksarm64.h"],
-+        allow_empty = False,
-+    ),
-+)
 +
 +filegroup(
 +    name = "winapifamily_header",

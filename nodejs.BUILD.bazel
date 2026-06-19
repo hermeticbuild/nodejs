@@ -79,7 +79,7 @@ _NODE_TARGET_LOCAL_DEFINES = [
         ":target_windows": [
             "BUILDING_UV_SHARED=1",
             "BUILDING_V8_SHARED=1",
-            "NODE_PLATFORM=\\\"win\\\"",
+            "NODE_PLATFORM=\\\"win32\\\"",
             "NOMINMAX",
             "WIN32",
             "_CRT_NONSTDC_NO_DEPRECATE",
@@ -777,7 +777,7 @@ cc_binary(
         {
             ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
             ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
-            ":target_windows": ["NODE_PLATFORM=\\\"win\\\""],
+            ":target_windows": ["NODE_PLATFORM=\\\"win32\\\""],
         },
         no_match_error = "node currently supports Linux, macOS, and Windows targets",
     ),
@@ -2783,7 +2783,10 @@ cc_library(
             ":target_windows": [],
         },
         no_match_error = "zlib currently supports Linux, macOS, and Windows targets",
-    ),
+    ) + select({
+        ":target_windows_arm64": ["ARMV8_OS_WINDOWS"],
+        "//conditions:default": [],
+    }),
     includes = ["deps/zlib"],
     local_defines = select(
         {
@@ -3535,63 +3538,6 @@ genrule(
     tools = [":libffi_generate_headers"],
 )
 
-py_binary(
-    name = "libffi_preprocess_asm",
-    srcs = ["deps/libffi/preprocess_asm.py"],
-    main = "deps/libffi/preprocess_asm.py",
-)
-
-genrule(
-    name = "libffi_windows_arm64_asm",
-    srcs = [
-        ":generated/libffi/windows_arm64/ffi.h",
-        ":generated/libffi/windows_arm64/fficonfig.h",
-        ":generated/libffi/windows_arm64/ffitarget.h",
-        "@windows_sdk//:ksarm64_header",
-        "deps/libffi/include/ffi_cfi.h",
-        "deps/libffi/src/aarch64/internal.h",
-        "deps/libffi/src/aarch64/win64_armasm.S",
-    ],
-    outs = [
-        "generated/libffi/windows_arm64/win64_armasm.asm",
-        "generated/libffi/windows_arm64/win64_armasm.obj",
-    ],
-    cmd = "exit 1",
-    cmd_bat = """
-for %%I in ("$(execpath @msvc_runtime//:armasm64)") do set "PATH=%%~dpI;%PATH%"
-set "CC=$(execpath @llvm//tools:clang-cl)"
-for %%I in ("$(execpath :generated/libffi/windows_arm64/ffi.h)") do set "FFI_GENERATED_INCLUDE=%%~dpI"
-for %%I in ("$(execpath deps/libffi/include/ffi_cfi.h)") do set "FFI_INCLUDE=%%~dpI"
-for %%I in ("$(execpath deps/libffi/src/aarch64/internal.h)") do set "FFI_AARCH64_INCLUDE=%%~dpI"
-for %%I in ("$(execpath @windows_sdk//:ksarm64_header)") do set "WINDOWS_SDK_SHARED_INCLUDE=%%~dpI"
-"$(execpath :libffi_preprocess_asm)" ^
-  --input "$(execpath deps/libffi/src/aarch64/win64_armasm.S)" ^
-  --output "$(execpath :generated/libffi/windows_arm64/win64_armasm.asm)" ^
-  --include-dir "%FFI_INCLUDE%" ^
-  --include-dir "%FFI_AARCH64_INCLUDE%" ^
-  --include-dir "%FFI_GENERATED_INCLUDE%" ^
-  --include-dir "%WINDOWS_SDK_SHARED_INCLUDE%" ^
-  --define FFI_STATIC_BUILD ^
-  --assemble "$(execpath :generated/libffi/windows_arm64/win64_armasm.obj)"
-""",
-    exec_compatible_with = [
-        "@platforms//cpu:aarch64",
-        "@platforms//os:windows",
-    ],
-    tags = ["no-remote"],
-    tools = [
-        ":libffi_preprocess_asm",
-        "@llvm//tools:clang-cl",
-        "@msvc_runtime//:armasm64",
-        "@msvc_runtime//:armasm64_runtime_files",
-    ],
-)
-
-filegroup(
-    name = "libffi_windows_arm64_asm_object",
-    srcs = [":generated/libffi/windows_arm64/win64_armasm.obj"],
-)
-
 cc_library(
     name = "libffi",
     srcs = [
@@ -3626,7 +3572,7 @@ cc_library(
             ],
             ":target_windows_arm64": [
                 "deps/libffi/src/aarch64/ffi.c",
-                ":libffi_windows_arm64_asm_object",
+                "deps/libffi/src/aarch64/sysv.S",
             ],
             ":target_windows_x86_64": [
                 "deps/libffi/src/x86/ffiw64.c",

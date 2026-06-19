@@ -15,6 +15,7 @@ _CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel"
 _ICU_BUILD_FILE = Label("//nodejs/private/overlays/icu:BUILD.icu.bazel")
 _NODEJS_PATCHES = [
     Label("//nodejs/private/patches/nodejs:histogram-windows-intrinsic.patch"),
+    Label("//nodejs/private/patches/nodejs:libffi-clang-cl-inline-asm.patch"),
 ]
 _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast_float/src:BUILD.fast_float.bazel")
 _V8_PATCHES = [
