@@ -1,6 +1,7 @@
 exports_files([
     "lief_sources.bzl",
     "node_javascript.bzl",
+    "node_sources.bzl",
     "openssl_sources.bzl",
     "repositories.bzl",
     "v8_requirements.txt",

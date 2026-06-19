@@ -5,6 +5,14 @@ load(
 )
 load("@nodejs//nodejs/private:node_javascript.bzl", "node_javascript")
 load(
+    "@nodejs//nodejs/private:node_sources.bzl",
+    "NODE_CRYPTO_SOURCES",
+    "NODE_FFI_SOURCES",
+    "NODE_INSPECTOR_SOURCES",
+    "NODE_SOURCES",
+    "NODE_SQLITE_SOURCES",
+)
+load(
     "@nodejs//nodejs/private:openssl_sources.bzl",
     "OPENSSL_NO_ASM_PLATFORM_DEFINES",
     "OPENSSL_NO_ASM_PLATFORM_SOURCES",
@@ -13,6 +21,7 @@ load(
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@v8_python_deps//:requirements.bzl", "requirement")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -80,6 +89,7 @@ exports_files([
     "deps/openssl/config/archs/linux-x86_64/no-asm/openssl.gypi",
     "deps/LIEF/lief.gyp",
     "node.gyp",
+    "src/inspector/node_inspector.gypi",
     "src/node_version.h",
 ])
 
@@ -269,6 +279,277 @@ node_javascript(
     root_marker = "node.gyp",
 )
 
+py_binary(
+    name = "inspector_convert_protocol",
+    srcs = [
+        "deps/inspector_protocol/convert_protocol_to_json.py",
+        "deps/inspector_protocol/pdl.py",
+    ],
+    imports = ["deps/inspector_protocol"],
+    main = "deps/inspector_protocol/convert_protocol_to_json.py",
+)
+
+py_binary(
+    name = "inspector_code_generator",
+    srcs = [
+        "deps/inspector_protocol/code_generator.py",
+        "deps/inspector_protocol/pdl.py",
+    ],
+    data = [
+        "deps/inspector_protocol/lib/Forward_h.template",
+        "deps/inspector_protocol/lib/Object_cpp.template",
+        "deps/inspector_protocol/lib/Object_h.template",
+        "deps/inspector_protocol/lib/Protocol_cpp.template",
+        "deps/inspector_protocol/lib/ValueConversions_cpp.template",
+        "deps/inspector_protocol/lib/ValueConversions_h.template",
+        "deps/inspector_protocol/lib/Values_cpp.template",
+        "deps/inspector_protocol/lib/Values_h.template",
+        "deps/inspector_protocol/templates/Exported_h.template",
+        "deps/inspector_protocol/templates/Imported_h.template",
+        "deps/inspector_protocol/templates/TypeBuilder_cpp.template",
+        "deps/inspector_protocol/templates/TypeBuilder_h.template",
+    ],
+    imports = ["deps/inspector_protocol"],
+    main = "deps/inspector_protocol/code_generator.py",
+    deps = [requirement("jinja2")],
+)
+
+py_binary(
+    name = "inspector_concatenate_protocols",
+    srcs = [
+        "deps/inspector_protocol/concatenate_protocols.py",
+        "deps/inspector_protocol/pdl.py",
+    ],
+    imports = ["deps/inspector_protocol"],
+    main = "deps/inspector_protocol/concatenate_protocols.py",
+)
+
+py_binary(
+    name = "inspector_compress_json",
+    srcs = ["tools/compress_json.py"],
+    main = "tools/compress_json.py",
+)
+
+genrule(
+    name = "node_protocol_json",
+    srcs = [
+        "src/inspector/domain_dom_storage.pdl",
+        "src/inspector/domain_io.pdl",
+        "src/inspector/domain_network.pdl",
+        "src/inspector/domain_node_runtime.pdl",
+        "src/inspector/domain_node_tracing.pdl",
+        "src/inspector/domain_node_worker.pdl",
+        "src/inspector/domain_storage.pdl",
+        "src/inspector/domain_target.pdl",
+        "src/inspector/node_protocol.pdl",
+    ],
+    outs = ["generated/node_inspector/src/node_protocol.json"],
+    cmd = "$(execpath :inspector_convert_protocol) $(location src/inspector/node_protocol.pdl) $@",
+    tools = [":inspector_convert_protocol"],
+)
+
+genrule(
+    name = "node_inspector_protocol",
+    srcs = [
+        "//deps/v8:include/js_protocol.pdl",
+        "src/inspector/domain_dom_storage.pdl",
+        "src/inspector/domain_io.pdl",
+        "src/inspector/domain_network.pdl",
+        "src/inspector/domain_node_runtime.pdl",
+        "src/inspector/domain_node_tracing.pdl",
+        "src/inspector/domain_node_worker.pdl",
+        "src/inspector/domain_storage.pdl",
+        "src/inspector/domain_target.pdl",
+        "src/inspector/node_protocol.pdl",
+        "src/inspector/node_protocol_config.json",
+    ],
+    outs = [
+        "generated/node_inspector/src/node/inspector/protocol/DOMStorage.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/DOMStorage.h",
+        "generated/node_inspector/src/node/inspector/protocol/Forward.h",
+        "generated/node_inspector/src/node/inspector/protocol/IO.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/IO.h",
+        "generated/node_inspector/src/node/inspector/protocol/Network.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/Network.h",
+        "generated/node_inspector/src/node/inspector/protocol/NodeRuntime.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/NodeRuntime.h",
+        "generated/node_inspector/src/node/inspector/protocol/NodeTracing.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/NodeTracing.h",
+        "generated/node_inspector/src/node/inspector/protocol/NodeWorker.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/NodeWorker.h",
+        "generated/node_inspector/src/node/inspector/protocol/Protocol.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/Protocol.h",
+        "generated/node_inspector/src/node/inspector/protocol/Runtime.h",
+        "generated/node_inspector/src/node/inspector/protocol/Storage.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/Storage.h",
+        "generated/node_inspector/src/node/inspector/protocol/Target.cpp",
+        "generated/node_inspector/src/node/inspector/protocol/Target.h",
+    ],
+    cmd = "$(execpath :inspector_code_generator) --inspector_protocol_dir deps/inspector_protocol --jinja_dir . --output_base $(RULEDIR)/generated/node_inspector/src --config $(location src/inspector/node_protocol_config.json)",
+    tools = [":inspector_code_generator"],
+)
+
+genrule(
+    name = "node_inspector_concatenated_protocol",
+    srcs = [
+        ":generated/node_inspector/src/node_protocol.json",
+        "//deps/v8:include/js_protocol.pdl",
+    ],
+    outs = ["generated/node_inspector/concatenated_protocol.json"],
+    cmd = "$(execpath :inspector_concatenate_protocols) $(location //deps/v8:include/js_protocol.pdl) $(location :generated/node_inspector/src/node_protocol.json) $@",
+    tools = [":inspector_concatenate_protocols"],
+)
+
+genrule(
+    name = "v8_inspector_protocol_json",
+    srcs = [":generated/node_inspector/concatenated_protocol.json"],
+    outs = ["generated/node_inspector/v8_inspector_protocol_json.h"],
+    cmd = "$(execpath :inspector_compress_json) $< $@",
+    tools = [":inspector_compress_json"],
+)
+
+cc_library(
+    name = "crdtp",
+    srcs = [
+        "deps/inspector_protocol/crdtp/cbor.cc",
+        "deps/inspector_protocol/crdtp/dispatch.cc",
+        "deps/inspector_protocol/crdtp/error_support.cc",
+        "deps/inspector_protocol/crdtp/json.cc",
+        "deps/inspector_protocol/crdtp/json_platform.cc",
+        "deps/inspector_protocol/crdtp/protocol_core.cc",
+        "deps/inspector_protocol/crdtp/serializable.cc",
+        "deps/inspector_protocol/crdtp/span.cc",
+        "deps/inspector_protocol/crdtp/status.cc",
+    ],
+    hdrs = glob(["deps/inspector_protocol/crdtp/*.h"]),
+    copts = ["-std=c++20"],
+    includes = ["deps/inspector_protocol"],
+)
+
+cc_library(
+    name = "node_gtest_prod_headers",
+    hdrs = [
+        "//deps/v8:testing/gtest/include/gtest/gtest_prod.h",
+        "//deps/v8:third_party/googletest/src/googletest/include/gtest/gtest_prod.h",
+    ],
+    includes = [
+        "deps/v8",
+        "deps/v8/testing/gtest/include",
+    ],
+)
+
+cc_library(
+    name = "libnode",
+    srcs = NODE_SOURCES + NODE_CRYPTO_SOURCES + NODE_FFI_SOURCES + NODE_INSPECTOR_SOURCES + NODE_SQLITE_SOURCES + [
+        ":node_inspector_protocol",
+        ":node_javascript",
+    ],
+    hdrs = glob(["src/**/*.h"]) + [
+        ":v8_inspector_protocol_json",
+        "deps/postject/postject-api.h",
+    ],
+    copts = [
+        "-O3",
+        "-std=c++20",
+        "-Werror=ctad-maybe-unsupported",
+        "-Werror=extra-semi",
+        "-Werror=undefined-inline",
+    ] + select(
+        {
+            ":target_linux": ["-fno-omit-frame-pointer"],
+            ":target_macos": [],
+        },
+        no_match_error = "libnode currently supports Linux and macOS targets",
+    ),
+    includes = [
+        "deps/postject",
+        "generated/node_inspector",
+        "generated/node_inspector/include",
+        "generated/node_inspector/src",
+        "src",
+    ],
+    local_defines = [
+        "HAVE_AMARO=1",
+        "HAVE_FFI=1",
+        "HAVE_INSPECTOR=1",
+        "HAVE_LIEF=1",
+        "HAVE_OPENSSL=1",
+        "HAVE_QUIC=0",
+        "HAVE_SQLITE=1",
+        "ICU_NO_USER_DATA_OVERRIDE",
+        "NAPI_EXPERIMENTAL=1",
+        "NODE_API_EXPERIMENTAL_NO_WARNING=1",
+        "NODE_BUNDLED_ZLIB",
+        "NODE_BUNDLED_ZSTD",
+        "NODE_HAVE_I18N_SUPPORT=1",
+        "NODE_OPENSSL_CONF_NAME=nodejs_conf",
+        "NODE_OPENSSL_SYSTEM_CERT_PATH=\\\"\\\"",
+        "NODE_RELEASE_URLBASE=\\\"https://nodejs.org/download/release/\\\"",
+        "NODE_SHARED_FFI=0",
+        "NODE_USE_V8_PLATFORM=1",
+        "NODE_WANT_INTERNALS=1",
+        "OPENSSL_API_COMPAT=0x10100000L",
+        "SQLITE_ENABLE_SESSION",
+        "V8_DEPRECATION_WARNINGS=1",
+        "__POSIX__",
+    ] + select(
+        {
+            ":target_x86_64": ["NODE_ARCH=\\\"x64\\\""],
+            ":target_arm64": ["NODE_ARCH=\\\"arm64\\\""],
+        },
+        no_match_error = "libnode currently supports x86_64 and arm64 targets",
+    ) + select(
+        {
+            ":target_linux": ["NODE_PLATFORM=\\\"linux\\\""],
+            ":target_macos": ["NODE_PLATFORM=\\\"darwin\\\""],
+        },
+        no_match_error = "libnode currently supports Linux and macOS targets",
+    ),
+    linkopts = select(
+        {
+            ":target_linux": [],
+            ":target_macos": [
+                "-framework CoreFoundation",
+                "-framework Security",
+            ],
+        },
+        no_match_error = "libnode currently supports Linux and macOS targets",
+    ),
+    deps = [
+        ":ada",
+        ":brotli",
+        ":cares",
+        ":crdtp",
+        ":histogram",
+        ":libffi",
+        ":libuv",
+        ":lief",
+        ":llhttp",
+        ":merve",
+        ":nbytes",
+        ":ncrypto",
+        ":nghttp2",
+        ":node_gtest_prod_headers",
+        ":simdjson",
+        ":sqlite",
+        ":uvwasi",
+        ":zlib",
+        ":zstd",
+        "@abseil-cpp//absl/synchronization",
+        "@nodejs_icu_26_3_1//:icu",
+        "@v8//:simdutf",
+        "@v8//:v8_icu",
+    ],
+    alwayslink = True,
+)
+
+cc_library(
+    name = "node_snapshot_stub",
+    srcs = ["src/node_snapshot_stub.cc"],
+    copts = ["-std=c++20"],
+    deps = [":libnode"],
+)
+
 cc_library(
     name = "zlib_headers",
     hdrs = glob([
@@ -421,7 +702,7 @@ cc_library(
         "-Wno-error=deprecated-declarations",
         "-Wno-unused-parameter",
     ],
-    defines = [
+    local_defines = [
         "CARES_STATICLIB",
         "HAVE_CONFIG_H",
         "_DARWIN_USE_64_BIT_INODE=1",
@@ -746,7 +1027,7 @@ cc_library(
         },
         no_match_error = "openssl currently supports Linux and macOS targets",
     ),
-    defines = [
+    local_defines = [
         "MODULESDIR=\\\"/dev/null\\\"",
         "OPENSSL_API_COMPAT=0x10100001L",
         "OPENSSL_NO_ASM",

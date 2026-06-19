@@ -1,0 +1,16 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "generate",
+    srcs = ["generate.py"],
+    args = [
+        "--node-gyp=$(rootpath @nodejs_26_3_1//:node.gyp)",
+        "--node-inspector-gypi=$(rootpath @nodejs_26_3_1//:src/inspector/node_inspector.gypi)",
+    ],
+    data = [
+        "@nodejs_26_3_1//:node.gyp",
+        "@nodejs_26_3_1//:src/inspector/node_inspector.gypi",
+    ],
+    main = "generate.py",
+    tags = ["manual"],
+)

@@ -147,6 +147,19 @@ jobs:
             //tests/js2c:node_javascript_test \
             //tests/js2c:node_js2c_test
 
+      - name: Test libnode
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --local_test_jobs=4 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            --strategy=TestRunner=local \
+            //tests/libnode:libnode_test
+
       - name: Test Rust 1.82 toolchain
         run: |
           bazel test \

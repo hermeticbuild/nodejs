@@ -10,7 +10,10 @@ _REQUIRED_SOURCE_FILES = [
     "tools/test.py",
 ]
 
-_V8_JS2C_FILES = [
+_V8_EXPORTED_FILES = [
+    "include/js_protocol.pdl",
+    "testing/gtest/include/gtest/gtest_prod.h",
+    "third_party/googletest/src/googletest/include/gtest/gtest_prod.h",
     "tools/arguments.mjs",
     "tools/codemap.mjs",
     "tools/consarray.mjs",
@@ -127,7 +130,7 @@ def _nodejs_source_repository_impl(repository_ctx):
 
     v8_build_path = "deps/v8/BUILD.bazel"
     v8_build = repository_ctx.read(v8_build_path)
-    v8_build += "\nexports_files({})\n".format(repr(_V8_JS2C_FILES))
+    v8_build += "\nexports_files({})\n".format(repr(_V8_EXPORTED_FILES))
     repository_ctx.file(v8_build_path, v8_build)
     _validate_release(repository_ctx)
 
