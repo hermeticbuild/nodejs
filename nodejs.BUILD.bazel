@@ -604,6 +604,13 @@ cc_binary(
     name = "node",
     srcs = ["src/node_main.cc"],
     copts = ["-std=c++20"],
+    linkopts = select(
+        {
+            ":target_linux": ["-Wl,--export-dynamic"],
+            ":target_macos": [],
+        },
+        no_match_error = "node currently supports Linux and macOS targets",
+    ),
     local_defines = ["NODE_WANT_INTERNALS=1"] + select(
         {
             ":target_x86_64": ["NODE_ARCH=\\\"x64\\\""],
@@ -654,8 +661,14 @@ py_binary(
         ],
     ) + select(
         {
-            ":target_linux": [":test/ffi/fixture_library/build/Release/ffi_test_library.so"],
-            ":target_macos": [":test/ffi/fixture_library/build/Release/ffi_test_library.dylib"],
+            ":target_linux": [
+                ":test/ffi/fixture_library/build/Release/ffi_test_library.so",
+                ":test/sqlite/test_sqlite_extensions/build/Release/sqlite_extension.so",
+            ],
+            ":target_macos": [
+                ":test/ffi/fixture_library/build/Release/ffi_test_library.dylib",
+                ":test/sqlite/test_sqlite_extensions/build/Release/sqlite_extension.dylib",
+            ],
         },
         no_match_error = "node_test_runner currently supports Linux and macOS targets",
     ),
@@ -705,6 +718,30 @@ cc_binary(
 cc_binary(
     name = "test/ffi/fixture_library/build/Release/ffi_test_library.dylib",
     srcs = ["test/ffi/fixture_library/ffi_test_library.c"],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:macos"],
+)
+
+cc_binary(
+    name = "test/sqlite/test_sqlite_extensions/build/Release/sqlite_extension.so",
+    srcs = [
+        "deps/sqlite/sqlite3.h",
+        "deps/sqlite/sqlite3ext.h",
+        "test/sqlite/test_sqlite_extensions/extension.c",
+    ],
+    includes = ["deps/sqlite"],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:linux"],
+)
+
+cc_binary(
+    name = "test/sqlite/test_sqlite_extensions/build/Release/sqlite_extension.dylib",
+    srcs = [
+        "deps/sqlite/sqlite3.h",
+        "deps/sqlite/sqlite3ext.h",
+        "test/sqlite/test_sqlite_extensions/extension.c",
+    ],
+    includes = ["deps/sqlite"],
     linkshared = True,
     target_compatible_with = ["@platforms//os:macos"],
 )
@@ -851,6 +888,66 @@ nodejs_upstream_test_shards(
     test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
     test_directory_under_test_root = True,
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_abort_tests",
+    suite = "abort",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_ffi_tests",
+    suite = "ffi",
+    shards = 2,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_sqlite_tests",
+    suite = "sqlite",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_wasi_tests",
+    suite = "wasi",
+    shards = 4,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = ["wasi/test-wasi-readdir"],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_wasm_allocation_tests",
+    suite = "wasm-allocation",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
 )
 
 cc_library(

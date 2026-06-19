@@ -193,3 +193,23 @@ x86_64 shards:
 `test/` directory for snapshot path normalization. Other suites place
 `NODE_TEST_DIR` under `/tmp` so absolute Unix-domain socket paths remain below
 Linux's 108-byte limit.
+
+The Linux x86_64 test job also selects 51 tests from these upstream suites
+across nine remote actions:
+
+- `@nodejs_26_3_1//:node_upstream_abort_tests`
+- `@nodejs_26_3_1//:node_upstream_ffi_tests`
+- `@nodejs_26_3_1//:node_upstream_sqlite_tests`
+- `@nodejs_26_3_1//:node_upstream_wasi_tests`
+- `@nodejs_26_3_1//:node_upstream_wasm_allocation_tests`
+
+The Bazel `node` target exports dynamic symbols on Linux, matching upstream
+Node.js's `-rdynamic` link setting and allowing FFI to resolve
+`uv_os_getpid`. Bazel builds the FFI and SQLite fixture libraries at the paths
+expected by the upstream tests.
+
+`abort/test-addon-register-signal-handler` and
+`abort/test-addon-uv-handle-leak` report upstream runtime skips because their
+native addon fixtures are not built yet. The WASI target excludes
+`wasi/test-wasi-readdir` because BuildBuddy's execution filesystem includes
+directory entries beyond the four entries asserted by that test.
