@@ -10,6 +10,7 @@ def nodejs_upstream_test_shards(
         root_status,
         getaddrinfo_library,
         skip_tests,
+        test_sources,
         test_runner):
     """Creates deterministic shards for one upstream Node.js test suite."""
     tests = []
@@ -31,6 +32,7 @@ def nodejs_upstream_test_shards(
                 node,
                 root_status,
                 getaddrinfo_library,
+                test_sources,
                 test_runner,
             ],
             exec_properties = {"network": "off"},

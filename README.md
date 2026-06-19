@@ -172,3 +172,9 @@ The sharded suite excludes `parallel/test-debugger-preserve-breaks`. The test
 times out after the `restart` command with both the official Node.js 26.3.1
 macOS arm64 binary and the Bazel-built Linux x86_64 binary. The test already
 contains the wait added by nodejs/node#62471.
+
+`@nodejs_26_3_1//:node_upstream_sequential_tests` runs all 119 upstream
+`sequential` tests in one Linux x86_64 action with `NODE_TEST_JOBS=1`.
+`node_test_runner.py` removes the `PYTHONSAFEPATH` value set by the
+`rules_python` launcher so nested upstream `tools/test.py` invocations can
+import the adjacent `tools/utils.py` file.

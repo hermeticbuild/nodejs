@@ -628,6 +628,7 @@ filegroup(
 py_binary(
     name = "node_test_runner",
     srcs = [
+        "@nodejs//nodejs/private:node_test_runner.py",
         "tools/test.py",
         "tools/utils.py",
     ],
@@ -659,7 +660,15 @@ py_binary(
         no_match_error = "node_test_runner currently supports Linux and macOS targets",
     ),
     imports = ["tools"],
-    main = "tools/test.py",
+    main = "@nodejs//nodejs/private:node_test_runner.py",
+)
+
+filegroup(
+    name = "node_test_sources",
+    srcs = [
+        "tools/test.py",
+        "tools/utils.py",
+    ],
 )
 
 cc_binary(
@@ -714,6 +723,7 @@ sh_binary(
         ":node_test_getaddrinfo",
         ":node_test_root",
         ":node_test_runner",
+        ":node_test_sources",
     ],
 )
 
@@ -736,6 +746,7 @@ sh_test(
         ":node_test_getaddrinfo",
         ":node_test_root",
         ":node_test_runner",
+        ":node_test_sources",
     ],
     env = {"NODE_TEST_FLAKY_TESTS": "skip"},
     exec_properties = {"network": "off"},
@@ -753,6 +764,19 @@ nodejs_upstream_test_shards(
     # nodejs/node#62471 does not make this test pass with the official
     # Node.js 26.3.1 macOS binary or the Bazel-built Linux binary.
     skip_tests = ["parallel/test-debugger-preserve-breaks"],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_sequential_tests",
+    suite = "sequential",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
 )
 
