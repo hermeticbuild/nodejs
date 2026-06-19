@@ -254,3 +254,8 @@ do not record performance measurements.
 with the upstream suite's inverted expected-failure configuration. A target
 failure means a known-issue case no longer produced its expected failure or
 failed in a different way.
+
+`@nodejs_26_3_1//:node_upstream_sea_tests` runs all 36 Single Executable
+Application cases sequentially in one Linux x86_64 remote action. The tests
+validate the LIEF-backed `--build-sea` implementation and the postject copy
+pinned in the Node.js source archive.
