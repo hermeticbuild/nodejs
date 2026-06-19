@@ -161,3 +161,14 @@ bazel run --config=release @nodejs_26_3_1//:node_test -- \
 
 `@nodejs_26_3_1//:node_upstream_smoke_test` runs representative upstream
 assertion, buffer, crypto, filesystem, and HTTP tests in CI.
+
+`@nodejs_26_3_1//:node_upstream_parallel_tests` runs 3,978 tests from the
+upstream `parallel` suite in 16 deterministic Linux x86_64 shards. The Linux
+test runner preloads `node_test_getaddrinfo.so`, which retries a failed
+`localhost` lookup with the matching numeric loopback address while BuildBuddy
+runs the tests with `network=off`.
+
+The sharded suite excludes `parallel/test-debugger-preserve-breaks`. The test
+times out after the `restart` command with both the official Node.js 26.3.1
+macOS arm64 binary and the Bazel-built Linux x86_64 binary. The test already
+contains the wait added by nodejs/node#62471.

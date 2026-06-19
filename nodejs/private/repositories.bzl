@@ -12,6 +12,7 @@ _REQUIRED_SOURCE_FILES = [
 
 _V8_EXPORTED_FILES = [
     "include/js_protocol.pdl",
+    "src/objects/intl-objects.h",
     "testing/gtest/include/gtest/gtest_prod.h",
     "third_party/googletest/src/googletest/include/gtest/gtest_prod.h",
     "tools/arguments.mjs",

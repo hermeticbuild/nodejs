@@ -202,6 +202,19 @@ jobs:
             --strategy=TestRunner=local \
             @nodejs_26_3_1//:node_upstream_smoke_test
 
+      - name: Test upstream Node.js parallel suite
+        if: matrix.system.name == 'Linux x86_64'
+        run: |
+          bazel test \
+            --config=ci \
+            --config=release \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            @nodejs_26_3_1//:node_upstream_parallel_tests
+
       - name: Test Node.js release archives
         run: |
           bazel test \

@@ -12,6 +12,7 @@ load(
     "NODE_SOURCES",
     "NODE_SQLITE_SOURCES",
 )
+load("@nodejs//nodejs/private:node_test_shards.bzl", "nodejs_upstream_test_shards")
 load(
     "@nodejs//nodejs/private:openssl_sources.bzl",
     "OPENSSL_NO_ASM_PLATFORM_DEFINES",
@@ -630,8 +631,19 @@ py_binary(
         "tools/test.py",
         "tools/utils.py",
     ],
-    data = glob(
+    data = [
+        "CHANGELOG.md",
+        "deps/undici/src/package.json",
+        "//deps/v8:src/objects/intl-objects.h",
+        "src/node_options.cc",
+        "src/node_version.h",
+    ] + glob(
         [
+            "benchmark/**",
+            "deps/acorn/**",
+            "deps/npm/**",
+            "doc/**",
+            "lib/**",
             "test/**",
             "tools/**",
         ],
@@ -639,9 +651,53 @@ py_binary(
             "tools/test.py",
             "tools/utils.py",
         ],
+    ) + select(
+        {
+            ":target_linux": [":test/ffi/fixture_library/build/Release/ffi_test_library.so"],
+            ":target_macos": [":test/ffi/fixture_library/build/Release/ffi_test_library.dylib"],
+        },
+        no_match_error = "node_test_runner currently supports Linux and macOS targets",
     ),
     imports = ["tools"],
     main = "tools/test.py",
+)
+
+cc_binary(
+    name = "node_test_getaddrinfo.so",
+    additional_linker_inputs = ["@nodejs//nodejs/private:node_test_getaddrinfo.map"],
+    srcs = ["@nodejs//nodejs/private:node_test_getaddrinfo.c"],
+    linkopts = [
+        "-ldl",
+        "-pthread",
+        "-Wl,--version-script,$(location @nodejs//nodejs/private:node_test_getaddrinfo.map)",
+    ],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:linux"],
+)
+
+alias(
+    name = "node_test_getaddrinfo",
+    actual = select(
+        {
+            ":target_linux": ":node_test_getaddrinfo.so",
+            ":target_macos": ":node_test_root",
+        },
+        no_match_error = "node_test_getaddrinfo currently supports Linux and macOS targets",
+    ),
+)
+
+cc_binary(
+    name = "test/ffi/fixture_library/build/Release/ffi_test_library.so",
+    srcs = ["test/ffi/fixture_library/ffi_test_library.c"],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:linux"],
+)
+
+cc_binary(
+    name = "test/ffi/fixture_library/build/Release/ffi_test_library.dylib",
+    srcs = ["test/ffi/fixture_library/ffi_test_library.c"],
+    linkshared = True,
+    target_compatible_with = ["@platforms//os:macos"],
 )
 
 sh_binary(
@@ -651,9 +707,11 @@ sh_binary(
         "$(rootpath :node_test_runner)",
         "$(rootpath :node)",
         "$(rootpath :node_test_root)",
+        "$(rootpath :node_test_getaddrinfo)",
     ],
     data = [
         ":node",
+        ":node_test_getaddrinfo",
         ":node_test_root",
         ":node_test_runner",
     ],
@@ -666,6 +724,7 @@ sh_test(
         "$(rootpath :node_test_runner)",
         "$(rootpath :node)",
         "$(rootpath :node_test_root)",
+        "$(rootpath :node_test_getaddrinfo)",
         "parallel/test-assert",
         "parallel/test-buffer-alloc",
         "parallel/test-crypto-hash",
@@ -674,10 +733,27 @@ sh_test(
     ],
     data = [
         ":node",
+        ":node_test_getaddrinfo",
         ":node_test_root",
         ":node_test_runner",
     ],
+    env = {"NODE_TEST_FLAKY_TESTS": "skip"},
+    exec_properties = {"network": "off"},
+    tags = ["requires-network"],
     timeout = "long",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_parallel_tests",
+    suite = "parallel",
+    shards = 16,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    # nodejs/node#62471 does not make this test pass with the official
+    # Node.js 26.3.1 macOS binary or the Bazel-built Linux binary.
+    skip_tests = ["parallel/test-debugger-preserve-breaks"],
+    test_runner = ":node_test_runner",
 )
 
 cc_library(
