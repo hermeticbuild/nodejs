@@ -114,6 +114,8 @@ def _nodejs_source_repository_impl(repository_ctx):
         sha256 = repository_ctx.attr.sha256,
         stripPrefix = repository_ctx.attr.strip_prefix,
     )
+    for patch in repository_ctx.attr.patches:
+        repository_ctx.patch(patch, strip = 1)
     release_headers_directory = "bazel/release_headers"
     repository_ctx.download_and_extract(
         url = repository_ctx.attr.headers_urls,
@@ -180,6 +182,7 @@ nodejs_source_repository = repository_rule(
         "headers_strip_prefix": attr.string(mandatory = True),
         "headers_urls": attr.string_list(mandatory = True),
         "node_module_version": attr.int(mandatory = True),
+        "patches": attr.label_list(allow_files = True),
         "release": attr.string(mandatory = True),
         "sha256": attr.string(mandatory = True),
         "strip_prefix": attr.string(mandatory = True),

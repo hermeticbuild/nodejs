@@ -15,6 +15,9 @@ _BUILD_FILE = Label("//:nodejs.BUILD.bazel")
 _CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel")
 _CRATES_DEFS_FILE = Label("//nodejs/private/overlays/crates:rust_crate_defs.bzl")
 _ICU_BUILD_FILE = Label("//nodejs/private/overlays/icu:BUILD.icu.bazel")
+_NODEJS_PATCHES = [
+    Label("//nodejs/private/patches/nodejs:histogram-windows-intrinsic.patch"),
+]
 _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast_float/src:BUILD.fast_float.bazel")
 _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:hermetic-toolchain.patch"),
@@ -54,6 +57,7 @@ def _nodejs_impl(module_ctx):
             headers_strip_prefix = release.headers_strip_prefix,
             headers_urls = release.headers_urls,
             node_module_version = release.node_module_version,
+            patches = _NODEJS_PATCHES,
             release = release.release,
             sha256 = release.sha256,
             strip_prefix = release.strip_prefix,
