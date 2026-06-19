@@ -241,9 +241,11 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_26_3_1//:node_upstream_abort_tests \
             @nodejs_26_3_1//:node_upstream_async_hooks_tests \
+            @nodejs_26_3_1//:node_upstream_benchmark_tests \
             @nodejs_26_3_1//:node_upstream_client_proxy_tests \
             @nodejs_26_3_1//:node_upstream_es_module_tests \
             @nodejs_26_3_1//:node_upstream_ffi_tests \
+            @nodejs_26_3_1//:node_upstream_known_issues_tests \
             @nodejs_26_3_1//:node_upstream_message_tests \
             @nodejs_26_3_1//:node_upstream_module_hooks_tests \
             @nodejs_26_3_1//:node_upstream_pseudo_tty_tests \

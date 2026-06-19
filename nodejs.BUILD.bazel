@@ -1022,6 +1022,30 @@ nodejs_upstream_test_shards(
     test_runner = ":node_test_runner",
 )
 
+nodejs_upstream_test_shards(
+    name = "node_upstream_benchmark_tests",
+    suite = "benchmark",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = ["benchmark/test-benchmark-napi"],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_known_issues_tests",
+    suite = "known_issues",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
 cc_library(
     name = "zlib_headers",
     hdrs = glob([
