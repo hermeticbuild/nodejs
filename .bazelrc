@@ -27,6 +27,7 @@ common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 common --repo_env=BAZEL_NO_APPLE_CPP_TOOLCHAIN=1
 common --repo_env=BAZEL_DO_NOT_DETECT_SWIFT_TOOLCHAIN=1
 common --extra_toolchains=@llvm//toolchain:all
+common --@llvm//config:experimental_stub_libgcc_s=True
 
 common --experimental_cc_static_library
 common --experimental_platform_in_output_dir
