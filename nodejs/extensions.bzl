@@ -45,6 +45,9 @@ def _nodejs_impl(module_ctx):
         nodejs_source_repository(
             name = release.repository_name,
             build_file = _BUILD_FILE,
+            headers_sha256 = release.headers_sha256,
+            headers_strip_prefix = release.headers_strip_prefix,
+            headers_urls = release.headers_urls,
             node_module_version = release.node_module_version,
             release = release.release,
             sha256 = release.sha256,

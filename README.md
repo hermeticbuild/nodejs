@@ -21,6 +21,8 @@ use_repo(nodejs, "nodejs_26_3_1", "nodejs_crates_26_3_1", "nodejs_icu_26_3_1", "
 `@nodejs_26_3_1//:release_metadata` contains the checked Node.js, Node module
 ABI, V8, and libuv versions. `@nodejs_26_3_1//:configure_audit_sources`
 contains the upstream configuration files that define the release build.
+`@nodejs_26_3_1//:bazel/release_config.gypi` is the generated release
+configuration from the pinned official Node.js 26.3.1 headers archive.
 
 ## Configure/GYP inventory
 

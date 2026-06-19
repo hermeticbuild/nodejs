@@ -8,8 +8,10 @@ sh_test(
         "$(rootpath @nodejs_26_3_1//:configure.py)",
         "$(rootpath @nodejs_26_3_1//:common.gypi)",
         "$(rootpath @nodejs_26_3_1//:node.gyp)",
+        "$(rootpath @nodejs_26_3_1//:bazel/release_config.gypi)",
     ],
     data = [
+        "@nodejs_26_3_1//:bazel/release_config.gypi",
         "@nodejs_26_3_1//:bazel/release_metadata.json",
         "@nodejs_26_3_1//:common.gypi",
         "@nodejs_26_3_1//:configure.py",

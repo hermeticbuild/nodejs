@@ -91,6 +91,25 @@ def _nodejs_source_repository_impl(repository_ctx):
         sha256 = repository_ctx.attr.sha256,
         stripPrefix = repository_ctx.attr.strip_prefix,
     )
+    release_headers_directory = "bazel/release_headers"
+    repository_ctx.download_and_extract(
+        url = repository_ctx.attr.headers_urls,
+        output = release_headers_directory,
+        sha256 = repository_ctx.attr.headers_sha256,
+        stripPrefix = repository_ctx.attr.headers_strip_prefix,
+    )
+    release_config_path = "{}/config.gypi".format(release_headers_directory)
+    if not repository_ctx.path(release_config_path).exists:
+        fail("Node.js {} headers archive is missing config.gypi".format(
+            repository_ctx.attr.release,
+        ))
+    release_config = repository_ctx.read(release_config_path)
+    if '"node_module_version": {}'.format(repository_ctx.attr.node_module_version) not in release_config:
+        fail("Node.js {} headers config.gypi has the wrong module ABI".format(
+            repository_ctx.attr.release,
+        ))
+    repository_ctx.file("bazel/release_config.gypi", release_config)
+    repository_ctx.delete(release_headers_directory)
     _validate_release(repository_ctx)
 
     release_metadata = {
@@ -120,6 +139,9 @@ nodejs_source_repository = repository_rule(
     implementation = _nodejs_source_repository_impl,
     attrs = {
         "build_file": attr.label(mandatory = True, allow_single_file = True),
+        "headers_sha256": attr.string(mandatory = True),
+        "headers_strip_prefix": attr.string(mandatory = True),
+        "headers_urls": attr.string_list(mandatory = True),
         "node_module_version": attr.int(mandatory = True),
         "release": attr.string(mandatory = True),
         "sha256": attr.string(mandatory = True),

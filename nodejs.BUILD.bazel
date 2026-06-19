@@ -69,6 +69,7 @@ config_setting(
 
 exports_files([
     "bazel/release.bzl",
+    "bazel/release_config.gypi",
     "bazel/release_metadata.json",
     "common.gypi",
     "configure.py",
