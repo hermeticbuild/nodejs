@@ -557,3 +557,40 @@ cc_library(
     includes = ["deps/uvwasi/include"],
     deps = [":libuv"],
 )
+
+cc_library(
+    name = "sqlite",
+    srcs = ["deps/sqlite/sqlite3.c"],
+    hdrs = [
+        "deps/sqlite/sqlite3.h",
+        "deps/sqlite/sqlite3ext.h",
+    ],
+    copts = ["-fvisibility=hidden"],
+    defines = [
+        "SQLITE_DEFAULT_MEMSTATUS=0",
+        "SQLITE_ENABLE_COLUMN_METADATA",
+        "SQLITE_ENABLE_DBSTAT_VTAB",
+        "SQLITE_ENABLE_FTS3",
+        "SQLITE_ENABLE_FTS3_PARENTHESIS",
+        "SQLITE_ENABLE_FTS5",
+        "SQLITE_ENABLE_GEOPOLY",
+        "SQLITE_ENABLE_MATH_FUNCTIONS",
+        "SQLITE_ENABLE_PERCENTILE",
+        "SQLITE_ENABLE_PREUPDATE_HOOK",
+        "SQLITE_ENABLE_RBU",
+        "SQLITE_ENABLE_RTREE",
+        "SQLITE_ENABLE_SESSION",
+    ],
+    includes = ["deps/sqlite"],
+    linkopts = select(
+        {
+            ":target_linux": [
+                "-ldl",
+                "-lm",
+                "-lpthread",
+            ],
+            ":target_macos": [],
+        },
+        no_match_error = "sqlite currently supports Linux and macOS targets",
+    ),
+)

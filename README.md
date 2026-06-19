@@ -75,6 +75,10 @@ and a compression/decompression round trip.
 `@nodejs_26_3_1//:uvwasi` builds the exact uvwasi 0.0.23 source list with
 `@nodejs_26_3_1//:libuv`. Its test initializes and destroys a uvwasi instance.
 
+`@nodejs_26_3_1//:sqlite` builds Node.js's SQLite 3.53.1 amalgamation with the
+upstream release feature definitions. Its test verifies FTS5 and session
+support and executes an in-memory query.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
