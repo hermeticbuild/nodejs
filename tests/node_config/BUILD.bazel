@@ -1,0 +1,36 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+sh_test(
+    name = "node_config_test",
+    srcs = ["node_config_test.sh"],
+    args = ["$(rootpath @nodejs_26_3_1//:config_gypi)"] + select(
+        {
+            "@nodejs_26_3_1//:target_linux_arm64": [
+                "arm64",
+                "so.147",
+                "0",
+                "false",
+            ],
+            "@nodejs_26_3_1//:target_linux_x86_64": [
+                "x64",
+                "so.147",
+                "1",
+                "true",
+            ],
+            "@nodejs_26_3_1//:target_macos_arm64": [
+                "arm64",
+                "147.dylib",
+                "0",
+                "false",
+            ],
+            "@nodejs_26_3_1//:target_macos_x86_64": [
+                "x64",
+                "147.dylib",
+                "0",
+                "false",
+            ],
+        },
+        no_match_error = "node_config_test currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    data = ["@nodejs_26_3_1//:config_gypi"],
+)

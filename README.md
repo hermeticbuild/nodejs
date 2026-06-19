@@ -23,6 +23,8 @@ ABI, V8, and libuv versions. `@nodejs_26_3_1//:configure_audit_sources`
 contains the upstream configuration files that define the release build.
 `@nodejs_26_3_1//:bazel/release_config.gypi` is the generated release
 configuration from the pinned official Node.js 26.3.1 headers archive.
+`@nodejs_26_3_1//:config_gypi` applies the target OS and architecture values
+for Linux and macOS x86_64 and arm64 builds.
 
 ## Configure/GYP inventory
 

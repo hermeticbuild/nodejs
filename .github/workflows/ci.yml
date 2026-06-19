@@ -79,6 +79,19 @@ jobs:
             --strategy=TestRunner=local \
             //:source_contract_test
 
+      - name: Test release configuration
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            --local_test_jobs=4 \
+            --strategy=TestRunner=local \
+            //tests/node_config:node_config_test
+
       - name: Build bundled libuv
         run: |
           bazel build \

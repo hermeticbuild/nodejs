@@ -827,6 +827,51 @@ py_binary(
 )
 
 genrule(
+    name = "config_gypi_linux_arm64",
+    srcs = ["bazel/release_config.gypi"],
+    outs = ["generated/config/linux_arm64/config.gypi"],
+    cmd = "$(execpath @nodejs//tools/node_config:generate) --input $(location bazel/release_config.gypi) --output $@ --arch arm64 --os linux",
+    tools = ["@nodejs//tools/node_config:generate"],
+)
+
+genrule(
+    name = "config_gypi_linux_x86_64",
+    srcs = ["bazel/release_config.gypi"],
+    outs = ["generated/config/linux_x86_64/config.gypi"],
+    cmd = "$(execpath @nodejs//tools/node_config:generate) --input $(location bazel/release_config.gypi) --output $@ --arch x64 --os linux",
+    tools = ["@nodejs//tools/node_config:generate"],
+)
+
+genrule(
+    name = "config_gypi_macos_arm64",
+    srcs = ["bazel/release_config.gypi"],
+    outs = ["generated/config/macos_arm64/config.gypi"],
+    cmd = "$(execpath @nodejs//tools/node_config:generate) --input $(location bazel/release_config.gypi) --output $@ --arch arm64 --os mac",
+    tools = ["@nodejs//tools/node_config:generate"],
+)
+
+genrule(
+    name = "config_gypi_macos_x86_64",
+    srcs = ["bazel/release_config.gypi"],
+    outs = ["generated/config/macos_x86_64/config.gypi"],
+    cmd = "$(execpath @nodejs//tools/node_config:generate) --input $(location bazel/release_config.gypi) --output $@ --arch x64 --os mac",
+    tools = ["@nodejs//tools/node_config:generate"],
+)
+
+filegroup(
+    name = "config_gypi",
+    srcs = select(
+        {
+            ":target_linux_arm64": [":generated/config/linux_arm64/config.gypi"],
+            ":target_linux_x86_64": [":generated/config/linux_x86_64/config.gypi"],
+            ":target_macos_arm64": [":generated/config/macos_arm64/config.gypi"],
+            ":target_macos_x86_64": [":generated/config/macos_x86_64/config.gypi"],
+        },
+        no_match_error = "config_gypi currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+)
+
+genrule(
     name = "libffi_headers_linux_arm64",
     outs = [
         "generated/libffi/linux_arm64/ffi.h",
