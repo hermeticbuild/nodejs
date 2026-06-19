@@ -108,6 +108,7 @@ jobs:
             //tests/llhttp:llhttp_test \
             //tests/libuv:libuv_version_test \
             //tests/nbytes:nbytes_test \
+            //tests/ncrypto:ncrypto_test \
             //tests/nghttp2:nghttp2_test \
             //tests/merve:merve_test \
             //tests/openssl:openssl_test \

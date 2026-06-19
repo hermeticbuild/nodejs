@@ -788,3 +788,16 @@ cc_library(
         no_match_error = "openssl currently supports Linux and macOS targets",
     ),
 )
+
+cc_library(
+    name = "ncrypto",
+    srcs = [
+        "deps/ncrypto/engine.cc",
+        "deps/ncrypto/ncrypto.cc",
+    ],
+    hdrs = ["deps/ncrypto/ncrypto.h"],
+    copts = ["-std=c++20"],
+    defines = ["NCRYPTO_BSSL_LIBDECREPIT_MISSING=1"],
+    includes = ["deps/ncrypto"],
+    deps = [":openssl"],
+)

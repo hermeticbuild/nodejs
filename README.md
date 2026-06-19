@@ -89,6 +89,11 @@ source inventory and generated configuration for Linux and macOS x86_64 and
 arm64 targets. `//tests/openssl:openssl_test` checks the bundled version and
 computes a SHA-256 digest through the OpenSSL EVP API.
 
+`@nodejs_26_3_1//:ncrypto` builds Node.js's `deps/ncrypto/engine.cc` and
+`deps/ncrypto/ncrypto.cc` against `@nodejs_26_3_1//:openssl`.
+`//tests/ncrypto:ncrypto_test` checks ncrypto 0.0.1, computes a SHA-256 digest,
+and requests random bytes through `ncrypto::CSPRNG`.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
