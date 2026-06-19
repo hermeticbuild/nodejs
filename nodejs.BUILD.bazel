@@ -741,7 +741,10 @@ cc_binary(
         },
         no_match_error = "node currently supports Linux, macOS, and Windows targets",
     ),
-    deps = [":node_snapshot"],
+    deps = select({
+        ":target_windows": [":node_snapshot_stub"],
+        "//conditions:default": [":node_snapshot"],
+    }),
 )
 
 cc_binary(
