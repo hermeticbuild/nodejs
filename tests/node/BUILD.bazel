@@ -1,0 +1,28 @@
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+sh_test(
+    name = "node_test",
+    srcs = ["node_test.sh"],
+    args = ["$(rootpath @nodejs_26_3_1//:node)"] + select(
+        {
+            "@nodejs_26_3_1//:target_linux_arm64": [
+                "arm64",
+                "linux",
+            ],
+            "@nodejs_26_3_1//:target_linux_x86_64": [
+                "x64",
+                "linux",
+            ],
+            "@nodejs_26_3_1//:target_macos_arm64": [
+                "arm64",
+                "darwin",
+            ],
+            "@nodejs_26_3_1//:target_macos_x86_64": [
+                "x64",
+                "darwin",
+            ],
+        },
+        no_match_error = "node_test currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    data = ["@nodejs_26_3_1//:node"],
+)
