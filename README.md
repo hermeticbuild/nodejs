@@ -259,3 +259,9 @@ failed in a different way.
 Application cases sequentially in one Linux x86_64 remote action. The tests
 validate the LIEF-backed `--build-sea` implementation and the postject copy
 pinned in the Node.js source archive.
+
+`@nodejs_26_3_1//:node_upstream_embedding_tests` builds upstream `embedtest`
+against the Bazel `node_snapshot_stub` and runs 13 embedding cases across four
+Linux x86_64 shards. The 12 static-embedding cases run; upstream
+`test-shared-embedding-v8` reports a runtime skip because this repository links
+static `libnode`.
