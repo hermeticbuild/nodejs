@@ -56,6 +56,10 @@ llhttp 9.4.2 and c-ares 1.34.6 sources. `//tests/llhttp:llhttp_test` parses an
 HTTP request, and `//tests/cares:cares_test` initializes c-ares and checks the
 bundled version.
 
+`@nodejs_26_3_1//:histogram` and `@nodejs_26_3_1//:nbytes` build Node.js's
+bundled hdr-histogram 0.11.9 and nbytes 0.1.4 sources. Their tests verify value
+recording, percentile lookup, byte swapping, and the bundled versions.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
