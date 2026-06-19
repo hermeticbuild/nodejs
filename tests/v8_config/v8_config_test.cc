@@ -46,6 +46,10 @@
 #error "V8_USE_SIPHASH must be defined"
 #endif
 
+#ifndef V8_USE_ZLIB
+#error "V8_USE_ZLIB must be defined"
+#endif
+
 #ifdef V8_31BIT_SMIS_ON_64BIT_ARCH
 #error "V8_31BIT_SMIS_ON_64BIT_ARCH must not be defined"
 #endif

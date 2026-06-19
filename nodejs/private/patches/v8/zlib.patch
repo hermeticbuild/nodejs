@@ -1,0 +1,62 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -548,7 +548,8 @@ v8_config(
+         "V8_EMBEDDER_STRING=\"-node.20\"",
+         "V8_PROMISE_INTERNAL_FIELD_COUNT=1",
+         "V8_TLS_USED_IN_LIBRARY",
+         "V8_USE_SIPHASH",
++        "V8_USE_ZLIB",
+     ] + select({
+         ":nodejs_linux_x64": ["ENABLE_GDB_JIT_INTERFACE"],
+         "//conditions:default": [],
+@@ -4600,6 +4601,39 @@ cc_library(
+     ],
+ )
+ 
++cc_library(
++    name = "v8_zlib",
++    srcs = [
++        "third_party/zlib/adler32.c",
++        "third_party/zlib/compress.c",
++        "third_party/zlib/cpu_features.c",
++        "third_party/zlib/crc32.c",
++        "third_party/zlib/deflate.c",
++        "third_party/zlib/google/compression_utils_portable.cc",
++        "third_party/zlib/gzclose.c",
++        "third_party/zlib/gzlib.c",
++        "third_party/zlib/gzread.c",
++        "third_party/zlib/gzwrite.c",
++        "third_party/zlib/infback.c",
++        "third_party/zlib/inffast.c",
++        "third_party/zlib/inflate.c",
++        "third_party/zlib/inftrees.c",
++        "third_party/zlib/trees.c",
++        "third_party/zlib/uncompr.c",
++        "third_party/zlib/zutil.c",
++    ],
++    hdrs = glob([
++        "third_party/zlib/*.h",
++        "third_party/zlib/contrib/optimizations/*.h",
++        "third_party/zlib/google/compression_utils_portable.h",
++    ]),
++    includes = [
++        "third_party/zlib",
++        "third_party/zlib/google",
++    ],
++    local_defines = ["ZLIB_IMPLEMENTATION"],
++)
++
+ cc_library(
+   name = "simdutf",
+   srcs = ["third_party/simdutf/simdutf.cpp"],
+@@ -4648,8 +4682,9 @@ v8_library(
+         ":lib_dragonbox",
+         "//third_party/fast_float/src:fast_float",
+         ":lib_fp16",
+         ":simdutf",
+         ":v8_libbase",
++        ":v8_zlib",
+         "@abseil-cpp//absl/container:btree",
+         "@abseil-cpp//absl/container:flat_hash_map",
+         "@abseil-cpp//absl/container:flat_hash_set",
