@@ -255,6 +255,17 @@ addons and runs their four JavaScript tests in one Linux x86_64 remote action.
 required by the package export tests, and runs all six JavaScript tests in one
 Linux x86_64 remote action.
 
+`@nodejs_26_3_1//:node_upstream_addon_openssl_zlib_tests` builds three OpenSSL
+addons, the Linux `testsetengine.engine`, and the zlib addon, then selects 11
+JavaScript tests in one Linux x86_64 remote action. The macOS-only client-cert
+and key-engine tests report runtime skips on Linux.
+
+`@nodejs_26_3_1//:node_upstream_addon_tests` selects all 75 upstream `addons`
+JavaScript tests in two Linux x86_64 remote shards. The 73 cross-platform tests
+run, and the two macOS-only engine tests report runtime skips. CI runs this
+complete target; the grouped addon targets remain available for focused
+validation.
+
 The Linux x86_64 test job also selects 51 tests from these upstream suites
 across nine remote actions:
 

@@ -799,6 +799,10 @@ py_binary(
         ":test_addon_node_module_version_binding_node",
         ":test_addon_non_node_context_binding_node",
         ":test_addon_not_a_binding_node",
+        ":test_addon_openssl_binding_node",
+        ":test_addon_openssl_get_ssl_ctx_binding_node",
+        ":test_addon_openssl_providers_binding_node",
+        ":test_addon_openssl_test_engine",
         ":test_addon_null_buffer_neuter_binding_node",
         ":test_addon_parse_encoding_binding_node",
         ":test_addon_report_api_binding_node",
@@ -810,6 +814,7 @@ py_binary(
         ":test_addon_uv_thread_name_binding_node",
         ":test_addon_worker_addon_binding_node",
         ":test_addon_worker_buffer_callback_binding_node",
+        ":test_addon_zlib_binding_node",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
         "//deps/v8:src/objects/intl-objects.h",
@@ -1755,6 +1760,49 @@ genrule(
     cmd = "cp $< $@",
 )
 
+node_module_addon(
+    name = "test_addon_openssl_binding_node",
+    output = "test/addons/openssl-binding/build/Release/binding.node",
+    srcs = ["test/addons/openssl-binding/binding.cc"],
+    copts = ["-Wno-deprecated-declarations"],
+    deps = [":openssl_addon_headers"],
+)
+
+node_module_addon(
+    name = "test_addon_openssl_get_ssl_ctx_binding_node",
+    output = "test/addons/openssl-get-ssl-ctx/build/Release/binding.node",
+    srcs = ["test/addons/openssl-get-ssl-ctx/binding.cc"],
+    deps = [":openssl_addon_headers"],
+)
+
+node_module_addon(
+    name = "test_addon_openssl_providers_binding_node",
+    output = "test/addons/openssl-providers/build/Release/binding.node",
+    srcs = ["test/addons/openssl-providers/binding.cc"],
+    copts = ["-Wno-deprecated-declarations"],
+    deps = [":openssl_addon_headers"],
+)
+
+node_addon(
+    name = "test_addon_openssl_test_engine",
+    output = "test/addons/openssl-test-engine/build/Release/testsetengine.engine",
+    srcs = ["test/addons/openssl-test-engine/testsetengine.cc"],
+    copts = [
+        "-std=c++20",
+        "-Wno-cast-function-type",
+        "-Wno-deprecated-declarations",
+    ],
+    defines = ["V8_DEPRECATION_WARNINGS=1"],
+    deps = [":openssl_addon_headers"],
+)
+
+node_module_addon(
+    name = "test_addon_zlib_binding_node",
+    output = "test/addons/zlib-binding/build/Release/binding.node",
+    srcs = ["test/addons/zlib-binding/binding.cc"],
+    deps = [":zlib_headers"],
+)
+
 node_addon(
     name = "benchmark_napi_buffer_binding_node",
     output = "benchmark/napi/buffer/build/Release/binding.node",
@@ -2195,6 +2243,38 @@ nodejs_upstream_test_shards(
         "addons/esm",
     ],
     shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_openssl_zlib_tests",
+    suites = [
+        "addons/openssl-binding",
+        "addons/openssl-client-cert-engine",
+        "addons/openssl-get-ssl-ctx",
+        "addons/openssl-key-engine",
+        "addons/openssl-providers",
+        "addons/openssl-test-engine",
+        "addons/zlib-binding",
+    ],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_addon_tests",
+    suites = ["addons"],
+    shards = 2,
     node = ":node",
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",
@@ -2837,6 +2917,32 @@ cc_library(
     hdrs = ["deps/simdjson/simdjson.h"],
     copts = ["-std=c++20"],
     includes = ["deps/simdjson"],
+)
+
+cc_library(
+    name = "openssl_addon_headers",
+    defines = ["OPENSSL_NO_ASM"],
+    hdrs = glob([
+        "deps/openssl/config/*.h",
+        "deps/openssl/openssl/include/**/*.h",
+    ]) + select(
+        {
+            ":target_linux_arm64": glob(["deps/openssl/config/archs/linux-aarch64/no-asm/include/**/*.h"]),
+            ":target_linux_x86_64": glob(["deps/openssl/config/archs/linux-x86_64/no-asm/include/**/*.h"]),
+            ":target_macos_arm64": glob(["deps/openssl/config/archs/darwin64-arm64-cc/no-asm/include/**/*.h"]),
+            ":target_macos_x86_64": glob(["deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/include/**/*.h"]),
+        },
+        no_match_error = "openssl_addon_headers currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
+    includes = ["deps/openssl/openssl/include"] + select(
+        {
+            ":target_linux_arm64": ["deps/openssl/config/archs/linux-aarch64/no-asm/include"],
+            ":target_linux_x86_64": ["deps/openssl/config/archs/linux-x86_64/no-asm/include"],
+            ":target_macos_arm64": ["deps/openssl/config/archs/darwin64-arm64-cc/no-asm/include"],
+            ":target_macos_x86_64": ["deps/openssl/config/archs/darwin64-x86_64-cc/no-asm/include"],
+        },
+        no_match_error = "openssl_addon_headers currently supports Linux and macOS x86_64 and arm64 targets",
+    ),
 )
 
 cc_library(

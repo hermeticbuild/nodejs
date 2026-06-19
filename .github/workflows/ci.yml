@@ -240,12 +240,7 @@ jobs:
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_26_3_1//:node_upstream_abort_tests \
-            @nodejs_26_3_1//:node_upstream_addon_async_hello_world_tests \
-            @nodejs_26_3_1//:node_upstream_addon_callback_conversion_report_tests \
-            @nodejs_26_3_1//:node_upstream_addon_context_worker_tests \
-            @nodejs_26_3_1//:node_upstream_addon_cppgc_profiler_repl_uv_tests \
-            @nodejs_26_3_1//:node_upstream_addon_dlopen_esm_tests \
-            @nodejs_26_3_1//:node_upstream_addon_module_loading_tests \
+            @nodejs_26_3_1//:node_upstream_addon_tests \
             @nodejs_26_3_1//:node_upstream_async_hooks_tests \
             @nodejs_26_3_1//:node_upstream_benchmark_napi_test \
             @nodejs_26_3_1//:node_upstream_benchmark_tests \
