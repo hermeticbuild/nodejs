@@ -45,7 +45,7 @@ const storage = new AsyncLocalStorage();
 storage.run(42, () => Promise.resolve().then(() => {
   assert.equal(storage.getStore(), 42);
   process.stderr.write('node_windows_test: async hooks checked\n');
-  process.stdout.write('node-ok\\n');
+  process.stdout.write('node-ok\n');
 }));
 """
 
