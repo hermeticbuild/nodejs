@@ -15,23 +15,31 @@ def _read_config(path: Path) -> dict[str, Any]:
     return value
 
 
+def _cargo_rust_target(target_os: str, target_arch: str) -> str:
+    if target_os == "win":
+        return (
+            "aarch64-pc-windows-msvc"
+            if target_arch == "arm64"
+            else "x86_64-pc-windows-msvc"
+        )
+    if target_os == "mac" and target_arch == "x64":
+        return "x86_64-apple-darwin"
+    return ""
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--arch", required=True, choices=("arm64", "x64"))
-    parser.add_argument("--os", required=True, choices=("linux", "mac"))
+    parser.add_argument("--os", required=True, choices=("linux", "mac", "win"))
     arguments = parser.parse_args()
 
     config = _read_config(arguments.input)
     variables = config["variables"]
     variables.update(
         {
-            "cargo_rust_target": (
-                "x86_64-apple-darwin"
-                if arguments.os == "mac" and arguments.arch == "x64"
-                else ""
-            ),
+            "cargo_rust_target": _cargo_rust_target(arguments.os, arguments.arch),
             "host_arch": arguments.arch,
             "llvm_version": "22.1",
             "shlib_suffix": (
