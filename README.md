@@ -21,3 +21,16 @@ use_repo(nodejs, "nodejs_26_3_1")
 `@nodejs_26_3_1//:release_metadata` contains the checked Node.js, Node module
 ABI, V8, and libuv versions. `@nodejs_26_3_1//:configure_audit_sources`
 contains the upstream configuration files that define the release build.
+
+## Configure/GYP inventory
+
+[`tools/configure_inventory.py`](tools/configure_inventory.py) reads the
+pinned `configure.py`, `common.gypi`, `node.gyp`, and `tools/v8_gypfiles`
+files without executing `configure.py` or GYP. The generated
+[`docs/configure-check-audit.md`](docs/configure-check-audit.md) records every
+configure option, every direct configure.py GYP-variable assignment, every GYP
+default, and every GYP reference. It also records the reviewed Linux and macOS
+release values that the Bazel build must preserve.
+
+Run `tools/configure_check_audit.sh` to update the inventory. Run
+`tools/configure_check_audit.sh --check` to verify the checked-in inventory.

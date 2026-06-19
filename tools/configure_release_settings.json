@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "release": "26.3.1",
+  "settings": [
+    {
+      "name": "build_type%",
+      "values": {"*": "Release"},
+      "required_assignments": ["'Debug' if options.debug else 'Release'"],
+      "justification": "Upstream release artifacts use the Release configuration."
+    },
+    {
+      "name": "node_shared",
+      "values": {"*": "false"},
+      "required_assignments": ["b(options.shared)"],
+      "justification": "Upstream release artifacts link the Node.js executable instead of a shared libnode library."
+    },
+    {
+      "name": "node_use_node_snapshot",
+      "values": {"*": "true"},
+      "required_assignments": [],
+      "justification": "Upstream same-architecture release builds embed the Node.js startup snapshot; Bazel must preserve the snapshot for every target platform."
+    },
+    {
+      "name": "node_use_node_code_cache",
+      "values": {"*": "true"},
+      "required_assignments": [],
+      "justification": "Upstream release builds embed the built-in JavaScript code cache."
+    },
+    {
+      "name": "node_write_snapshot_as_array_literals",
+      "values": {"*": "false"},
+      "required_assignments": [],
+      "justification": "Upstream Linux and macOS builds use the non-array snapshot representation."
+    },
+    {
+      "name": "node_use_amaro",
+      "values": {"*": "true"},
+      "required_assignments": ["b(not options.without_amaro)"],
+      "justification": "Upstream release builds include Amaro TypeScript support."
+    },
+    {
+      "name": "node_use_bundled_v8",
+      "values": {"*": "true"},
+      "required_assignments": ["b(not options.without_bundled_v8)"],
+      "justification": "Node.js 26.3.1 release artifacts use the V8 14.6.202.34 source bundled in the Node.js archive."
+    },
+    {
+      "name": "node_use_openssl",
+      "values": {"*": "true"},
+      "required_assignments": ["b(not options.without_ssl)"],
+      "justification": "Upstream release artifacts include the bundled OpenSSL implementation."
+    },
+    {
+      "name": "node_use_sqlite",
+      "values": {"*": "true"},
+      "required_assignments": ["b(not options.without_sqlite)"],
+      "justification": "Upstream release artifacts include the bundled SQLite implementation."
+    },
+    {
+      "name": "node_use_v8_platform",
+      "values": {"*": "true"},
+      "required_assignments": ["b(not options.without_v8_platform)"],
+      "justification": "Node.js uses the V8 platform implementation for foreground and worker tasks."
+    },
+    {
+      "name": "v8_enable_i18n_support",
+      "values": {"*": 1},
+      "required_assignments": ["1"],
+      "justification": "The default --with-intl=full-icu release configuration enables V8 internationalization."
+    },
+    {
+      "name": "v8_enable_temporal_support",
+      "values": {"*": 1},
+      "required_assignments": ["0 if options.v8_disable_temporal_support else 1"],
+      "justification": "The full-ICU release configuration enables Temporal by default."
+    },
+    {
+      "name": "v8_enable_webassembly",
+      "values": {"*": 1},
+      "required_assignments": ["0 if options.v8_lite_mode else 1"],
+      "justification": "The default release configuration does not use V8 lite mode and enables WebAssembly."
+    },
+    {
+      "name": "v8_enable_maglev",
+      "values": {"*": true},
+      "required_assignments": [],
+      "justification": "Node.js enables Maglev by default on the supported x64 and arm64 release architectures."
+    },
+    {
+      "name": "v8_enable_pointer_compression",
+      "values": {"*": 0},
+      "required_assignments": ["1 if options.enable_pointer_compression else 0"],
+      "justification": "Node.js disables V8 pointer compression by default; the Bazel V8 build must override V8's x64 and arm64 default."
+    },
+    {
+      "name": "v8_enable_pointer_compression_shared_cage",
+      "values": {"*": 0},
+      "required_assignments": ["1 if options.pointer_compression_shared_cage else 0"],
+      "justification": "Node.js disables the shared pointer-compression cage by default."
+    },
+    {
+      "name": "v8_enable_sandbox",
+      "values": {"*": 0},
+      "required_assignments": ["0"],
+      "justification": "Node.js explicitly disables the V8 sandbox because Node.js ArrayBuffer backing stores are not sandbox-compatible."
+    },
+    {
+      "name": "force_dynamic_crt",
+      "values": {"*": 0},
+      "required_assignments": ["1 if options.shared else 0"],
+      "justification": "The non-shared release configuration does not force a dynamic C runtime."
+    },
+    {
+      "name": "target_arch",
+      "values": {
+        "darwin_arm64": "arm64",
+        "darwin_x86_64": "x64",
+        "linux_arm64": "arm64",
+        "linux_x86_64": "x64"
+      },
+      "required_assignments": ["target_arch"],
+      "justification": "Node.js and V8 use x64 for x86_64 targets and arm64 for AArch64 targets."
+    }
+  ]
+}
