@@ -224,3 +224,9 @@ remote actions:
 upstream `tools/pseudo-tty.py` creates the controlling terminal for each of its
 39 tests. `node_upstream_wpt_tests` runs 25 Node.js WPT runner files against
 the WPT files pinned in the Node.js source archive.
+
+`@nodejs_26_3_1//:node_upstream_pummel_tests` runs all 65 upstream `pummel`
+cases sequentially in one Linux x86_64 remote action. The suite reports runtime
+skips for `test-fs-watch-system-limit` when the executor's inotify limit is too
+large, `test-keep-alive` when `wrk` is unavailable, and the 32-bit-only
+`test-webcrypto-kangarootwelve-32bit-overflow` case.
