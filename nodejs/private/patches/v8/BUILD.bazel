@@ -9,5 +9,6 @@ exports_files([
     "windows-defines.patch",
     "windows-arm64-cpu.patch",
     "windows-libraries.patch",
+    "windows-target-config.patch",
     "zlib.patch",
 ])
