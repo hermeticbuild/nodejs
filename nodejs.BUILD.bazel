@@ -1,3 +1,4 @@
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load(
     "@nodejs//nodejs/private:lief_sources.bzl",
     "LIEF_SOURCES",
@@ -674,6 +675,14 @@ filegroup(
     srcs = ["test/root.status"],
 )
 
+copy_to_directory(
+    name = "node_test_doc_api",
+    srcs = glob(["doc/api/**"]),
+    out = "out/doc/api",
+    hardlink = "off",
+    root_paths = ["doc/api"],
+)
+
 py_binary(
     name = "node_test_runner",
     srcs = [
@@ -769,6 +778,7 @@ py_binary(
         ":node_api_test_worker_buffer_callback_binding_node",
         ":node_api_test_worker_terminate_finalization_node",
         ":node_api_test_worker_terminate_node",
+        ":node_test_doc_api",
         ":test_addon_async_cleanup_hook_binding_node",
         ":test_addon_async_hello_world_binding_node",
         ":test_addon_async_hooks_id_binding_node",
@@ -2471,6 +2481,18 @@ nodejs_upstream_test_shards(
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",
     skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_doctool_tests",
+    suites = ["doctool"],
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = ["doctool/test-deprecation-codes"],
     test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
 )

@@ -336,3 +336,9 @@ against the Bazel `node_snapshot_stub` and runs 13 embedding cases across four
 Linux x86_64 shards. The 12 static-embedding cases run; upstream
 `test-shared-embedding-v8` reports a runtime skip because this repository links
 static `libnode`.
+
+`@nodejs_26_3_1//:node_upstream_doctool_tests` stages the HTML, JSON, and
+Markdown API documentation shipped in the Node.js 26.3.1 source archive and
+runs `test-doc-api-json` and `test-make-doc`. `test-deprecation-codes` remains
+excluded until its `unified` and `remark-parse` dependencies are available as
+Bazel inputs.
