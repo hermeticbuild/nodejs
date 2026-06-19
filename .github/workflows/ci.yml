@@ -42,6 +42,25 @@ jobs:
           fi
           grep -F 'Unsupported Node.js version "26.3.2"; supported versions are 26.3.1' <<<"$output"
 
+  windows-x86_64:
+    name: Windows x86_64 remote build / Node.js 26.3.1
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build libnode, node.exe, and the release ZIP
+        run: |
+          bazel build \
+            --config=ci \
+            --config=release \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            --platforms=@llvm//platforms:windows_x86_64_msvc \
+            @nodejs_26_3_1//:libnode \
+            @nodejs_26_3_1//:node \
+            //tests/release:windows_release_archive_validation
+
   test:
     name: ${{ matrix.system.name }} / Node.js 26.3.1
     runs-on: ${{ matrix.system.runner }}
@@ -280,7 +299,7 @@ jobs:
             --strategy=TestRunner=local \
             //tests/release:release_archive_test
 
-      - name: Test Rust 1.82 toolchain
+      - name: Test Rust 1.92 toolchain
         run: |
           bazel test \
             --config=ci \
