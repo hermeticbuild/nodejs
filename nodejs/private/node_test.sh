@@ -25,9 +25,12 @@ fi
 
 test_root="$(dirname "$root_status")"
 workspace="$(dirname "$test_root")"
-# Linux limits Unix-domain socket paths to 107 bytes. Bazel test directories
-# can exceed that limit before Node.js appends the test-specific socket name.
-test_directory="/tmp/node-test-$$"
+if [[ "${NODE_TEST_DIRECTORY_UNDER_TEST_ROOT:-}" == 1 ]]; then
+  test_directory="$test_root/.node-test-$$"
+else
+  # Linux limits absolute Unix-domain socket paths to 107 bytes.
+  test_directory="/tmp/node-test-$$"
+fi
 mkdir -p "$test_directory"
 trap 'rm -rf "$test_directory"' EXIT
 

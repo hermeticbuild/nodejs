@@ -228,6 +228,24 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             @nodejs_26_3_1//:node_upstream_sequential_tests
 
+      - name: Test additional upstream Node.js JavaScript suites
+        if: matrix.system.name == 'Linux x86_64'
+        run: |
+          bazel test \
+            --config=ci \
+            --config=release \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
+            "--platforms=${{ matrix.system.platform }}" \
+            @nodejs_26_3_1//:node_upstream_async_hooks_tests \
+            @nodejs_26_3_1//:node_upstream_es_module_tests \
+            @nodejs_26_3_1//:node_upstream_message_tests \
+            @nodejs_26_3_1//:node_upstream_module_hooks_tests \
+            @nodejs_26_3_1//:node_upstream_report_tests \
+            @nodejs_26_3_1//:node_upstream_test_runner_tests
+
       - name: Test Node.js release archives
         run: |
           bazel test \

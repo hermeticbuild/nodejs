@@ -780,6 +780,79 @@ nodejs_upstream_test_shards(
     test_runner = ":node_test_runner",
 )
 
+nodejs_upstream_test_shards(
+    name = "node_upstream_async_hooks_tests",
+    suite = "async-hooks",
+    shards = 4,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_es_module_tests",
+    suite = "es-module",
+    shards = 8,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_message_tests",
+    suite = "message",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_module_hooks_tests",
+    suite = "module-hooks",
+    shards = 4,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_report_tests",
+    suite = "report",
+    shards = 2,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_test_runner_tests",
+    suite = "test-runner",
+    shards = 4,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+    test_directory_under_test_root = True,
+)
+
 cc_library(
     name = "zlib_headers",
     hdrs = glob([

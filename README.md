@@ -178,3 +178,18 @@ contains the wait added by nodejs/node#62471.
 `node_test_runner.py` removes the `PYTHONSAFEPATH` value set by the
 `rules_python` launcher so nested upstream `tools/test.py` invocations can
 import the adjacent `tools/utils.py` file.
+
+The following targets run 563 additional upstream tests across 23 Linux
+x86_64 shards:
+
+- `@nodejs_26_3_1//:node_upstream_async_hooks_tests`
+- `@nodejs_26_3_1//:node_upstream_es_module_tests`
+- `@nodejs_26_3_1//:node_upstream_message_tests`
+- `@nodejs_26_3_1//:node_upstream_module_hooks_tests`
+- `@nodejs_26_3_1//:node_upstream_report_tests`
+- `@nodejs_26_3_1//:node_upstream_test_runner_tests`
+
+`node_upstream_test_runner_tests` places `NODE_TEST_DIR` under the upstream
+`test/` directory for snapshot path normalization. Other suites place
+`NODE_TEST_DIR` under `/tmp` so absolute Unix-domain socket paths remain below
+Linux's 108-byte limit.

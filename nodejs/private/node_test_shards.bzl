@@ -11,7 +11,8 @@ def nodejs_upstream_test_shards(
         getaddrinfo_library,
         skip_tests,
         test_sources,
-        test_runner):
+        test_runner,
+        test_directory_under_test_root = False):
     """Creates deterministic shards for one upstream Node.js test suite."""
     tests = []
     for shard in range(shards):
@@ -35,6 +36,7 @@ def nodejs_upstream_test_shards(
                 test_sources,
                 test_runner,
             ],
+            env = {"NODE_TEST_DIRECTORY_UNDER_TEST_ROOT": "1"} if test_directory_under_test_root else {},
             exec_properties = {"network": "off"},
             tags = [
                 "requires-network",
