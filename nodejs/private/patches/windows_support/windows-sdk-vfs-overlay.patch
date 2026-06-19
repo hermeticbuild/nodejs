@@ -47,13 +47,14 @@ index ddbfa36..bf73ac0 100644
  def _repository_fs_is_case_sensitive(repository_ctx):
      probe_path = repository_ctx.path(_CASE_SENSITIVITY_PROBE)
      if not probe_path.exists:
-@@ -169,6 +199,23 @@ def _apply_transformations(repository_ctx):
+@@ -169,6 +199,27 @@ def _apply_transformations(repository_ctx):
 
              repository_ctx.symlink(src_rel, dst_rel)
              created[dst_rel] = True
 
 +def _write_lowercase_library_aliases(repository_ctx, sysroot_dir, architectures):
 +    seen_architectures = {}
++    created = {}
 +    for arch in architectures:
 +        if seen_architectures.get(arch, False):
 +            continue
@@ -67,11 +68,14 @@ index ddbfa36..bf73ac0 100644
 +                if not src_rel.lower().endswith(".lib"):
 +                    continue
 +                dst_rel = "{}/{}/c/{}/{}/{}".format(_LOWERCASE_SYSROOT_DIR, arch, library_kind, arch, _basename(src_rel).lower())
++                if created.get(dst_rel, False):
++                    continue
 +                repository_ctx.symlink(src_rel, dst_rel)
++                created[dst_rel] = True
 +
  def _windows_sdk_repository_impl(repository_ctx):
      if not repository_ctx.attr.windows_sdk_version:
-@@ -205,6 +252,8 @@ def _windows_sdk_repository_impl(repository_ctx):
+@@ -205,6 +256,8 @@ def _windows_sdk_repository_impl(repository_ctx):
      )
 
      _apply_transformations(repository_ctx)
