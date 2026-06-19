@@ -1,1 +1,2 @@
 import %workspace%/../../.bazelrc
+common --symlink_prefix=/
