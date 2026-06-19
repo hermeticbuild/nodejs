@@ -307,6 +307,7 @@ def _nodejs_crates_repository_impl(repository_ctx):
         if not repository_ctx.path(path).exists:
             fail("Node.js Rust crates are missing {}".format(path))
     repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
+    repository_ctx.symlink(repository_ctx.attr.defs_file, "rust_crate_defs.bzl")
     for build_file, destination in repository_ctx.attr.build_files.items():
         repository_ctx.symlink(build_file, destination)
         package_path = destination.removesuffix("/BUILD.bazel")
@@ -327,6 +328,7 @@ nodejs_crates_repository = repository_rule(
     attrs = {
         "build_file": attr.label(mandatory = True, allow_single_file = True),
         "build_files": attr.label_keyed_string_dict(mandatory = True, allow_files = True),
+        "defs_file": attr.label(mandatory = True, allow_single_file = True),
         "sha256": attr.string(mandatory = True),
         "strip_prefix": attr.string(mandatory = True),
         "urls": attr.string_list(mandatory = True),

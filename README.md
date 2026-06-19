@@ -120,6 +120,8 @@ archive. It contains Node.js's Cargo lockfile, vendored crates, patched `resb`
 crate, `temporal_capi`, and `temporal_rs`. Rust targets use the pinned Rust
 1.82.0 toolchain provided through `rules_rs` 0.0.86 for Linux x86_64, Linux
 arm64, macOS x86_64, macOS arm64, and Windows x86_64.
+`bazel run //tools/crates_vendor:generate` resolves the Cargo lockfile with
+`rules_rs` and updates the checked-in BUILD files for the vendored crates.
 
 `@nodejs_26_3_1//:libnode` builds the Node.js 26.3.1 implementation with the
 bundled dependencies. `@nodejs_26_3_1//:node` builds the executable and embeds

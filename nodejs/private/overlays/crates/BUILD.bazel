@@ -2,5 +2,6 @@ exports_files(
     [
         "BUILD.crates.bazel",
         "files.bzl",
+        "rust_crate_defs.bzl",
     ] + glob(["build_files/*.bazel"]),
 )
