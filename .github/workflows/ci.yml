@@ -85,6 +85,31 @@ jobs:
       - name: Test node.exe
         run: python tests/node/node_windows_test.py node-windows-x86_64/node.exe x64 win32
 
+  windows-arm64:
+    name: Windows arm64 build and execution / Node.js 26.3.1
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build libnode, node.exe, and the release ZIP
+        run: |
+          bazel build `
+            --config=ci `
+            --config=release `
+            --config=remote `
+            --jobs=64 `
+            --lockfile_mode=error `
+            --host_platform=@llvm//platforms:linux_x86_64 `
+            "--extra_execution_platforms=@nodejs//:rbe_platform,//:windows_arm64_local_execution_platform" `
+            --platforms=@llvm//platforms:windows_aarch64_msvc `
+            @nodejs_26_3_1//:libnode `
+            @nodejs_26_3_1//:node `
+            //tests/node:node_windows_binary `
+            //tests/release:windows_release_archive_validation
+
+      - name: Test node.exe
+        run: python tests/node/node_windows_test.py bazel-bin/tests/node/node.exe arm64 win32
+
   test:
     name: ${{ matrix.system.name }} / Node.js 26.3.1
     runs-on: ${{ matrix.system.runner }}

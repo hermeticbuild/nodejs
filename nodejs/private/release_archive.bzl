@@ -285,6 +285,13 @@ _PLATFORMS = [
     ),
     struct(
         archive_formats = ["zip"],
+        config = ":target_windows_arm64",
+        constraints = ["@platforms//cpu:aarch64", "@platforms//os:windows"],
+        name = "windows_arm64",
+        release_name = "win-arm64",
+    ),
+    struct(
+        archive_formats = ["zip"],
         config = ":target_windows_x86_64",
         constraints = ["@platforms//cpu:x86_64", "@platforms//os:windows"],
         name = "windows_x86_64",
@@ -523,13 +530,14 @@ def nodejs_release_archives(name, version, node, config_gypi):
         name = name + "_zip",
         actual = select(
             zip_archives,
-            no_match_error = "{}_zip currently supports Windows x86_64 targets".format(name),
+            no_match_error = "{}_zip currently supports Windows x86_64 and arm64 targets".format(name),
         ),
         visibility = ["//visibility:public"],
     )
     native.filegroup(
         name = name,
         srcs = select({
+            ":target_windows_arm64": [":" + name + "_zip"],
             ":target_windows_x86_64": [":" + name + "_zip"],
             "//conditions:default": [
                 ":" + name + "_tar_gz",

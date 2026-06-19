@@ -1,10 +1,11 @@
-"""Validates the Node.js Windows x86_64 release ZIP."""
+"""Validates a Node.js Windows release ZIP."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import pathlib
+import struct
 import sys
 import zipfile
 
@@ -40,6 +41,7 @@ def main() -> None:
     archive_path = pathlib.Path(sys.argv[1])
     output_path = pathlib.Path(sys.argv[2])
     root = sys.argv[3]
+    expected_pe_machine = int(sys.argv[4], 0)
     assert archive_path.name == root + ".zip", archive_path
 
     with zipfile.ZipFile(archive_path) as archive:
@@ -74,7 +76,12 @@ def main() -> None:
                 root + "/node_modules/npm/bin/" + wrapper
             )
 
-        assert archive.read(root + "/node.exe").startswith(b"MZ")
+        node = archive.read(root + "/node.exe")
+        assert node.startswith(b"MZ")
+        pe_offset = struct.unpack_from("<I", node, 0x3C)[0]
+        assert node[pe_offset : pe_offset + 4] == b"PE\0\0"
+        pe_machine = struct.unpack_from("<H", node, pe_offset + 4)[0]
+        assert pe_machine == expected_pe_machine
         package = json.loads(archive.read(root + "/node_modules/npm/package.json"))
         assert package["version"] == "11.16.0"
 

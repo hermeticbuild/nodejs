@@ -7,7 +7,6 @@ copy_file(
     src = "@nodejs_26_3_1//:node",
     out = "node.exe",
     target_compatible_with = [
-        "@platforms//cpu:x86_64",
         "@platforms//os:windows",
     ],
 )
