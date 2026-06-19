@@ -61,6 +61,26 @@ jobs:
             @nodejs_26_3_1//:node \
             //tests/release:windows_release_archive_validation
 
+  windows-x86_64-execution:
+    name: Windows x86_64 execution / Node.js 26.3.1
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test node.exe
+        run: |
+          bazel test `
+            --config=ci `
+            --config=release `
+            --config=remote `
+            --jobs=64 `
+            --local_test_jobs=1 `
+            --lockfile_mode=error `
+            --extra_execution_platforms=@nodejs//:rbe_platform,@llvm//platforms:windows_x86_64_msvc `
+            --platforms=@llvm//platforms:windows_x86_64_msvc `
+            --strategy=TestRunner=local `
+            //tests/node:node_windows_test
+
   test:
     name: ${{ matrix.system.name }} / Node.js 26.3.1
     runs-on: ${{ matrix.system.runner }}

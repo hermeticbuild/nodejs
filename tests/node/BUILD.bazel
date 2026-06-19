@@ -1,3 +1,4 @@
+load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 sh_test(
@@ -25,6 +26,21 @@ sh_test(
         no_match_error = "node_test currently supports Linux and macOS x86_64 and arm64 targets",
     ),
     data = ["@nodejs_26_3_1//:node"],
+)
+
+py_test(
+    name = "node_windows_test",
+    srcs = ["node_windows_test.py"],
+    args = [
+        "$(rootpath @nodejs_26_3_1//:node)",
+        "x64",
+        "win32",
+    ],
+    data = ["@nodejs_26_3_1//:node"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
 )
 
 sh_test(
