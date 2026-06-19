@@ -244,10 +244,10 @@ the `v8-updates` target runs `test-linux-perf-logger` and
 `test-trace-gc-flag`.
 
 `@nodejs_26_3_1//:node_upstream_benchmark_tests` runs 39 benchmark validation
-cases sequentially. It excludes `benchmark/test-benchmark-napi` until the
-eleven N-API benchmark binding targets are available. The benchmark tests use
-test parameters and validate that each benchmark entry point completes; they
-do not record performance measurements.
+cases sequentially. `@nodejs_26_3_1//:node_upstream_benchmark_napi_test` runs
+`benchmark/test-benchmark-napi` in a separate action with 13 Bazel-built native
+bindings. The benchmark tests use test parameters and validate that each
+benchmark entry point completes; they do not record performance measurements.
 
 `@nodejs_26_3_1//:node_upstream_known_issues_tests` runs 22 cases sequentially
 with the upstream suite's inverted expected-failure configuration. A target

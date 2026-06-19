@@ -3,6 +3,7 @@ load(
     "LIEF_SOURCES",
     "LIEF_THIRD_PARTY_SOURCES",
 )
+load("@nodejs//nodejs/private:node_addon.bzl", "node_addon")
 load("@nodejs//nodejs/private:node_javascript.bzl", "node_javascript")
 load(
     "@nodejs//nodejs/private:node_sources.bzl",
@@ -670,6 +671,19 @@ py_binary(
     data = [
         "CHANGELOG.md",
         "deps/undici/src/package.json",
+        ":benchmark_napi_buffer_binding_node",
+        ":benchmark_napi_buffer_v8_binding_node",
+        ":benchmark_napi_create_object_with_properties_binding_node",
+        ":benchmark_napi_define_properties_binding_node",
+        ":benchmark_napi_function_args_binding_node",
+        ":benchmark_napi_function_args_napi_binding_node",
+        ":benchmark_napi_function_call_binding_node",
+        ":benchmark_napi_function_call_napi_binding_node",
+        ":benchmark_napi_property_keys_binding_node",
+        ":benchmark_napi_ref_addon_node",
+        ":benchmark_napi_string_binding_node",
+        ":benchmark_napi_type_tag_binding_node",
+        ":benchmark_napi_type_tag_check_binding_node",
         ":embedtest",
         ":test/addons/register-signal-handler/build/Release/binding.node",
         ":test/addons/uv-handle-leak/build/Release/binding.node",
@@ -777,48 +791,106 @@ cc_binary(
     target_compatible_with = ["@platforms//os:macos"],
 )
 
-cc_binary(
-    name = "register_signal_handler_binding",
+node_addon(
+    name = "register_signal_handler_binding_node",
+    output = "test/addons/register-signal-handler/build/Release/binding.node",
     srcs = ["test/addons/register-signal-handler/binding.cc"],
     copts = ["-std=c++20"],
-    linkopts = select(
-        {
-            ":target_linux": [],
-            ":target_macos": ["-Wl,-undefined,dynamic_lookup"],
-        },
-        no_match_error = "Node.js addons currently support Linux and macOS targets",
-    ),
-    linkshared = True,
-    deps = [":node_addon_headers"],
 )
 
-cc_binary(
-    name = "uv_handle_leak_binding",
+node_addon(
+    name = "uv_handle_leak_binding_node",
+    output = "test/addons/uv-handle-leak/build/Release/binding.node",
     srcs = ["test/addons/uv-handle-leak/binding.cc"],
     copts = ["-std=c++20"],
-    linkopts = select(
-        {
-            ":target_linux": [],
-            ":target_macos": ["-Wl,-undefined,dynamic_lookup"],
-        },
-        no_match_error = "Node.js addons currently support Linux and macOS targets",
-    ),
-    linkshared = True,
-    deps = [":node_addon_headers"],
 )
 
-genrule(
-    name = "register_signal_handler_binding_node",
-    srcs = [":register_signal_handler_binding"],
-    outs = ["test/addons/register-signal-handler/build/Release/binding.node"],
-    cmd = "cp $< $@",
+node_addon(
+    name = "benchmark_napi_buffer_binding_node",
+    output = "benchmark/napi/buffer/build/Release/binding.node",
+    srcs = ["benchmark/napi/buffer/binding.cc"],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_EXPERIMENTAL"],
 )
 
-genrule(
-    name = "uv_handle_leak_binding_node",
-    srcs = [":uv_handle_leak_binding"],
-    outs = ["test/addons/uv-handle-leak/build/Release/binding.node"],
-    cmd = "cp $< $@",
+node_addon(
+    name = "benchmark_napi_buffer_v8_binding_node",
+    output = "benchmark/napi/buffer/build/Release/binding_node_api_v8.node",
+    srcs = ["benchmark/napi/buffer/binding.cc"],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_VERSION=8"],
+)
+
+node_addon(
+    name = "benchmark_napi_create_object_with_properties_binding_node",
+    output = "benchmark/napi/create_object_with_properties/build/Release/binding.node",
+    srcs = ["benchmark/napi/create_object_with_properties/binding.cc"],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_EXPERIMENTAL"],
+)
+
+node_addon(
+    name = "benchmark_napi_define_properties_binding_node",
+    output = "benchmark/napi/define_properties/build/Release/binding.node",
+    srcs = ["benchmark/napi/define_properties/binding.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_function_args_binding_node",
+    output = "benchmark/napi/function_args/build/Release/binding.node",
+    srcs = ["benchmark/napi/function_args/binding.cc"],
+    copts = ["-std=c++20"],
+)
+
+node_addon(
+    name = "benchmark_napi_function_args_napi_binding_node",
+    output = "benchmark/napi/function_args/build/Release/napi_binding.node",
+    srcs = ["benchmark/napi/function_args/napi_binding.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_function_call_binding_node",
+    output = "benchmark/napi/function_call/build/Release/binding.node",
+    srcs = ["benchmark/napi/function_call/binding.cc"],
+    copts = ["-std=c++20"],
+)
+
+node_addon(
+    name = "benchmark_napi_function_call_napi_binding_node",
+    output = "benchmark/napi/function_call/build/Release/napi_binding.node",
+    srcs = ["benchmark/napi/function_call/napi_binding.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_property_keys_binding_node",
+    output = "benchmark/napi/property_keys/build/Release/binding.node",
+    srcs = ["benchmark/napi/property_keys/binding.cc"],
+    copts = ["-std=c++20"],
+    defines = ["NAPI_EXPERIMENTAL"],
+)
+
+node_addon(
+    name = "benchmark_napi_ref_addon_node",
+    output = "benchmark/napi/ref/build/Release/addon.node",
+    srcs = ["benchmark/napi/ref/addon.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_string_binding_node",
+    output = "benchmark/napi/string/build/Release/binding.node",
+    srcs = ["benchmark/napi/string/binding.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_type_tag_binding_node",
+    output = "benchmark/napi/type-tag/build/Release/binding.node",
+    srcs = ["benchmark/napi/type-tag/binding.c"],
+)
+
+node_addon(
+    name = "benchmark_napi_type_tag_check_binding_node",
+    output = "benchmark/napi/type-tag-check/build/Release/binding.node",
+    srcs = ["benchmark/napi/type-tag/binding.c"],
 )
 
 sh_binary(
@@ -1105,6 +1177,18 @@ nodejs_upstream_test_shards(
     root_status = ":node_test_root",
     getaddrinfo_library = ":node_test_getaddrinfo",
     skip_tests = ["benchmark/test-benchmark-napi"],
+    test_sources = ":node_test_sources",
+    test_runner = ":node_test_runner",
+)
+
+nodejs_upstream_test_shards(
+    name = "node_upstream_benchmark_napi_test",
+    suite = "benchmark/test-benchmark-napi",
+    shards = 1,
+    node = ":node",
+    root_status = ":node_test_root",
+    getaddrinfo_library = ":node_test_getaddrinfo",
+    skip_tests = [],
     test_sources = ":node_test_sources",
     test_runner = ":node_test_runner",
 )
