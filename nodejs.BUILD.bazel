@@ -525,3 +525,35 @@ cc_library(
         no_match_error = "zstd currently supports Linux and macOS targets",
     ),
 )
+
+cc_library(
+    name = "uvwasi",
+    srcs = [
+        "deps/uvwasi/src/clocks.c",
+        "deps/uvwasi/src/fd_table.c",
+        "deps/uvwasi/src/path_resolver.c",
+        "deps/uvwasi/src/poll_oneoff.c",
+        "deps/uvwasi/src/sync_helpers.c",
+        "deps/uvwasi/src/uv_mapping.c",
+        "deps/uvwasi/src/uvwasi.c",
+        "deps/uvwasi/src/wasi_rights.c",
+        "deps/uvwasi/src/wasi_serdes.c",
+    ],
+    hdrs = glob([
+        "deps/uvwasi/include/*.h",
+        "deps/uvwasi/src/*.h",
+    ]),
+    copts = ["-fvisibility=hidden"],
+    defines = select(
+        {
+            ":target_linux": [
+                "_GNU_SOURCE",
+                "_POSIX_C_SOURCE=200112",
+            ],
+            ":target_macos": [],
+        },
+        no_match_error = "uvwasi currently supports Linux and macOS targets",
+    ),
+    includes = ["deps/uvwasi/include"],
+    deps = [":libuv"],
+)

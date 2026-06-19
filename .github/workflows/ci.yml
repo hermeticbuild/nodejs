@@ -108,6 +108,7 @@ jobs:
             //tests/libuv:libuv_version_test \
             //tests/nbytes:nbytes_test \
             //tests/nghttp2:nghttp2_test \
+            //tests/uvwasi:uvwasi_test \
             //tests/zlib:zlib_test \
             //tests/zstd:zstd_test
 

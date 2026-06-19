@@ -1,0 +1,7 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_test(
+    name = "uvwasi_test",
+    srcs = ["uvwasi_test.c"],
+    deps = ["@nodejs_26_3_1//:uvwasi"],
+)
