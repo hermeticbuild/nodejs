@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -140,4 +141,36 @@ cc_library(
         },
         no_match_error = "libuv currently supports Linux and macOS targets",
     ),
+)
+
+cc_binary(
+    name = "node_js2c",
+    srcs = [
+        "src/builtin_info.cc",
+        "src/builtin_info.h",
+        "src/embedded_data.cc",
+        "src/embedded_data.h",
+        "tools/executable_wrapper.h",
+        "tools/js2c.cc",
+    ],
+    copts = ["-std=c++20"],
+    defines = ["NODE_JS2C_USE_STRING_LITERALS"],
+    includes = [
+        "src",
+        "tools",
+    ],
+    linkopts = select(
+        {
+            ":target_linux": [],
+            ":target_macos": [
+                "-framework CoreFoundation",
+                "-framework Security",
+            ],
+        },
+        no_match_error = "node_js2c currently supports Linux and macOS targets",
+    ),
+    deps = [
+        ":libuv",
+        "@v8//:simdutf",
+    ],
 )

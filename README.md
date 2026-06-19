@@ -42,6 +42,10 @@ Run `tools/configure_check_audit.sh` to update the inventory. Run
 definitions, and system libraries for Linux and macOS. The hermetic LLVM
 toolchains build x86_64 and arm64 variants for both operating systems.
 
+`@nodejs_26_3_1//:node_js2c` builds Node.js's `node_js2c` executable with the
+bundled libuv and V8 simdutf sources. `//tests/js2c:node_js2c_test` verifies
+that `node_js2c` embeds JavaScript, ES module, and `config.gypi` inputs.
+
 `@v8` projects `deps/v8` from the same Node.js 26.3.1 archive as a repository
 because V8's Bazel targets use repository-root labels. `@nodejs_icu_26_3_1`
 projects Node.js's bundled ICU 78 source and provides `//:icudata`, which
