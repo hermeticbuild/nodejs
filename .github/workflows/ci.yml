@@ -24,6 +24,16 @@ jobs:
           'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
           >/dev/null
 
+      - name: Test consumer source contract
+        working-directory: tests/integration
+        run: |
+          bazel test \
+            --config=ci \
+            --config=remote \
+            --jobs=64 \
+            --lockfile_mode=error \
+            //:source_contract_test
+
       - name: Build bundled ICU
         run: |
           bazel build \
@@ -134,245 +144,41 @@ jobs:
           - name: Linux x86_64
             runner: ubuntu-24.04
             platform: "@llvm//platforms:linux_x86_64"
+            test_strategy: remote
+            upstream_target: "@nodejs_26_3_1//:node_upstream_tests"
           - name: Linux arm64
             runner: ubuntu-24.04-arm
             platform: "@llvm//platforms:linux_aarch64"
+            test_strategy: local
+            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
           - name: macOS x86_64
             runner: macos-15-intel
             platform: "@llvm//platforms:macos_x86_64"
+            test_strategy: local
+            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
           - name: macOS arm64
             runner: macos-15
             platform: "@llvm//platforms:macos_aarch64"
+            test_strategy: local
+            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test source contract
-        working-directory: tests/integration
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --local_test_jobs=4 \
-            --strategy=TestRunner=local \
-            //:source_contract_test
-
-      - name: Test release configuration
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --local_test_jobs=4 \
-            --strategy=TestRunner=local \
-            //tests/node_config:node_config_test
-
-      - name: Test V8 release configuration
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --local_test_jobs=4 \
-            --strategy=TestRunner=local \
-            //tests/v8_config:v8_config_test
-
-      - name: Test bundled C dependencies
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/ada:ada_test \
-            //tests/brotli:brotli_test \
-            //tests/cares:cares_test \
-            //tests/histogram:histogram_test \
-            //tests/icu:icu_data_test \
-            //tests/libffi:libffi_test \
-            //tests/lief:lief_test \
-            //tests/llhttp:llhttp_test \
-            //tests/libuv:libuv_version_test \
-            //tests/nbytes:nbytes_test \
-            //tests/ncrypto:ncrypto_test \
-            //tests/nghttp2:nghttp2_test \
-            //tests/merve:merve_test \
-            //tests/openssl:openssl_test \
-            //tests/simdjson:simdjson_test \
-            //tests/sqlite:sqlite_test \
-            //tests/uvwasi:uvwasi_test \
-            //tests/zlib:zlib_test \
-            //tests/zstd:zstd_test
-
-      - name: Test Node.js js2c
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/js2c:node_javascript_test \
-            //tests/js2c:node_js2c_test
-
-      - name: Test libnode
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/libnode:libnode_test
-
-      - name: Test Node.js executable
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/node:node_snapshot_test \
-            //tests/node:node_test
-
-      - name: Test upstream Node.js smoke tests
+      - name: Test Node.js
         run: |
           bazel test \
             --config=ci \
             --config=release \
             --config=remote \
-            --jobs=64 \
-            --local_test_jobs=1 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            @nodejs_26_3_1//:node_upstream_smoke_test
-
-      - name: Test upstream Node.js parallel suite
-        if: matrix.system.name == 'Linux x86_64'
-        run: |
-          bazel test \
-            --config=ci \
-            --config=release \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            @nodejs_26_3_1//:node_upstream_parallel_tests
-
-      - name: Test upstream Node.js sequential suite
-        if: matrix.system.name == 'Linux x86_64'
-        run: |
-          bazel test \
-            --config=ci \
-            --config=release \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            @nodejs_26_3_1//:node_upstream_sequential_tests
-
-      - name: Test additional upstream Node.js JavaScript suites
-        if: matrix.system.name == 'Linux x86_64'
-        run: |
-          bazel test \
-            --config=ci \
-            --config=release \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            @nodejs_26_3_1//:node_upstream_abort_tests \
-            @nodejs_26_3_1//:node_upstream_addon_tests \
-            @nodejs_26_3_1//:node_upstream_async_hooks_tests \
-            @nodejs_26_3_1//:node_upstream_benchmark_napi_test \
-            @nodejs_26_3_1//:node_upstream_benchmark_tests \
-            @nodejs_26_3_1//:node_upstream_client_proxy_tests \
-            @nodejs_26_3_1//:node_upstream_doctool_tests \
-            @nodejs_26_3_1//:node_upstream_embedding_tests \
-            @nodejs_26_3_1//:node_upstream_es_module_tests \
-            @nodejs_26_3_1//:node_upstream_ffi_tests \
-            @nodejs_26_3_1//:node_upstream_js_native_api_tests \
-            @nodejs_26_3_1//:node_upstream_known_issues_tests \
-            @nodejs_26_3_1//:node_upstream_message_tests \
-            @nodejs_26_3_1//:node_upstream_module_hooks_tests \
-            @nodejs_26_3_1//:node_upstream_node_api_tests \
-            @nodejs_26_3_1//:node_upstream_pseudo_tty_tests \
-            @nodejs_26_3_1//:node_upstream_pummel_tests \
-            @nodejs_26_3_1//:node_upstream_report_tests \
-            @nodejs_26_3_1//:node_upstream_sea_tests \
-            @nodejs_26_3_1//:node_upstream_sqlite_tests \
-            @nodejs_26_3_1//:node_upstream_wasi_tests \
-            @nodejs_26_3_1//:node_upstream_wasm_allocation_tests \
-            @nodejs_26_3_1//:node_upstream_test426_tests \
-            @nodejs_26_3_1//:node_upstream_test_runner_tests \
-            @nodejs_26_3_1//:node_upstream_v8_updates_tests \
-            @nodejs_26_3_1//:node_upstream_wpt_tests
-
-      - name: Test Node.js release archives
-        run: |
-          bazel test \
-            --config=ci \
-            --config=release \
-            --config=remote \
+            --build_tests_only \
             --jobs=64 \
             --local_test_jobs=4 \
             --lockfile_mode=error \
             "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
             "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/release:release_archive_test
-
-      - name: Test Rust 1.92 toolchain
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/rust:rust_toolchain_test
-
-      - name: Test V8 Temporal
-        run: |
-          bazel test \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --local_test_jobs=4 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            --strategy=TestRunner=local \
-            //tests/temporal:all
+            "--strategy=TestRunner=${{ matrix.system.test_strategy }}" \
+            -- \
+            //tests/... \
+            -//tests/integration/... \
+            "${{ matrix.system.upstream_target }}"
