@@ -16,21 +16,33 @@
     },
     {
       "name": "node_use_node_snapshot",
-      "values": {"*": "true"},
+      "values": {
+        "*": "true",
+        "windows_arm64": "false",
+        "windows_x86_64": "false"
+      },
       "required_assignments": [],
-      "justification": "Upstream same-architecture release builds embed the Node.js startup snapshot; Bazel must preserve the snapshot for every target platform."
+      "justification": "Upstream same-architecture release builds embed the Node.js startup snapshot; cross-compiled Windows builds use node_snapshot_stub."
     },
     {
       "name": "node_use_node_code_cache",
-      "values": {"*": "true"},
+      "values": {
+        "*": "true",
+        "windows_arm64": "false",
+        "windows_x86_64": "false"
+      },
       "required_assignments": [],
-      "justification": "Upstream release builds embed the built-in JavaScript code cache."
+      "justification": "Upstream same-architecture release builds embed the built-in JavaScript code cache; cross-compiled Windows builds disable it."
     },
     {
       "name": "node_write_snapshot_as_array_literals",
-      "values": {"*": "false"},
+      "values": {
+        "*": "false",
+        "windows_arm64": "true",
+        "windows_x86_64": "true"
+      },
       "required_assignments": [],
-      "justification": "Upstream release builds use the non-array snapshot representation."
+      "justification": "Upstream Windows configuration selects array literals, while Linux and macOS use the non-array snapshot representation."
     },
     {
       "name": "node_use_amaro",

@@ -65,6 +65,15 @@ def main() -> None:
     else:
         variables.pop("v8_enable_wasm_simd256_revec", None)
 
+    if arguments.os == "win":
+        variables.update(
+            {
+                "node_use_node_code_cache": "false",
+                "node_use_node_snapshot": "false",
+                "node_write_snapshot_as_array_literals": "true",
+            }
+        )
+
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     arguments.output.write_text(
         "# Do not edit. Generated from the Node.js 26.3.1 release config.gypi.\n"
