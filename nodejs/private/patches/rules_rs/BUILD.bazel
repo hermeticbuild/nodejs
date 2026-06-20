@@ -1,3 +1,4 @@
 exports_files([
+    "rust-objcopy.patch",
     "windows-bcrypt-case.patch",
 ])
