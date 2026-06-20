@@ -16,12 +16,17 @@ import sys
 from collections.abc import Sequence
 
 
-_SUPPORTED_PLATFORMS = (
-    "darwin_arm64",
-    "darwin_x86_64",
-    "linux_arm64",
-    "linux_x86_64",
-)
+_PLATFORM_TITLES = {
+    "darwin_arm64": "Darwin arm64",
+    "darwin_x86_64": "Darwin x86_64",
+    "linux_arm64": "Linux arm64",
+    "linux_x86_64": "Linux x86_64",
+    "windows_arm64": "Windows arm64",
+    "windows_x86_64": "Windows x86_64",
+}
+_SUPPORTED_PLATFORMS = tuple(_PLATFORM_TITLES)
+
+
 @dataclasses.dataclass(frozen=True)
 class ConfigureOption:
     line: int
@@ -331,23 +336,27 @@ def _generate(
         "execute `configure.py` or GYP.",
         "",
         "The reviewed release settings below define the values that the Bazel release",
-        "build must preserve for Linux and macOS. A configure.py assignment is evidence",
-        "for the upstream mechanism; the reviewed value is the Bazel build requirement.",
+        "build must preserve for every supported platform. A configure.py assignment",
+        "is evidence for the upstream mechanism; the reviewed value is the Bazel build",
+        "requirement.",
         "",
         "## Reviewed release settings",
         "",
-        "| GYP variable | Darwin arm64 | Darwin x86_64 | Linux arm64 | Linux x86_64 | configure.py assignments | Requirement |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| GYP variable | {} | configure.py assignments | Requirement |".format(
+            " | ".join(_PLATFORM_TITLES.values())
+        ),
+        "| --- | {} | --- | --- |".format(
+            " | ".join("---" for _ in _SUPPORTED_PLATFORMS)
+        ),
     ]
     for setting in settings:
         lines.append(
-            "| {name} | {darwin_arm64} | {darwin_x86_64} | {linux_arm64} | "
-            "{linux_x86_64} | {assignments} | {justification} |".format(
+            "| {name} | {values} | {assignments} | {justification} |".format(
                 name=f"`{setting.name}`",
-                darwin_arm64=_markdown_code(_setting_value(setting, "darwin_arm64")),
-                darwin_x86_64=_markdown_code(_setting_value(setting, "darwin_x86_64")),
-                linux_arm64=_markdown_code(_setting_value(setting, "linux_arm64")),
-                linux_x86_64=_markdown_code(_setting_value(setting, "linux_x86_64")),
+                values=" | ".join(
+                    _markdown_code(_setting_value(setting, platform))
+                    for platform in _SUPPORTED_PLATFORMS
+                ),
                 assignments=_locations(writes_by_name.get(setting.name, [])),
                 justification=_markdown_text(setting.justification),
             )

@@ -30,7 +30,7 @@
       "name": "node_write_snapshot_as_array_literals",
       "values": {"*": "false"},
       "required_assignments": [],
-      "justification": "Upstream Linux and macOS builds use the non-array snapshot representation."
+      "justification": "Upstream release builds use the non-array snapshot representation."
     },
     {
       "name": "node_use_amaro",
@@ -60,13 +60,13 @@
       "name": "node_use_ffi",
       "values": {"*": "true"},
       "required_assignments": ["b(use_ffi)"],
-      "justification": "Node.js 26.3.1 release artifacts enable the bundled libffi implementation on Linux and macOS x86_64 and arm64 targets."
+      "justification": "Node.js 26.3.1 release artifacts enable the bundled libffi implementation on every supported target."
     },
     {
       "name": "node_use_lief",
       "values": {"*": "true"},
       "required_assignments": ["'true'"],
-      "justification": "Node.js 26.3.1 release artifacts enable bundled LIEF for single-executable application support on Linux and macOS."
+      "justification": "Node.js 26.3.1 release artifacts enable bundled LIEF for single-executable application support."
     },
     {
       "name": "node_use_v8_platform",
@@ -128,7 +128,9 @@
         "darwin_arm64": "arm64",
         "darwin_x86_64": "x64",
         "linux_arm64": "arm64",
-        "linux_x86_64": "x64"
+        "linux_x86_64": "x64",
+        "windows_arm64": "arm64",
+        "windows_x86_64": "x64"
       },
       "required_assignments": ["target_arch"],
       "justification": "Node.js and V8 use x64 for x86_64 targets and arm64 for AArch64 targets."
