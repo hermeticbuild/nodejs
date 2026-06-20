@@ -25,7 +25,6 @@ _V8_PATCHES = [
     Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
     Label("//nodejs/private/patches/v8:temporal.patch"),
     Label("//nodejs/private/patches/v8:windows-defines.patch"),
-    Label("//nodejs/private/patches/v8:windows-arm64-cpu.patch"),
     Label("//nodejs/private/patches/v8:windows-libraries.patch"),
     Label("//nodejs/private/patches/v8:nodejs-config.patch"),
     Label("//nodejs/private/patches/v8:windows-target-config.patch"),
@@ -71,9 +70,8 @@ def _nodejs_impl(module_ctx):
         )
         nodejs_doc_dependencies_repository(
             name = release.doc_dependencies_repository_name,
-            sha256 = release.sha256,
-            strip_prefix = release.strip_prefix,
-            urls = release.urls,
+            package_lock_sha256 = release.doc_package_lock_sha256,
+            package_lock_urls = release.doc_package_lock_urls,
         )
         nodejs_v8_repository(
             name = release.v8_repository_name,

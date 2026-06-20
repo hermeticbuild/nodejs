@@ -208,18 +208,14 @@ def _resolve_node_package(packages, package_path, dependency):
     fail("Cannot resolve {} from {}".format(dependency, package_path))
 
 def _nodejs_doc_dependencies_repository_impl(repository_ctx):
-    source_directory = "_nodejs_source"
-    repository_ctx.download_and_extract(
-        url = repository_ctx.attr.urls,
-        output = source_directory,
-        sha256 = repository_ctx.attr.sha256,
-        stripPrefix = repository_ctx.attr.strip_prefix,
+    package_lock_path = "package-lock.json"
+    repository_ctx.download(
+        url = repository_ctx.attr.package_lock_urls,
+        output = package_lock_path,
+        sha256 = repository_ctx.attr.package_lock_sha256,
     )
-    package_lock_path = "{}/tools/doc/package-lock.json".format(source_directory)
-    if not repository_ctx.path(package_lock_path).exists:
-        fail("Node.js source archive is missing tools/doc/package-lock.json")
     package_lock = json.decode(repository_ctx.read(package_lock_path))
-    repository_ctx.delete(source_directory)
+    repository_ctx.delete(package_lock_path)
     packages = package_lock["packages"]
     pending = {
         "node_modules/remark-parse": True,
@@ -260,9 +256,8 @@ filegroup(
 nodejs_doc_dependencies_repository = repository_rule(
     implementation = _nodejs_doc_dependencies_repository_impl,
     attrs = {
-        "sha256": attr.string(mandatory = True),
-        "strip_prefix": attr.string(mandatory = True),
-        "urls": attr.string_list(mandatory = True),
+        "package_lock_sha256": attr.string(mandatory = True),
+        "package_lock_urls": attr.string_list(mandatory = True),
     },
 )
 

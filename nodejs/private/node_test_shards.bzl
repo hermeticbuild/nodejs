@@ -13,7 +13,20 @@ def nodejs_upstream_test_shards(
         test_sources,
         test_runner,
         test_directory_under_test_root = False):
-    """Creates deterministic shards for upstream Node.js test suites."""
+    """Creates deterministic shards for upstream Node.js test suites.
+
+    Args:
+      name: Name for the generated test_suite.
+      suites: Upstream Node.js suite names passed to tools/test.py.
+      shards: Number of sh_test targets to generate.
+      node: Node.js executable label.
+      root_status: Upstream test/root.status label.
+      getaddrinfo_library: Linux getaddrinfo preload library label.
+      skip_tests: Upstream test names passed to --skip-tests.
+      test_sources: Upstream test source filegroup label.
+      test_runner: Node.js tools/test.py wrapper label.
+      test_directory_under_test_root: Whether NODE_TEST_DIR belongs under test/.
+    """
     tests = []
     for shard in range(shards):
         test_name = "{}_{}".format(name, shard)

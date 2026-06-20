@@ -1,5 +1,4 @@
 common --enable_platform_specific_config
-common --experimental_fetch_all_coverage_outputs
 common --heap_dump_on_oom
 common --incompatible_default_to_explicit_init_py
 common --incompatible_enforce_starlark_utf8=error
@@ -23,9 +22,6 @@ test:ci --test_summary=terse
 build:release --compilation_mode=opt
 build:release --copt=-O3
 
-# A module should not require direct declarations for unused transitive dependencies.
-common --check_direct_dependencies=off
-
 common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 common --repo_env=BAZEL_NO_APPLE_CPP_TOOLCHAIN=1
 common --repo_env=BAZEL_DO_NOT_DETECT_SWIFT_TOOLCHAIN=1
@@ -33,6 +29,7 @@ common --repo_env=BAZEL_MSVC_RUNTIME_VISUAL_STUDIO_EULA=1
 common --extra_toolchains=@llvm//toolchain:all
 common --@llvm//config:experimental_stub_libgcc_s=True
 common --experimental_propagate_custom_flag=@v8//bazel/config:v8_target_cpu
+common --experimental_propagate_custom_flag=@v8//:v8_target_os
 
 common:windows --host_platform=//:local_windows_platform
 

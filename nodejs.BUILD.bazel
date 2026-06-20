@@ -1,5 +1,7 @@
+"""Build targets for the Node.js source repository."""
+
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@nodejs//nodejs/private:compiler_options.bzl", "cxx20_copts")
+load("@nodejs//nodejs:compiler_options.bzl", "cxx20_copts")
 load(
     "@nodejs//nodejs/private:lief_sources.bzl",
     "LIEF_SOURCES",
@@ -729,9 +731,11 @@ windows_resource(
     ],
     inputs = [
         "@windows_sdk//:winsdk_resource_headers",
-        "src/node_version.h",
-        "src/res/node.ico",
     ],
+    target_triple = select({
+        ":target_windows_arm64": "aarch64-pc-windows-msvc",
+        "//conditions:default": "x86_64-pc-windows-msvc",
+    }),
     target_compatible_with = ["@platforms//os:windows"],
 )
 

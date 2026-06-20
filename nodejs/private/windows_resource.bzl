@@ -8,7 +8,7 @@ def _run_llvm_rc(ctx, source, output, inputs, include_anchors):
     preprocess_args.add_all([
         "--driver-mode=gcc",
         "-target",
-        "x86_64-pc-windows-msvc",
+        ctx.attr.target_triple,
         "-E",
         "-xc",
         "-DRC_INVOKED",
@@ -26,24 +26,32 @@ def _run_llvm_rc(ctx, source, output, inputs, include_anchors):
     ctx.actions.run(
         arguments = [preprocess_args],
         executable = ctx.executable._clang,
-        inputs = depset(inputs + [ctx.file._windows_sdk_vfs_overlay]),
+        inputs = depset(inputs + include_anchors + [ctx.file._windows_sdk_vfs_overlay]),
         mnemonic = "WindowsResourcePreprocess",
         outputs = [preprocessed],
         progress_message = "Preprocessing Windows resource %{input}",
         tools = [ctx.executable._clang],
     )
 
+    _compile_llvm_rc(
+        ctx,
+        preprocessed,
+        output,
+        inputs + include_anchors + [preprocessed],
+        include_anchors,
+    )
+
+def _compile_llvm_rc(ctx, source, output, inputs, include_anchors):
     resource_args = ctx.actions.args()
     resource_args.add("/FO" + output.path)
     resource_args.add("/no-preprocess")
     for anchor in include_anchors:
         resource_args.add("/I" + anchor.dirname)
-    resource_args.add(preprocessed.path)
-
+    resource_args.add(source.path)
     ctx.actions.run(
         arguments = [resource_args],
         executable = ctx.executable._llvm_rc,
-        inputs = depset(inputs + [preprocessed]),
+        inputs = depset(inputs),
         mnemonic = "WindowsResource",
         outputs = [output],
         progress_message = "Compiling Windows resource %{input}",
@@ -71,6 +79,7 @@ windows_resource = rule(
         "inputs": attr.label_list(allow_files = True),
         "include_anchors": attr.label_list(allow_files = True),
         "out": attr.output(mandatory = True),
+        "target_triple": attr.string(mandatory = True),
         "_clang": attr.label(
             allow_files = True,
             cfg = "exec",
@@ -96,7 +105,7 @@ def _windows_manifest_resource_impl(ctx):
         output = resource_script,
         content = '1 24 "{}"\n'.format(ctx.file.manifest.path),
     )
-    _run_llvm_rc(
+    _compile_llvm_rc(
         ctx,
         resource_script,
         ctx.outputs.out,
@@ -112,21 +121,11 @@ windows_manifest_resource = rule(
             mandatory = True,
         ),
         "out": attr.output(mandatory = True),
-        "_clang": attr.label(
-            allow_files = True,
-            cfg = "exec",
-            default = Label("@llvm//tools:clang"),
-            executable = True,
-        ),
         "_llvm_rc": attr.label(
             allow_files = True,
             cfg = "exec",
             default = Label("@llvm//tools:llvm-rc"),
             executable = True,
-        ),
-        "_windows_sdk_vfs_overlay": attr.label(
-            allow_single_file = True,
-            default = Label("@windows_sdk//:windows_sdk_vfs_overlay.yaml"),
         ),
     },
 )

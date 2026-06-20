@@ -1,5 +1,5 @@
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
-load("//nodejs/private:compiler_options.bzl", "cxx20_copts")
+load("//nodejs:compiler_options.bzl", "cxx20_copts")
 
 cc_test(
     name = "simdjson_test",

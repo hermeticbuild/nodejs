@@ -1,5 +1,3 @@
 /.bazelrc.user
 bazel-*
 .DS_Store
-/patches/resb/BUILD.bazel
-/tools/crates_vendor/generated/

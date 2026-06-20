@@ -408,7 +408,14 @@ _release_zip = rule(
 )
 
 def nodejs_release_archives(name, version, node, config_gypi):
-    """Creates the upstream Node.js binary archive layout."""
+    """Creates the upstream Node.js binary archive layout.
+
+    Args:
+      name: Base name for the release archive targets.
+      version: Node.js release version.
+      node: Node.js executable label.
+      config_gypi: Target-specific config.gypi label.
+    """
     windows_wrappers = []
     for wrapper in _WINDOWS_RELEASE_WRAPPERS:
         target = "_windows_release_{}".format(wrapper.replace(".", "_"))

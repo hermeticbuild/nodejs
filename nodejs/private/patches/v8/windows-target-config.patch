@@ -112,29 +112,10 @@ diff --git a/BUILD.bazel b/BUILD.bazel
 diff --git a/bazel/defs.bzl b/bazel/defs.bzl
 --- a/bazel/defs.bzl
 +++ b/bazel/defs.bzl
-@@ -429,13 +429,43 @@ def _torque_files(name, noicu_srcs, icu_srcs, args, definition_extras = [], ini
+@@ -429,13 +429,16 @@ def _torque_files(name, noicu_srcs, icu_srcs, args, definition_extras = [], ini
          }),
      )
  
-+def _v8_target_platform(settings):
-+    platforms = settings["//command_line_option:platforms"]
-+    if len(platforms) != 1:
-+        return None
-+
-+    platform = str(platforms[0])
-+    platform_mapping = {
-+        ":linux_aarch64": ("arm64", "linux"),
-+        ":linux_x86_64": ("x64", "linux"),
-+        ":macos_aarch64": ("arm64", "macos"),
-+        ":macos_x86_64": ("x64", "macos"),
-+        ":windows_aarch64_msvc": ("arm64", "windows"),
-+        ":windows_x86_64_msvc": ("x64", "windows"),
-+    }
-+    for suffix, target in platform_mapping.items():
-+        if platform.endswith(suffix):
-+            return target
-+    return None
-+
  def _v8_target_cpu_transition_impl(settings,
                                     attr, # @unused
                                    ):
@@ -142,25 +123,17 @@ diff --git a/bazel/defs.bzl b/bazel/defs.bzl
 -    if "@v8//bazel/config:v8_target_cpu" in settings:
 -        if settings["@v8//bazel/config:v8_target_cpu"] != "none":
 -            return {}
-+    result = {}
-+    target = _v8_target_platform(settings)
-+
++    result = {
++        "@v8//:v8_target_os": settings["@v8//:v8_target_os"],
++    }
 +    target_cpu = settings["@v8//bazel/config:v8_target_cpu"]
-+    if target_cpu == "none" and target != None:
-+        target_cpu = target[0]
-+
-+    target_os = settings["@v8//:v8_target_os"]
-+    if target_os == "none" and target != None:
-+        target_os = target[1]
-+    result["@v8//:v8_target_os"] = target_os
-+
 +    if target_cpu != "none":
 +        result["@v8//bazel/config:v8_target_cpu"] = target_cpu
 +        return result
  
      # Auto-detect target architecture based on the --cpu flag.
      mapping = {
-@@ -458,15 +488,24 @@ def _v8_target_cpu_transition_impl(settings,
+@@ -458,15 +461,22 @@ def _v8_target_cpu_transition_impl(settings,
          "riscv64": "riscv64",
          "ppc": "ppc64le",
      }
@@ -171,9 +144,8 @@ diff --git a/bazel/defs.bzl b/bazel/defs.bzl
  
 -# Set the v8_target_cpu to be the correct architecture given the cpu specified
 -# on the command line.
-+# Set v8_target_cpu and v8_target_os from the requested platform. The build
-+# settings remain configured when Bazel applies the execution transition for
-+# mksnapshot.
++# Preserve explicit v8_target_cpu and v8_target_os build settings when Bazel
++# applies the execution transition for mksnapshot.
  v8_target_cpu_transition = transition(
      implementation = _v8_target_cpu_transition_impl,
 -    inputs = ["@v8//bazel/config:v8_target_cpu", "//command_line_option:cpu"],
@@ -182,7 +154,6 @@ diff --git a/bazel/defs.bzl b/bazel/defs.bzl
 +        "@v8//:v8_target_os",
 +        "@v8//bazel/config:v8_target_cpu",
 +        "//command_line_option:cpu",
-+        "//command_line_option:platforms",
 +    ],
 +    outputs = [
 +        "@v8//:v8_target_os",

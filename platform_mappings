@@ -1,9 +1,19 @@
 platforms:
   @llvm//platforms:linux_x86_64
     --@v8//bazel/config:v8_target_cpu=x64
+    --@v8//:v8_target_os=linux
   @llvm//platforms:linux_aarch64
     --@v8//bazel/config:v8_target_cpu=arm64
+    --@v8//:v8_target_os=linux
   @llvm//platforms:macos_x86_64
     --@v8//bazel/config:v8_target_cpu=x64
+    --@v8//:v8_target_os=macos
   @llvm//platforms:macos_aarch64
     --@v8//bazel/config:v8_target_cpu=arm64
+    --@v8//:v8_target_os=macos
+  @llvm//platforms:windows_x86_64_msvc
+    --@v8//bazel/config:v8_target_cpu=x64
+    --@v8//:v8_target_os=windows
+  @llvm//platforms:windows_aarch64_msvc
+    --@v8//bazel/config:v8_target_cpu=arm64
+    --@v8//:v8_target_os=windows

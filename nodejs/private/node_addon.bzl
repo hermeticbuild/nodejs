@@ -1,7 +1,7 @@
 """Node.js addon build rule."""
 
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
-load("//nodejs/private:compiler_options.bzl", "cxx20_copts")
+load("//nodejs:compiler_options.bzl", "cxx20_copts")
 
 def node_addon(name, output, srcs, copts = [], defines = [], deps = []):
     """Builds a shared library and copies it to an upstream output path."""

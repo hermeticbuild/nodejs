@@ -7,7 +7,6 @@ exports_files([
     "simd256.patch",
     "temporal.patch",
     "windows-defines.patch",
-    "windows-arm64-cpu.patch",
     "windows-libraries.patch",
     "windows-target-config.patch",
     "zlib.patch",
