@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build libnode, node.exe, and the release ZIP
+      - name: Build node.exe and validate the release ZIP
         run: |
           bazel build \
             --config=ci \
@@ -57,8 +57,6 @@ jobs:
             --jobs=64 \
             --lockfile_mode=error \
             --platforms=@llvm//platforms:windows_x86_64_msvc \
-            @nodejs_26_3_1//:libnode \
-            @nodejs_26_3_1//:node \
             //tests/node:node_windows_binary \
             //tests/release:windows_release_archive_validation
 
@@ -83,7 +81,7 @@ jobs:
           path: node-windows-x86_64
 
       - name: Test node.exe
-        run: python tests/node/node_windows_test.py node-windows-x86_64/node.exe x64 win32
+        run: python tests/node/node_windows_test.py node-windows-x86_64/node.exe x64
 
   windows-arm64:
     name: Windows arm64 remote build / Node.js 26.3.1
@@ -91,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build libnode, node.exe, and the release ZIP
+      - name: Build node.exe and validate the release ZIP
         run: |
           bazel build \
             --config=ci \
@@ -100,8 +98,6 @@ jobs:
             --jobs=64 \
             --lockfile_mode=error \
             --platforms=@llvm//platforms:windows_aarch64_msvc \
-            @nodejs_26_3_1//:libnode \
-            @nodejs_26_3_1//:node \
             //tests/node:node_windows_binary \
             //tests/release:windows_release_archive_validation
 
@@ -126,7 +122,7 @@ jobs:
           path: node-windows-arm64
 
       - name: Test node.exe
-        run: python tests/node/node_windows_test.py node-windows-arm64/node.exe arm64 win32
+        run: python tests/node/node_windows_test.py node-windows-arm64/node.exe arm64
 
   test:
     name: ${{ matrix.system.name }} / Node.js 26.3.1
@@ -190,17 +186,6 @@ jobs:
             --local_test_jobs=4 \
             --strategy=TestRunner=local \
             //tests/v8_config:v8_config_test
-
-      - name: Build bundled libuv
-        run: |
-          bazel build \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            @nodejs_26_3_1//:libuv
 
       - name: Test bundled C dependencies
         run: |
@@ -378,17 +363,6 @@ jobs:
             "--platforms=${{ matrix.system.platform }}" \
             --strategy=TestRunner=local \
             //tests/rust:rust_toolchain_test
-
-      - name: Build bundled Temporal Rust crates
-        run: |
-          bazel build \
-            --config=ci \
-            --config=remote \
-            --jobs=64 \
-            --lockfile_mode=error \
-            "--extra_execution_platforms=@nodejs//:rbe_platform,${{ matrix.system.platform }}" \
-            "--platforms=${{ matrix.system.platform }}" \
-            @nodejs_crates_26_3_1//:temporal_capi
 
       - name: Test V8 Temporal
         run: |
