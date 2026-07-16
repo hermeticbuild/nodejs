@@ -1,0 +1,495 @@
+diff --git a/node.gyp b/node.gyp
+index 82c5bdae..a2b1a52c 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -128,6 +128,7 @@
+       'src/node_external_reference.cc',
+       'src/node_file.cc',
+       'src/node_file_utils.cc',
++      'src/node_hermetic_policy.cc',
+       'src/node_http_parser.cc',
+       'src/node_http2.cc',
+       'src/node_i18n.cc',
+diff --git a/src/node.cc b/src/node.cc
+index 4ba019dd..b4ac795c 100644
+--- a/src/node.cc
++++ b/src/node.cc
+@@ -33,6 +33,7 @@
+ #include "node_binding.h"
+ #include "node_builtins.h"
+ #include "node_errors.h"
++#include "node_hermetic_policy.h"
+ #include "node_internals.h"
+ #include "node_main_instance.h"
+ #include "node_metadata.h"
+@@ -845,6 +846,12 @@ static ExitCode InitializeNodeWithArgsInternal(
+   // used in diagnostic reports.
+   per_process::cli_options->cmdline = *argv;
+ 
++  const ExitCode hermetic_policy_result =
++      hermetic::InitializePolicy(*argv, errors);
++  if (hermetic_policy_result != ExitCode::kNoFailure) {
++    return hermetic_policy_result;
++  }
++
+   // Node provides a "v8.setFlagsFromString" method to dynamically change flags.
+   // Hence do not freeze flags when initializing V8. In a browser setting, this
+   // is security relevant, for Node it's less important.
+@@ -985,6 +992,11 @@ static ExitCode InitializeNodeWithArgsInternal(
+         per_process::config_reader.GetNamespaceFlags();
+     // [0] is expected to be the program name, fill it in from the real argv.
+     extra_argv.insert(extra_argv.begin(), argv->at(0));
++    if (hermetic::HasPolicyOption(extra_argv)) {
++      errors->emplace_back(
++          "--hermetic-policy-handle must be passed on the command line");
++      return ExitCode::kInvalidCommandLineArgument;
++    }
+     // Parse the extra argv coming from the config file
+     ExitCode exit_code = ProcessGlobalArgsInternal(
+         &extra_argv, nullptr, errors, kDisallowedInEnvvar);
+@@ -993,6 +1005,13 @@ static ExitCode InitializeNodeWithArgsInternal(
+     exit_code =
+         ProcessGlobalArgsInternal(argv, exec_argv, errors, kDisallowedInEnvvar);
+     if (exit_code != ExitCode::kNoFailure) return exit_code;
++    if (per_process::cli_options->hermetic_policy_handle !=
++            std::numeric_limits<uint64_t>::max() &&
++        hermetic::GetPolicy() == nullptr) {
++      errors->emplace_back(
++          "--hermetic-policy-handle must be passed on the command line");
++      return ExitCode::kInvalidCommandLineArgument;
++    }
+   }
+ 
+   // Set the process.title immediately after processing argv if --title is set.
+diff --git a/src/node_hermetic_policy.cc b/src/node_hermetic_policy.cc
+new file mode 100644
+index 00000000..e688b01c
+--- /dev/null
++++ b/src/node_hermetic_policy.cc
+@@ -0,0 +1,229 @@
++#include "node_hermetic_policy.h"
++
++#include <algorithm>
++#include <limits>
++#include <memory>
++#include <optional>
++#include <string_view>
++#include <utility>
++
++#include "node_options.h"
++#include "simdjson.h"
++#include "uv.h"
++
++namespace node::hermetic {
++
++namespace {
++
++constexpr std::string_view kPolicyOption = "--hermetic-policy-handle";
++constexpr std::string_view kPolicyFlag = "--hermetic-policy-handle=";
++constexpr size_t kReadSize = 8192;
++constexpr size_t kMaxPolicySize = 1024 * 1024;
++
++std::unique_ptr<const Policy> policy;
++
++bool IsPolicyOption(std::string_view arg) {
++  return arg == kPolicyOption || arg.starts_with(kPolicyFlag);
++}
++
++std::optional<uint64_t> FindPolicyHandle(
++    const std::vector<std::string>& args,
++    std::vector<std::string>* errors) {
++  std::vector<std::string> parsed_args = args;
++  std::vector<std::string> exec_args;
++  std::vector<std::string> v8_args;
++  std::vector<std::string> parse_errors;
++  PerProcessOptions parsed_options;
++  options_parser::Parse(&parsed_args,
++                        &exec_args,
++                        &v8_args,
++                        &parsed_options,
++                        kDisallowedInEnvvar,
++                        &parse_errors);
++
++  bool found = false;
++  for (const std::string& arg : exec_args) {
++    if (IsPolicyOption(arg)) {
++      if (found) {
++        errors->emplace_back("--hermetic-policy-handle may only be specified "
++                             "once");
++        return std::nullopt;
++      }
++      found = true;
++    }
++  }
++
++  if (!found) return std::nullopt;
++  if (!parse_errors.empty()) {
++    errors->insert(errors->end(), parse_errors.begin(), parse_errors.end());
++    return std::nullopt;
++  }
++  if (parsed_options.hermetic_policy_handle >
++      static_cast<uint64_t>(std::numeric_limits<uv_file>::max())) {
++    errors->emplace_back("--hermetic-policy-handle must identify an open "
++                         "file descriptor");
++    return std::nullopt;
++  }
++  return parsed_options.hermetic_policy_handle;
++}
++
++int ReadPolicy(uv_file handle, std::string* contents) {
++  uv_fs_t request;
++  while (contents->size() < kMaxPolicySize) {
++    const size_t offset = contents->size();
++    const size_t read_size = std::min(kReadSize, kMaxPolicySize - offset);
++    contents->resize(offset + read_size);
++    uv_buf_t buffer = uv_buf_init(contents->data() + offset, read_size);
++    const int read =
++        uv_fs_read(nullptr, &request, handle, &buffer, 1, -1, nullptr);
++    uv_fs_req_cleanup(&request);
++    if (read < 0) return read;
++    contents->resize(offset + read);
++    if (read == 0) return 0;
++  }
++
++  char extra;
++  uv_buf_t buffer = uv_buf_init(&extra, 1);
++  const int read = uv_fs_read(nullptr, &request, handle, &buffer, 1, -1, nullptr);
++  uv_fs_req_cleanup(&request);
++  if (read < 0) return read;
++  return read == 0 ? 0 : UV_EFBIG;
++}
++
++bool ReadString(simdjson::dom::object object,
++                std::string_view name,
++                std::string* value) {
++  std::string_view parsed;
++  if (object[name].get_string().get(parsed)) return false;
++  value->assign(parsed);
++  return true;
++}
++
++bool IsOpenHandle(uint64_t handle) {
++  if (handle > static_cast<uint64_t>(std::numeric_limits<uv_file>::max())) {
++    return false;
++  }
++  uv_fs_t request;
++  const int result = uv_fs_fstat(
++      nullptr, &request, static_cast<uv_file>(handle), nullptr);
++  uv_fs_req_cleanup(&request);
++  return result == 0;
++}
++
++std::unique_ptr<const Policy> ParsePolicy(std::string& contents,
++                                          std::vector<std::string>* errors) {
++  simdjson::dom::parser parser;
++  simdjson::dom::element document;
++  if (parser.parse(simdjson::pad(contents)).get(document)) {
++    errors->emplace_back("cannot parse hermetic policy manifest");
++    return nullptr;
++  }
++
++  simdjson::dom::object object;
++  if (document.get_object().get(object)) {
++    errors->emplace_back("hermetic policy manifest must be an object");
++    return nullptr;
++  }
++
++  uint64_t version;
++  if (object["version"].get_uint64().get(version) || version != 1) {
++    errors->emplace_back("unsupported hermetic policy manifest version");
++    return nullptr;
++  }
++
++  std::string cwd;
++  std::string exec_path;
++  if (!ReadString(object, "cwd", &cwd) ||
++      !ReadString(object, "execPath", &exec_path)) {
++    errors->emplace_back(
++        "hermetic policy manifest requires string cwd and execPath fields");
++    return nullptr;
++  }
++
++  simdjson::dom::array raw_mounts;
++  if (object["mounts"].get_array().get(raw_mounts)) {
++    errors->emplace_back("hermetic policy manifest requires a mounts array");
++    return nullptr;
++  }
++
++  std::vector<Mount> mounts;
++  for (simdjson::dom::element raw_mount : raw_mounts) {
++    simdjson::dom::object mount;
++    if (raw_mount.get_object().get(mount)) {
++      errors->emplace_back("hermetic policy mounts must be objects");
++      return nullptr;
++    }
++
++    std::string path;
++    std::string access;
++    uint64_t handle;
++    if (!ReadString(mount, "path", &path) ||
++        mount["handle"].get_uint64().get(handle) ||
++        !ReadString(mount, "access", &access)) {
++      errors->emplace_back(
++          "hermetic policy mounts require path, handle, and access fields");
++      return nullptr;
++    }
++    if (!IsOpenHandle(handle)) {
++      errors->emplace_back(
++          "hermetic policy mount handle must identify an open file descriptor");
++      return nullptr;
++    }
++
++    MountAccess parsed_access;
++    if (access == "read-only") {
++      parsed_access = MountAccess::kReadOnly;
++    } else if (access == "read-write") {
++      parsed_access = MountAccess::kReadWrite;
++    } else {
++      errors->emplace_back(
++          "hermetic policy mount access must be read-only or read-write");
++      return nullptr;
++    }
++    mounts.push_back({std::move(path), handle, parsed_access});
++  }
++
++  return std::make_unique<const Policy>(
++      Policy{version, std::move(mounts), std::move(cwd), std::move(exec_path)});
++}
++
++}  // namespace
++
++bool HasPolicyOption(const std::vector<std::string>& args) {
++  for (const std::string& arg : args) {
++    if (arg == "--") return false;
++    if (IsPolicyOption(arg)) return true;
++  }
++  return false;
++}
++
++ExitCode InitializePolicy(const std::vector<std::string>& args,
++                          std::vector<std::string>* errors) {
++  const size_t original_error_count = errors->size();
++  const std::optional<uint64_t> handle = FindPolicyHandle(args, errors);
++  if (errors->size() != original_error_count) {
++    return ExitCode::kInvalidCommandLineArgument;
++  }
++  if (!handle.has_value()) return ExitCode::kNoFailure;
++
++  std::string contents;
++  const int read_error = ReadPolicy(static_cast<uv_file>(*handle), &contents);
++  uv_fs_t request;
++  const int close_error =
++      uv_fs_close(nullptr, &request, static_cast<uv_file>(*handle), nullptr);
++  uv_fs_req_cleanup(&request);
++  if (read_error != 0 || close_error != 0) {
++    errors->emplace_back("cannot read hermetic policy manifest handle");
++    return ExitCode::kInvalidCommandLineArgument;
++  }
++
++  policy = ParsePolicy(contents, errors);
++  if (policy == nullptr) return ExitCode::kInvalidCommandLineArgument;
++  return ExitCode::kNoFailure;
++}
++
++const Policy* GetPolicy() {
++  return policy.get();
++}
++
++}  // namespace node::hermetic
+diff --git a/src/node_hermetic_policy.h b/src/node_hermetic_policy.h
+new file mode 100644
+index 00000000..8471130b
+--- /dev/null
++++ b/src/node_hermetic_policy.h
+@@ -0,0 +1,38 @@
++#ifndef SRC_NODE_HERMETIC_POLICY_H_
++#define SRC_NODE_HERMETIC_POLICY_H_
++
++#if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
++
++#include <cstdint>
++#include <string>
++#include <vector>
++
++#include "node_exit_code.h"
++
++namespace node::hermetic {
++
++enum class MountAccess { kReadOnly, kReadWrite };
++
++struct Mount {
++  std::string path;
++  uint64_t handle;
++  MountAccess access;
++};
++
++struct Policy {
++  uint64_t version;
++  std::vector<Mount> mounts;
++  std::string cwd;
++  std::string exec_path;
++};
++
++ExitCode InitializePolicy(const std::vector<std::string>& args,
++                          std::vector<std::string>* errors);
++bool HasPolicyOption(const std::vector<std::string>& args);
++const Policy* GetPolicy();
++
++}  // namespace node::hermetic
++
++#endif  // defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
++
++#endif  // SRC_NODE_HERMETIC_POLICY_H_
+diff --git a/src/node_options.cc b/src/node_options.cc
+index 99c5a7db..12fead77 100644
+--- a/src/node_options.cc
++++ b/src/node_options.cc
+@@ -1328,6 +1328,10 @@ PerIsolateOptionsParser::PerIsolateOptionsParser(
+ 
+ PerProcessOptionsParser::PerProcessOptionsParser(
+   const PerIsolateOptionsParser& iop) {
++  AddOption("--hermetic-policy-handle",
++            "read an immutable hermetic policy manifest from an inherited "
++            "handle",
++            &PerProcessOptions::hermetic_policy_handle);
+   AddOption("--title",
+             "the process title to use on startup",
+             &PerProcessOptions::title,
+diff --git a/src/node_options.h b/src/node_options.h
+index c69da1c9..ad0e58d6 100644
+--- a/src/node_options.h
++++ b/src/node_options.h
+@@ -3,6 +3,7 @@
+ 
+ #if defined(NODE_WANT_INTERNALS) && NODE_WANT_INTERNALS
+ 
++#include <limits>
+ #include <memory>
+ #include <string>
+ #include <unordered_map>
+@@ -347,6 +348,7 @@ class PerProcessOptions : public Options {
+   bool print_v8_help = false;
+   bool print_version = false;
+   std::string experimental_sea_config;
++  uint64_t hermetic_policy_handle = std::numeric_limits<uint64_t>::max();
+   std::string run;
+ 
+   std::string build_sea;
+diff --git a/test/parallel/test-cli-hermetic-policy.js b/test/parallel/test-cli-hermetic-policy.js
+new file mode 100644
+index 00000000..d12ce744
+--- /dev/null
++++ b/test/parallel/test-cli-hermetic-policy.js
+@@ -0,0 +1,111 @@
++'use strict';
++
++const tmpdir = require('../common/tmpdir');
++const assert = require('node:assert');
++const fs = require('node:fs');
++const { spawnSync } = require('node:child_process');
++
++tmpdir.refresh();
++
++const validManifest = {
++  version: 1,
++  mounts: [{
++    path: '/workspace',
++    handle: 4,
++    access: 'read-only',
++  }],
++  cwd: '/workspace',
++  execPath: '/node/bin/node',
++};
++
++function spawnWithManifest(manifest, args = [], options = {}) {
++  const manifestPath = tmpdir.resolve('manifest.json');
++  const mountPath = tmpdir.resolve('mount');
++  fs.writeFileSync(manifestPath, manifest);
++  fs.writeFileSync(mountPath, '');
++  const manifestHandle = fs.openSync(manifestPath, 'r');
++  const mountHandle = fs.openSync(mountPath, 'r');
++  const result = spawnSync(process.execPath, [
++    '--hermetic-policy-handle=3',
++    ...args,
++  ], {
++    encoding: 'utf8',
++    stdio: ['ignore', 'pipe', 'pipe', manifestHandle, mountHandle],
++    ...options,
++  });
++  fs.closeSync(manifestHandle);
++  fs.closeSync(mountHandle);
++  return result;
++}
++
++const result = spawnWithManifest(JSON.stringify(validManifest), [
++  '--eval',
++  'process.stdout.write("ok\\n")',
++]);
++
++assert.strictEqual(result.status, 0);
++assert.strictEqual(result.stdout, 'ok\n');
++assert.strictEqual(result.stderr, '');
++
++for (const [manifest, error] of [
++  ['not json', /cannot parse hermetic policy manifest/],
++  [JSON.stringify({ ...validManifest, version: 2 }),
++    /unsupported hermetic policy manifest version/],
++]) {
++  const invalid = spawnWithManifest(manifest);
++  assert.strictEqual(invalid.status, 9);
++  assert.match(invalid.stderr, error);
++}
++
++const badHandle = spawnSync(process.execPath, [
++  '--hermetic-policy-handle=3',
++], { encoding: 'utf8' });
++assert.strictEqual(badHandle.status, 9);
++assert.match(badHandle.stderr, /cannot read hermetic policy manifest handle/);
++
++const scriptPath = tmpdir.resolve('script.js');
++fs.writeFileSync(scriptPath, 'process.stdout.write(process.argv[2]);');
++const appArgument = spawnSync(process.execPath, [
++  scriptPath,
++  '--hermetic-policy-handle=3',
++], { encoding: 'utf8' });
++assert.strictEqual(appArgument.status, 0);
++assert.strictEqual(appArgument.stdout, '--hermetic-policy-handle=3');
++
++const badMount = spawnWithManifest(JSON.stringify({
++  ...validManifest,
++  mounts: [{ ...validManifest.mounts[0], handle: 5 }],
++}));
++assert.strictEqual(badMount.status, 9);
++assert.match(badMount.stderr,
++             /mount handle must identify an open file descriptor/);
++
++const nodeOptions = spawnSync(process.execPath, ['--eval', '0'], {
++  encoding: 'utf8',
++  env: {
++    ...process.env,
++    NODE_OPTIONS: '--hermetic-policy-handle=3',
++  },
++});
++assert.strictEqual(nodeOptions.status, 9);
++assert.match(nodeOptions.stderr,
++             /--hermetic-policy-handle= is not allowed in NODE_OPTIONS/);
++
++const configPath = tmpdir.resolve('node-config.json');
++fs.writeFileSync(configPath, JSON.stringify({
++  nodeOptions: { 'hermetic-policy-handle': 3 },
++}));
++const config = spawnSync(process.execPath, [
++  `--experimental-config-file=${configPath}`,
++], { encoding: 'utf8' });
++assert.strictEqual(config.status, 9);
++assert.match(config.stderr,
++             /--hermetic-policy-handle= is not allowed in NODE_OPTIONS/);
++
++const missingEnvFile = tmpdir.resolve('missing.env');
++const earlyFailure = spawnWithManifest('not json', [
++  `--env-file=${missingEnvFile}`,
++]);
++assert.strictEqual(earlyFailure.status, 9);
++assert.match(earlyFailure.stderr, /cannot parse hermetic policy manifest/);
++assert.doesNotMatch(earlyFailure.stderr, /missing\.env/);
+
