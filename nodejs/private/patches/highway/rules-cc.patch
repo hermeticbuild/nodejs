@@ -1,6 +1,0 @@
-diff --git a/BUILD b/BUILD
---- a/BUILD
-+++ b/BUILD
-@@ -5 +5 @@
--load("@rules_cc//cc:defs.bzl", "cc_test")
-+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")

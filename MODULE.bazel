@@ -8,7 +8,7 @@ bazel_dep(name = "abseil-cpp", version = "20250814.1")
 bazel_dep(name = "bazel_lib", version = "3.2.2")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "bzip2", version = "1.0.8.bcr.4")
-bazel_dep(name = "highway", version = "1.2.0")
+bazel_dep(name = "highway", version = "1.4.0")
 bazel_dep(name = "llvm", version = "0.8.8")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "rules_cc", version = "0.2.19")
@@ -64,13 +64,6 @@ single_version_override(
         "//nodejs/private/patches/rules_cc_autoconf:windows-native-command-paths.patch",
     ],
     version = "0.12.1",
-)
-
-single_version_override(
-    module_name = "highway",
-    patch_strip = 1,
-    patches = ["//nodejs/private/patches/highway:rules-cc.patch"],
-    version = "1.2.0",
 )
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
