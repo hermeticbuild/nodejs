@@ -1,4 +1,5 @@
 exports_files([
+    "hermetic-policy-bootstrap.patch",
     "histogram-windows-intrinsic.patch",
     "libffi-clang-cl-inline-asm.patch",
 ])

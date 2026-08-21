@@ -56,6 +56,7 @@ NODE_SOURCES = [
     "src/node_external_reference.cc",
     "src/node_file.cc",
     "src/node_file_utils.cc",
+    "src/node_hermetic_policy.cc",
     "src/node_http_parser.cc",
     "src/node_http2.cc",
     "src/node_i18n.cc",
