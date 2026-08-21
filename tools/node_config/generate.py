@@ -37,13 +37,19 @@ def main() -> None:
 
     config = _read_config(arguments.input)
     variables = config["variables"]
+    node_module_version = variables.get("node_module_version")
+    if type(node_module_version) is not int or node_module_version <= 0:
+        raise ValueError("node_module_version must be a positive integer")
+
     variables.update(
         {
             "cargo_rust_target": _cargo_rust_target(arguments.os, arguments.arch),
             "host_arch": arguments.arch,
             "llvm_version": "22.1",
             "shlib_suffix": (
-                "147.dylib" if arguments.os == "mac" else "so.147"
+                f"{node_module_version}.dylib"
+                if arguments.os == "mac"
+                else f"so.{node_module_version}"
             ),
             "target_arch": arguments.arch,
             "v8_enable_gdbjit": int(
@@ -76,7 +82,7 @@ def main() -> None:
 
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
     arguments.output.write_text(
-        "# Do not edit. Generated from the Node.js 26.3.1 release config.gypi.\n"
+        "# Do not edit. Generated from the Node.js release config.gypi.\n"
         + json.dumps(config, indent=2)
         + "\n"
     )
