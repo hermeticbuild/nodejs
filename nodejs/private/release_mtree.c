@@ -134,10 +134,17 @@ static int compare_entries(const void *left_value, const void *right_value) {
   return strcmp(left->destination, right->destination);
 }
 
-static int valid_root(const char *root) {
-  static const char prefix[] = "node-v26.3.1-";
+static int valid_root(const char *root, const char *version) {
+  static const char prefix[] = "node-v";
+  const size_t prefix_length = sizeof(prefix) - 1;
+  const size_t version_length = strlen(version);
+  const size_t root_prefix_length = prefix_length + version_length + 1;
+  const size_t root_length = strlen(root);
   const unsigned char *cursor = (const unsigned char *)root;
-  if (strncmp(root, prefix, sizeof(prefix) - 1) != 0) {
+  if (version_length == 0 || root_length <= root_prefix_length ||
+      strncmp(root, prefix, prefix_length) != 0 ||
+      strncmp(root + prefix_length, version, version_length) != 0 ||
+      root[prefix_length + version_length] != '-') {
     return 0;
   }
   for (; *cursor != '\0'; ++cursor) {
@@ -271,15 +278,16 @@ int main(int argc, char **argv) {
   char required_npm[192];
   char required_npx[192];
 
-  if (argc < 4 || !valid_root(argv[3])) {
-    fprintf(stderr, "usage: release_mtree INPUT OUTPUT node-v26.3.1-PLATFORM "
-                    "[EXECUTABLE ...]\n");
+  if (argc < 5 || !valid_root(argv[4], argv[3])) {
+    fprintf(stderr,
+            "usage: release_mtree INPUT OUTPUT VERSION node-vVERSION-PLATFORM "
+            "[EXECUTABLE ...]\n");
     return 2;
   }
   input_path = argv[1];
   output_path = argv[2];
-  root = argv[3];
-  for (index = 4; index < (size_t)argc; ++index) {
+  root = argv[4];
+  for (index = 5; index < (size_t)argc; ++index) {
     if (!valid_relative_path(argv[index])) {
       fprintf(stderr, "release_mtree: invalid executable path %s\n",
               argv[index]);

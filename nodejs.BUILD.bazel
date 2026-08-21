@@ -1,5 +1,6 @@
 """Build targets for the Node.js source repository."""
 
+load(":bazel/release.bzl", "NODEJS_RELEASE")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@nodejs//nodejs:compiler_options.bzl", "cxx20_copts")
 load(
@@ -3684,7 +3685,7 @@ nodejs_release_archives(
     name = "release_archives",
     config_gypi = ":config_gypi",
     node = ":node",
-    version = "26.3.1",
+    version = NODEJS_RELEASE.release,
 )
 
 cc_library(

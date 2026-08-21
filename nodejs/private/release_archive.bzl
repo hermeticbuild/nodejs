@@ -473,6 +473,7 @@ def nodejs_release_archives(name, version, node, config_gypi):
                 args = [
                     "$(execpath :_release_mtree)",
                     "$(execpath {}.mtree)".format(normalized_mtree),
+                    version,
                     root,
                 ] + _EXECUTABLE_RELEASE_FILES,
                 target_compatible_with = release_constraints,
