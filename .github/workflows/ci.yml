@@ -182,5 +182,4 @@ jobs:
             "--strategy=TestRunner=${{ matrix.system.test_strategy }}" \
             -- \
             //tests/... \
-            -//tests/integration/... \
             "${{ matrix.system.upstream_target }}"
