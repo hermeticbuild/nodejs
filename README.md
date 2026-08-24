@@ -55,6 +55,9 @@ configuration. Important targets include:
 `docs/configure-check-audit.md` records the reviewed release settings and
 the upstream assignments, defaults, and references.
 
+`docs/hermetic-node-runtime.md` proposes an opt-in Node.js runtime with an
+explicit virtual host and no undeclared Node-owned inputs.
+
 Update or verify the inventory with:
 
 ```console
