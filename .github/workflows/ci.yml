@@ -26,15 +26,6 @@ jobs:
           'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
           >/dev/null
 
-      - name: Test consumer integration
-        working-directory: tests/integration
-        run: |
-          bazel test \
-            --config=ci \
-            --config=release \
-            --lockfile_mode=error \
-            //...
-
       - name: Build bundled ICU
         run: |
           bazel build \
@@ -52,6 +43,21 @@ jobs:
             exit 1
           fi
           grep -F 'Unsupported Node.js version "26.3.2"; supported versions are 26.3.1' <<<"$output"
+
+  consumer-integration:
+    name: Consumer integration
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test source-built Node.js toolchains
+        working-directory: tests/integration
+        run: |
+          bazel test \
+            --config=ci \
+            --config=release \
+            --lockfile_mode=error \
+            //...
 
   windows-x86_64:
     name: Windows x86_64 remote build / Node.js 26.3.1
