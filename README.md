@@ -38,6 +38,27 @@ The Windows build runs compilation and linking on remote Linux workers. CI
 downloads the resulting `node.exe` and executes it on native Windows x86_64
 and Windows arm64 runners.
 
+## Consumer toolchains
+
+The module exposes `rules_nodejs` execution and runtime toolchains backed by
+the source-built Node.js binary. Consumers select the release and register the
+stable toolchain repository:
+
+```starlark
+bazel_dep(name = "nodejs", version = "0.0.0")
+
+nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
+nodejs.version(version = "26.3.1")
+use_repo(nodejs, "nodejs_26_3_1", "nodejs_toolchains")
+
+register_toolchains("@nodejs_toolchains//:all")
+```
+
+`@nodejs_toolchains` provides both `@rules_nodejs//nodejs:toolchain_type` for
+build actions and `@rules_nodejs//nodejs:runtime_toolchain_type` for programs
+that run on the selected target platform. Linux and macOS x86_64 and arm64 are
+currently registered.
+
 ## Source and configuration
 
 `@nodejs_26_3_1` contains the pinned Node.js source and the generated release

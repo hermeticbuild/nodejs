@@ -340,3 +340,67 @@ nodejs_icu_repository = repository_rule(
         "urls": attr.string_list(mandatory = True),
     },
 )
+
+_TOOLCHAIN_PLATFORMS = [
+    ("linux", "aarch64"),
+    ("linux", "x86_64"),
+    ("macos", "aarch64"),
+    ("macos", "x86_64"),
+]
+
+def _nodejs_toolchains_repository_impl(repository_ctx):
+    repository_name = repository_ctx.attr.nodejs_repository_name
+    implementation = """load("@nodejs//nodejs:toolchain.bzl", "source_nodejs_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+source_nodejs_toolchain(
+    name = "execution_toolchain",
+    headers = "@{repository_name}//:node_addon_headers",
+    node = "@{repository_name}//:node",
+    npm = "@{repository_name}//:deps/npm/bin/npm-cli.js",
+    npm_srcs = ["@{repository_name}//:npm_files"],
+)
+
+source_nodejs_toolchain(
+    name = "runtime_toolchain",
+    headers = "@{repository_name}//:node_addon_headers",
+    node = "@{repository_name}//:node",
+    npm = "@{repository_name}//:deps/npm/bin/npm-cli.js",
+    npm_srcs = ["@{repository_name}//:npm_files"],
+)
+""".format(repository_name = repository_name)
+
+    registrations = []
+    for os, cpu in _TOOLCHAIN_PLATFORMS:
+        registrations.append("""
+toolchain(
+    name = "nodejs_{os}_{cpu}",
+    exec_compatible_with = [
+        "@platforms//os:{os}",
+        "@platforms//cpu:{cpu}",
+    ],
+    toolchain = ":execution_toolchain",
+    toolchain_type = "@rules_nodejs//nodejs:toolchain_type",
+)
+
+toolchain(
+    name = "nodejs_runtime_{os}_{cpu}",
+    target_compatible_with = [
+        "@platforms//os:{os}",
+        "@platforms//cpu:{cpu}",
+    ],
+    toolchain = ":runtime_toolchain",
+    toolchain_type = "@rules_nodejs//nodejs:runtime_toolchain_type",
+)
+""".format(cpu = cpu, os = os))
+
+    repository_ctx.file("BUILD.bazel", implementation + "".join(registrations))
+
+nodejs_toolchains_repository = repository_rule(
+    implementation = _nodejs_toolchains_repository_impl,
+    attrs = {
+        "nodejs_repository_name": attr.string(mandatory = True),
+    },
+    doc = "Creates rules_nodejs toolchains backed by a source-built Node.js repository.",
+)

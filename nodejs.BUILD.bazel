@@ -764,7 +764,7 @@ cc_binary(
                 "-Wl,--export-dynamic",
                 "-Wl,--hash-style=sysv",
             ],
-            ":target_macos": [],
+            ":target_macos": ["-Wl,-export_dynamic"],
             ":target_windows": [
                 "$(location :node_windows_manifest_resource)",
                 "$(location :node_windows_resource)",
@@ -817,8 +817,18 @@ cc_library(
         "deps/uv/include",
         "src",
     ],
-    deps = ["//deps/v8:node_addon_headers"],
+    deps = [
+        ":openssl_addon_headers",
+        "//deps/v8:node_addon_headers",
+    ],
 )
+
+filegroup(
+    name = "npm_files",
+    srcs = glob(["deps/npm/**"]),
+)
+
+exports_files(["deps/npm/bin/npm-cli.js"])
 
 cc_library(
     name = "js_native_api_test_headers",
