@@ -26,7 +26,7 @@ jobs:
           'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
           >/dev/null
 
-      - name: Test consumer source contract
+      - name: Test downstream consumer
         working-directory: tests/integration
         run: |
           bazel test \
@@ -34,6 +34,7 @@ jobs:
             --config=remote \
             --jobs=64 \
             --lockfile_mode=error \
+            //:node_test \
             //:source_contract_test
 
       - name: Build bundled ICU
