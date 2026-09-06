@@ -13,24 +13,7 @@ load("//nodejs/private:versions.bzl", "NODEJS_RELEASES")
 _BUILD_FILE = Label("//:nodejs.BUILD.bazel")
 _CRATES_BUILD_FILE = Label("//nodejs/private/overlays/crates:BUILD.crates.bazel")
 _ICU_BUILD_FILE = Label("//nodejs/private/overlays/icu:BUILD.icu.bazel")
-_NODEJS_PATCHES = [
-    Label("//nodejs/private/patches/nodejs:histogram-windows-intrinsic.patch"),
-    Label("//nodejs/private/patches/nodejs:libffi-clang-cl-inline-asm.patch"),
-]
 _V8_FAST_FLOAT_BUILD_FILE = Label("//nodejs/private/overlays/v8/third_party/fast_float/src:BUILD.fast_float.bazel")
-_V8_PATCHES = [
-    Label("//nodejs/private/patches/v8:hermetic-toolchain.patch"),
-    Label("//nodejs/private/patches/v8:llvm-ml.patch"),
-    Label("//nodejs/private/patches/v8:nodejs-icu.patch"),
-    Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
-    Label("//nodejs/private/patches/v8:temporal.patch"),
-    Label("//nodejs/private/patches/v8:windows-defines.patch"),
-    Label("//nodejs/private/patches/v8:windows-libraries.patch"),
-    Label("//nodejs/private/patches/v8:nodejs-config.patch"),
-    Label("//nodejs/private/patches/v8:windows-target-config.patch"),
-    Label("//nodejs/private/patches/v8:zlib.patch"),
-    Label("//nodejs/private/patches/v8:simd256.patch"),
-]
 
 def _nodejs_impl(module_ctx):
     requested_versions = {}
@@ -60,7 +43,7 @@ def _nodejs_impl(module_ctx):
             headers_strip_prefix = release.headers_strip_prefix,
             headers_urls = release.headers_urls,
             node_module_version = release.node_module_version,
-            patches = _NODEJS_PATCHES,
+            patches = release.node_patches,
             release = release.release,
             sha256 = release.sha256,
             strip_prefix = release.strip_prefix,
@@ -76,7 +59,7 @@ def _nodejs_impl(module_ctx):
         nodejs_v8_repository(
             name = release.v8_repository_name,
             fast_float_build_file = _V8_FAST_FLOAT_BUILD_FILE,
-            patches = _V8_PATCHES,
+            patches = release.v8_patches,
             sha256 = release.sha256,
             strip_prefix = release.v8_strip_prefix,
             urls = release.urls,
