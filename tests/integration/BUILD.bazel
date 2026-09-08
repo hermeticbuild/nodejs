@@ -1,4 +1,72 @@
+load(":execution_toolchain_check.bzl", "node_execution_check")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
+cc_binary(
+    name = "consumer_addon_shared",
+    srcs = ["consumer_addon.cc"],
+    defines = ["NODE_GYP_MODULE_NAME=consumer_addon"],
+    linkopts = select({
+        "@platforms//os:macos": ["-Wl,-undefined,dynamic_lookup"],
+        "//conditions:default": [],
+    }),
+    linkshared = True,
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    deps = ["@rules_nodejs//nodejs/headers:current_node_cc_headers"],
+)
+
+genrule(
+    name = "consumer_addon",
+    srcs = [":consumer_addon_shared"],
+    outs = ["consumer_addon.node"],
+    cmd = "cp $< $@",
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+js_test(
+    name = "runtime_toolchain_test",
+    args = ["$(rootpath :consumer_addon)"],
+    data = [":consumer_addon"],
+    entry_point = "runtime_toolchain_test.js",
+    include_npm = True,
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+node_execution_check(
+    name = "execution_toolchain_check",
+    out = "execution_toolchain_version.txt",
+    script = "execution_toolchain_check.js",
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+sh_test(
+    name = "execution_toolchain_test",
+    srcs = ["execution_toolchain_test.sh"],
+    args = ["$(rootpath :execution_toolchain_check)"],
+    data = [":execution_toolchain_check"],
+    target_compatible_with = select({
+        "@platforms//os:linux": [],
+        "@platforms//os:macos": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
 
 sh_test(
     name = "source_contract_test",

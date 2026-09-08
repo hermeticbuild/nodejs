@@ -6,6 +6,7 @@ load(
     "nodejs_doc_dependencies_repository",
     "nodejs_icu_repository",
     "nodejs_source_repository",
+    "nodejs_toolchains_repository",
     "nodejs_v8_repository",
 )
 load("//nodejs/private:versions.bzl", "NODEJS_RELEASES")
@@ -79,6 +80,13 @@ def _nodejs_impl(module_ctx):
             urls = release.urls,
         )
 
+    if len(requested_versions) == 1:
+        selected_version = sorted(requested_versions.keys())[0]
+        nodejs_toolchains_repository(
+            name = "nodejs_toolchains",
+            nodejs_repository_name = NODEJS_RELEASES[selected_version].repository_name,
+        )
+
     root_direct_deps = [
         repository_name
         for version in sorted(root_requested_versions.keys())
@@ -88,7 +96,7 @@ def _nodejs_impl(module_ctx):
             NODEJS_RELEASES[version].icu_repository_name,
             NODEJS_RELEASES[version].v8_repository_name,
         ]
-    ]
+    ] + (["nodejs_toolchains"] if len(root_requested_versions) == 1 else [])
     root_direct_dev_deps = []
     if not module_ctx.root_module_has_non_dev_dependency:
         root_direct_dev_deps = root_direct_deps
