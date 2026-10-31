@@ -5,5 +5,5 @@ cc_test(
     name = "ncrypto_test",
     srcs = ["ncrypto_test.cc"],
     copts = cxx20_copts(),
-    deps = ["@nodejs_26_3_1//:ncrypto"],
+    deps = ["@nodejs_26_13_0//:ncrypto"],
 )

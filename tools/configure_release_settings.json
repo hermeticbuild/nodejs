@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "26.3.1",
+  "release": "26.13.0",
   "settings": [
     {
       "name": "build_type%",
@@ -54,7 +54,7 @@
       "name": "node_use_bundled_v8",
       "values": {"*": "true"},
       "required_assignments": ["b(not options.without_bundled_v8)"],
-      "justification": "Node.js 26.3.1 release artifacts use the V8 14.6.202.34 source bundled in the Node.js archive."
+      "justification": "Node.js 26.13.0 release artifacts use the V8 14.6.202.34 source bundled in the Node.js archive."
     },
     {
       "name": "node_use_openssl",
@@ -72,13 +72,13 @@
       "name": "node_use_ffi",
       "values": {"*": "true"},
       "required_assignments": ["b(use_ffi)"],
-      "justification": "Node.js 26.3.1 release artifacts enable the bundled libffi implementation on every supported target."
+      "justification": "Node.js 26.13.0 release artifacts enable the bundled libffi implementation on every supported target."
     },
     {
       "name": "node_use_lief",
       "values": {"*": "true"},
       "required_assignments": ["'true'"],
-      "justification": "Node.js 26.3.1 release artifacts enable bundled LIEF for single-executable application support."
+      "justification": "Node.js 26.13.0 release artifacts enable bundled LIEF for single-executable application support."
     },
     {
       "name": "node_use_v8_platform",
@@ -105,6 +105,12 @@
       "justification": "The default release configuration does not use V8 lite mode and enables WebAssembly."
     },
     {
+      "name": "v8_use_perfetto",
+      "values": {"*": 0},
+      "required_assignments": ["1 if options.with_perfetto else 0"],
+      "justification": "Default release builds use the legacy Node.js and inspector tracing sources instead of Perfetto."
+    },
+    {
       "name": "v8_enable_maglev",
       "values": {"*": true},
       "required_assignments": [],
@@ -125,8 +131,8 @@
     {
       "name": "v8_enable_sandbox",
       "values": {"*": 0},
-      "required_assignments": ["0"],
-      "justification": "Node.js explicitly disables the V8 sandbox because Node.js ArrayBuffer backing stores are not sandbox-compatible."
+      "required_assignments": ["1 if options.pointer_compression_shared_cage else 0"],
+      "justification": "The default release configuration disables the shared pointer-compression cage and V8 sandbox."
     },
     {
       "name": "force_dynamic_crt",

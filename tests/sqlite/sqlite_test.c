@@ -3,7 +3,7 @@
 #include "sqlite3.h"
 
 int main(void) {
-  if (strcmp(sqlite3_libversion(), "3.53.1") != 0 ||
+  if (strcmp(sqlite3_libversion(), "3.54.0") != 0 ||
       !sqlite3_compileoption_used("ENABLE_FTS5") ||
       !sqlite3_compileoption_used("ENABLE_SESSION")) {
     return 1;
@@ -17,7 +17,7 @@ int main(void) {
   char *error = 0;
   const int result = sqlite3_exec(database,
                                   "CREATE TABLE releases(version TEXT);"
-                                  "INSERT INTO releases VALUES('26.3.1');",
+                                  "INSERT INTO releases VALUES('26.13.0');",
                                   0, 0, &error);
   sqlite3_free(error);
   sqlite3_close(database);

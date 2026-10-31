@@ -10,7 +10,7 @@ int main(void) {
   int version = 0;
   const char *version_string = ares_version(&version);
   const int valid =
-      version == ARES_VERSION && strcmp(version_string, "1.34.6") == 0;
+      version == ARES_VERSION && strcmp(version_string, "1.34.9") == 0;
   ares_library_cleanup();
   return valid ? 0 : 1;
 }

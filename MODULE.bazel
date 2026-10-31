@@ -115,8 +115,8 @@ register_toolchains(
 )
 
 nodejs = use_extension("//nodejs:extensions.bzl", "nodejs", dev_dependency = True)
-nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1", "nodejs_crates_26_3_1", "nodejs_icu_26_3_1", "nodejs_toolchains", "v8")
+nodejs.version(version = "26.13.0")
+use_repo(nodejs, "nodejs_26_13_0", "nodejs_crates_26_13_0", "nodejs_icu_26_13_0", "nodejs_toolchains", "v8")
 
 register_toolchains(
     "@nodejs_toolchains//:all",
@@ -126,8 +126,8 @@ register_toolchains(
 nodejs_crates = use_extension("@rules_rs//rs:extensions.bzl", "crate", dev_dependency = True)
 nodejs_crates.from_cargo(
     name = "nodejs_crates",
-    cargo_lock = "@nodejs_crates_26_3_1//:Cargo.lock",
-    cargo_toml = "@nodejs_crates_26_3_1//:Cargo.toml",
+    cargo_lock = "@nodejs_crates_26_13_0//:Cargo.lock",
+    cargo_toml = "@nodejs_crates_26_13_0//:Cargo.toml",
     platform_triples = [
         "aarch64-apple-darwin",
         "aarch64-pc-windows-msvc",

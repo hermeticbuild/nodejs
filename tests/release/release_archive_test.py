@@ -11,7 +11,7 @@ import tarfile
 import tempfile
 
 
-_LAYOUT_SHA256 = "68c7a42727e0fab80741e1dddb25b0ac90665eacbff07cc4e13f4bcc5caae8be"
+_LAYOUT_SHA256 = "8289767970c200ae4f9edbccf2478b2efd46f46e02c2e122c45996278818c6a5"
 _MTIME = 1704067200
 
 
@@ -31,7 +31,7 @@ def _validate_archive(
     with tarfile.open(archive) as tar:
         members = tar.getmembers()
 
-    assert len(members) == 5714
+    assert len(members) == 5828
     relative_names = [_relative_name(member, root) for member in members]
     archive_order_names = [
         name + "/" if member.isdir() else name
@@ -45,11 +45,11 @@ def _validate_archive(
     regular_files = [member for member in members if member.isfile()]
     directories = [member for member in members if member.isdir()]
     symlinks = [member for member in members if member.issym()]
-    assert len(regular_files) == 4649
-    assert len(directories) == 1063
+    assert len(regular_files) == 4743
+    assert len(directories) == 1083
     assert len(symlinks) == 2
     assert sum(member.mode == 0o755 for member in regular_files) == 35
-    assert sum(member.mode == 0o644 for member in regular_files) == 4614
+    assert sum(member.mode == 0o644 for member in regular_files) == 4708
 
     links = {
         _relative_name(member, root): member.linkname for member in symlinks
@@ -96,9 +96,9 @@ def _execute_archive(archive: pathlib.Path, root: str) -> None:
         npx = release / "bin/npx"
         environment = os.environ.copy()
         environment["PATH"] = str(release / "bin") + os.pathsep + environment["PATH"]
-        assert subprocess.check_output([node, "--version"], text=True).strip() == "v26.3.1"
-        assert subprocess.check_output([npm, "--version"], env=environment, text=True).strip() == "11.16.0"
-        assert subprocess.check_output([npx, "--version"], env=environment, text=True).strip() == "11.16.0"
+        assert subprocess.check_output([node, "--version"], text=True).strip() == "v26.13.0"
+        assert subprocess.check_output([npm, "--version"], env=environment, text=True).strip() == "11.20.0"
+        assert subprocess.check_output([npx, "--version"], env=environment, text=True).strip() == "11.20.0"
 
 
 def main() -> None:

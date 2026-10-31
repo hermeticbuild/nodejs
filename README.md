@@ -1,7 +1,7 @@
 # Node.js for Bazel
 
-This repository builds Node.js 26.3.1 from the official source archive with
-hermetic Bazel toolchains. Node.js 26.3.1 is the only supported release.
+This repository builds Node.js 26.13.0 from the official source archive with
+hermetic Bazel toolchains. Node.js 26.13.0 is the only supported release.
 
 The build supports these target platforms:
 
@@ -9,7 +9,7 @@ The build supports these target platforms:
 - macOS x86_64 and arm64
 - Windows x86_64 and arm64
 
-`MODULE.bazel` selects Node.js 26.3.1 through
+`MODULE.bazel` selects Node.js 26.13.0 through
 `//nodejs:extensions.bzl`. The extension creates the Node.js, V8, ICU, Rust
 crate, and documentation dependency repositories from pinned inputs.
 
@@ -18,7 +18,7 @@ crate, and documentation dependency repositories from pinned inputs.
 Use remote execution for builds and tests:
 
 ```console
-bazel build --config=release --config=remote @nodejs_26_3_1//:node
+bazel build --config=release --config=remote @nodejs_26_13_0//:node
 bazel test --config=release --config=remote //tests/node:node_test
 ```
 
@@ -27,7 +27,7 @@ Select a non-Linux target with an LLVM platform:
 ```console
 bazel build --config=release --config=remote \
   --platforms=@llvm//platforms:macos_aarch64 \
-  @nodejs_26_3_1//:node
+  @nodejs_26_13_0//:node
 
 bazel build --config=release --config=remote \
   --platforms=@llvm//platforms:windows_aarch64_msvc \
@@ -48,8 +48,8 @@ stable toolchain repository:
 bazel_dep(name = "nodejs", version = "0.0.0")
 
 nodejs = use_extension("@nodejs//nodejs:extensions.bzl", "nodejs")
-nodejs.version(version = "26.3.1")
-use_repo(nodejs, "nodejs_26_3_1", "nodejs_toolchains")
+nodejs.version(version = "26.13.0")
+use_repo(nodejs, "nodejs_26_13_0", "nodejs_toolchains")
 
 register_toolchains("@nodejs_toolchains//:all")
 ```
@@ -61,7 +61,7 @@ currently registered.
 
 ## Source and configuration
 
-`@nodejs_26_3_1` contains the pinned Node.js source and the generated release
+`@nodejs_26_13_0` contains the pinned Node.js source and the generated release
 configuration. Important targets include:
 
 - `//:release_metadata`: Node.js, Node module ABI, V8, and libuv versions.
@@ -85,7 +85,7 @@ tools/configure_check_audit.sh --check
 
 ## Bundled dependencies
 
-The build uses the dependency sources bundled in Node.js 26.3.1, including
+The build uses the dependency sources bundled in Node.js 26.13.0, including
 V8, ICU, OpenSSL, libuv, zlib, Brotli, nghttp2, zstd, SQLite, libffi, LIEF,
 llhttp, c-ares, simdjson, Ada, merve, and the Temporal Rust crates.
 
@@ -94,25 +94,25 @@ repository-root labels. Target CPU and target OS values come from
 `platform_mappings` and remain configured for execution-platform tools such
 as `mksnapshot`.
 
-`@nodejs_icu_26_3_1` builds ICU 78 and embeds `icudt78l.dat`. The source
+`@nodejs_icu_26_13_0` builds ICU 78 and embeds `icudt78l.dat`. The source
 archive stores that file as a raw bzip2 stream, so the build uses the
 hermetic `@bzip2//:bzip2` executable. The stream is not a tar archive and
 cannot be extracted by `bsdtar`.
 
-`@nodejs_crates_26_3_1` contains Node.js's Cargo manifests, lockfile,
-vendored crates, and patched `resb` crate. `@nodejs_crates` uses `rules_rs`
-0.0.86 and the pinned Rust 1.92.0 toolchain for all six target platforms.
+`@nodejs_crates_26_13_0` contains Node.js's Cargo manifests, lockfile, and
+vendored crates, exposed through local Cargo patches. `@nodejs_crates` uses
+`rules_rs` 0.0.86 and the pinned Rust 1.92.0 toolchain for all six target platforms.
 
 ## Release archives
 
-`@nodejs_26_3_1//:release_archives` creates the upstream binary distribution
+`@nodejs_26_13_0//:release_archives` creates the upstream binary distribution
 layout:
 
 - `.tar.gz` and `.tar.xz` for Linux and macOS x86_64 and arm64
 - `.zip` for Windows x86_64 and arm64
 
 The archives contain Node.js, npm, public headers, debugger files, and the
-platform-specific launch scripts. Node.js 26.3.1 disables Corepack in its
+platform-specific launch scripts. Node.js 26.13.0 disables Corepack in its
 release configuration.
 
 `tar.bzl` and its hermetic `bsdtar` toolchain create deterministic tar
@@ -131,10 +131,10 @@ The repository has focused tests for the bundled dependencies, release
 configuration, generated JavaScript, `libnode`, Node.js, Temporal, Rust, and
 release archives.
 
-`@nodejs_26_3_1//:node_test` exposes the upstream Node.js Python test harness:
+`@nodejs_26_13_0//:node_test` exposes the upstream Node.js Python test harness:
 
 ```console
-bazel run --config=release --config=remote @nodejs_26_3_1//:node_test -- \
+bazel run --config=release --config=remote @nodejs_26_13_0//:node_test -- \
   parallel/test-assert parallel/test-buffer-alloc
 ```
 

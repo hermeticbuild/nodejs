@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-assert.equal(process.version, "v26.3.1");
+assert.equal(process.version, "v26.13.0");
 assert.ok(process.env.JS_BINARY__NODE_BINARY);
 assert.ok(process.env.JS_BINARY__NPM_BINARY);
 

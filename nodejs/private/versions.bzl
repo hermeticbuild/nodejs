@@ -57,19 +57,16 @@ def _nodejs_release(
     )
 
 NODEJS_RELEASES = {
-    "26.3.1": _nodejs_release(
-        crates_repository_name = "nodejs_crates_26_3_1",
-        doc_dependencies_repository_name = "nodejs_doc_dependencies_26_3_1",
-        doc_package_lock_sha256 = "961b216809fea8cea581cfa6115c74ac99dc8d743b11f473e4e3911d90bd5bb0",
-        headers_sha256 = "e84075cd1296f089ad17bc87d34cea964bad7f1018378656af16d494adf91d1a",
-        icu_repository_name = "nodejs_icu_26_3_1",
-        node_patches = [
-            Label("//nodejs/private/patches/nodejs:histogram-windows-intrinsic.patch"),
-            Label("//nodejs/private/patches/nodejs:libffi-clang-cl-inline-asm.patch"),
-        ],
-        release = "26.3.1",
-        repository_name = "nodejs_26_3_1",
-        sha256 = "979b9b8308a8d2d4a27c662ed50448c85f970c0fd4f5ce8b98e8da78c441f2bc",
+    "26.13.0": _nodejs_release(
+        crates_repository_name = "nodejs_crates_26_13_0",
+        doc_dependencies_repository_name = "nodejs_doc_dependencies_26_13_0",
+        doc_package_lock_sha256 = "b044cacc3ef141d3a3bc1f00cc13429bb34aa60ae942c069ca8934b99020089b",
+        headers_sha256 = "519e269c3e78bf513fdf53d2ab114b763173a7c9424bd477d4e182d782ea366f",
+        icu_repository_name = "nodejs_icu_26_13_0",
+        node_patches = [],
+        release = "26.13.0",
+        repository_name = "nodejs_26_13_0",
+        sha256 = "263f639ecfa7a17b49438d76cdbf9aff73179e3c7cb789da69b900718427fa2e",
         node_module_version = 147,
         v8_repository_name = "v8",
         v8_patches = [

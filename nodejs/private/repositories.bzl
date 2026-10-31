@@ -285,6 +285,23 @@ nodejs_v8_repository = repository_rule(
     },
 )
 
+def _use_vendored_crates(repository_ctx):
+    patches = ["", "[patch.crates-io]"]
+    for directory in sorted(repository_ctx.path("vendor").readdir(), key = str):
+        manifest = repository_ctx.read(directory.get_child("Cargo.toml"))
+        package = manifest.split("[package]\n", 1)[1].split("\n[", 1)[0]
+        name = package.split('name = "', 1)[1].split('"', 1)[0]
+        patches.append('{} = {{ path = "vendor/{}" }}'.format(name, directory.basename))
+    repository_ctx.file("Cargo.toml", repository_ctx.read("Cargo.toml") + "\n".join(patches) + "\n")
+
+    # Node ships checksum-free vendored crates; resolve them as local packages.
+    lockfile = repository_ctx.read("Cargo.lock")
+    repository_ctx.file("Cargo.lock", "\n".join([
+        line
+        for line in lockfile.split("\n")
+        if not line.startswith("source = ")
+    ]))
+
 def _nodejs_crates_repository_impl(repository_ctx):
     repository_ctx.download_and_extract(
         url = repository_ctx.attr.urls,
@@ -295,12 +312,12 @@ def _nodejs_crates_repository_impl(repository_ctx):
         ".cargo/config.toml",
         "Cargo.lock",
         "Cargo.toml",
-        "patches/resb/Cargo.toml",
-        "vendor/temporal_capi/Cargo.toml",
-        "vendor/temporal_rs/Cargo.toml",
+        "vendor/temporal_capi-v0_2/Cargo.toml",
+        "vendor/temporal_rs-v0_2/Cargo.toml",
     ]:
         if not repository_ctx.path(path).exists:
             fail("Node.js Rust crates are missing {}".format(path))
+    _use_vendored_crates(repository_ctx)
     repository_ctx.symlink(repository_ctx.attr.build_file, "BUILD.bazel")
 
 nodejs_crates_repository = repository_rule(

@@ -121,6 +121,6 @@
 #endif
 
 static_assert(v8::Promise::kEmbedderFieldCount == 1);
-static_assert(std::string_view(V8_EMBEDDER_STRING) == "-node.20");
+static_assert(std::string_view(V8_EMBEDDER_STRING) == "-node.40");
 
 int main() { return 0; }
