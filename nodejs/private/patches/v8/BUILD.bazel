@@ -6,8 +6,6 @@ exports_files([
     "nodejs-targets.patch",
     "simd256.patch",
     "temporal.patch",
-    "windows-defines.patch",
-    "windows-libraries.patch",
     "windows-target-config.patch",
     "zlib.patch",
 ])

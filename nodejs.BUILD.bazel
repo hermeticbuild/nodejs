@@ -645,6 +645,7 @@ cc_library(
         },
         no_match_error = "libnode currently supports Linux, macOS, and Windows targets",
     ),
+    linkstatic = True,
     local_defines = _NODE_TARGET_LOCAL_DEFINES,
     deps = [
         ":ada",
@@ -725,13 +726,8 @@ windows_resource(
     src = "src/res/node.rc",
     out = "generated/windows/node.res",
     include_anchors = [
-        "@windows_sdk//:winapifamily_header",
-        "@windows_sdk//:winresrc_header",
         "src/node_version.h",
         "src/res/node.ico",
-    ],
-    inputs = [
-        "@windows_sdk//:winsdk_resource_headers",
     ],
     target_triple = select({
         ":target_windows_arm64": "aarch64-pc-windows-msvc",
@@ -2748,6 +2744,7 @@ cc_library(
         },
         no_match_error = "zlib_adler32_simd currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
+    linkstatic = True,
     deps = [":zlib_headers"],
 )
 
@@ -2772,6 +2769,7 @@ cc_library(
         },
         no_match_error = "zlib_data_chunk_simd currently supports x86_64 and arm64 targets",
     ),
+    linkstatic = True,
     deps = [":zlib_headers"],
 )
 
@@ -2787,6 +2785,7 @@ cc_library(
         no_match_error = "zlib_arm_crc32 currently supports Linux, macOS, and Windows targets",
     ),
     target_compatible_with = ["@platforms//cpu:aarch64"],
+    linkstatic = True,
     deps = [":zlib_headers"],
 )
 
@@ -2846,6 +2845,7 @@ cc_library(
         },
         no_match_error = "zlib currently supports Linux, macOS, and Windows targets",
     ),
+    linkstatic = True,
     deps = [":zlib_headers"] + select(
         {
             ":target_linux_arm64": [
@@ -2945,6 +2945,7 @@ cc_library(
             ],
             ":target_windows": [
                 "CARES_PULL_WS2TCPIP_H=1",
+                "HAVE_STDINT_H=1",
                 "_WINSOCK_DEPRECATED_NO_WARNINGS",
             ],
         },
@@ -2967,6 +2968,7 @@ cc_library(
         "deps/histogram/include",
         "deps/histogram/src",
     ],
+    linkstatic = True,
 )
 
 cc_library(
@@ -3166,6 +3168,7 @@ cc_library(
         no_match_error = "uvwasi currently supports Linux, macOS, and Windows targets",
     ),
     includes = ["deps/uvwasi/include"],
+    linkstatic = True,
     deps = [":libuv"],
 )
 
@@ -3208,6 +3211,7 @@ cc_library(
         },
         no_match_error = "sqlite currently supports Linux, macOS, and Windows targets",
     ),
+    linkstatic = True,
 )
 
 cc_library(
@@ -3688,6 +3692,7 @@ cc_library(
         },
         no_match_error = "libffi currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
+    linkstatic = True,
     textual_hdrs = ["deps/libffi/src/dlmalloc.c"],
 )
 
@@ -3776,6 +3781,7 @@ cc_library(
         "deps/LIEF/third-party/mbedtls/library",
         "deps/LIEF/third-party/spdlog/include",
     ],
+    linkstatic = True,
     local_defines = [
         "LIEF_STATIC",
         "MBEDTLS_CONFIG_FILE=\\\"config/mbedtls/config.h\\\"",

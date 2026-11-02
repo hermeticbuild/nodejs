@@ -4,73 +4,19 @@ module(
     bazel_compatibility = [">=9.1.1"],
 )
 
-bazel_dep(name = "abseil-cpp", version = "20250814.1")
+bazel_dep(name = "abseil-cpp", version = "20260817.0")
 bazel_dep(name = "bazel_lib", version = "3.2.2")
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "bzip2", version = "1.0.8.bcr.4")
 bazel_dep(name = "highway", version = "1.4.0")
-bazel_dep(name = "llvm", version = "0.8.8")
+bazel_dep(name = "llvm", version = "0.8.26")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "rules_cc", version = "0.2.19")
-bazel_dep(name = "rules_cc_autoconf", version = "0.12.1")
+bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_nodejs", version = "6.7.5")
-bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_python", version = "1.8.0")
 bazel_dep(name = "rules_rs", version = "0.0.86")
-bazel_dep(name = "rules_shell", version = "0.6.1")
+bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "tar.bzl", version = "0.10.5")
-bazel_dep(name = "windows_support", version = "0.2.0")
-single_version_override(
-    module_name = "windows_support",
-    patch_strip = 1,
-    patches = ["//nodejs/private/patches/windows_support:windows-sdk-vfs-overlay.patch"],
-    version = "0.2.0",
-)
-
-msvc_runtime = use_extension("@windows_support//windows:extensions.bzl", "msvc_runtime")
-use_repo(msvc_runtime, "msvc_runtime")
-
-windows_sdk = use_extension("@windows_support//windows:extensions.bzl", "windows_sdk")
-use_repo(windows_sdk, "windows_sdk")
-
-archive_override(
-    module_name = "llvm",
-    integrity = "sha256-sSr0NUsY06DQwPoxgh+drMpOkeG/N7Lx+KxWkZTFUDM=",
-    patch_strip = 1,
-    patches = [
-        "//nodejs/private/patches/llvm:macos-sdk-26.5.patch",
-        "//nodejs/private/patches/llvm:msvc-cxx-standard.patch",
-        "//nodejs/private/patches/llvm:msvc-module-map.patch",
-        "//nodejs/private/patches/llvm:msvc-vfs-overlay.patch",
-        "//nodejs/private/patches/llvm:msvc-runtime-features.patch",
-        "//nodejs/private/patches/llvm:msvc-warning-level.patch",
-    ],
-    # Backport the glibc stack-end symbol missing from this MSVC toolchain revision.
-    remote_patch_strip = 1,
-    remote_patches = {
-        "https://github.com/hermeticbuild/hermetic-llvm/commit/d0413e4a4771ebd859c28858196b9d869e2bc733.diff": "sha256-hPa67vxs+D2MxpO89B76qeWpu61ghecF4qX2CHKbGKA=",
-    },
-    strip_prefix = "hermetic-llvm-85d29dc776702879eb9cbcbe560428df7fd24e64",
-    urls = ["https://github.com/hermeticbuild/hermetic-llvm/archive/85d29dc776702879eb9cbcbe560428df7fd24e64.tar.gz"],
-)
-
-archive_override(
-    module_name = "rules_cc",
-    integrity = "sha256-yLVbuU8I/7wTSmCifWYUqY45Q5aMRqWZkkkX6uXaFio=",
-    strip_prefix = "rules_cc-cb995b18db7c855fe95cacf0a0e84fda8c58725d",
-    urls = ["https://github.com/ArchangelX360/rules_cc/archive/cb995b18db7c855fe95cacf0a0e84fda8c58725d.tar.gz"],
-)
-
-single_version_override(
-    module_name = "rules_cc_autoconf",
-    patch_strip = 1,
-    patches = [
-        "//nodejs/private/patches/rules_cc_autoconf:windows-clang-cl-command-line.patch",
-        "//nodejs/private/patches/rules_cc_autoconf:windows-clang-cl-exceptions.patch",
-        "//nodejs/private/patches/rules_cc_autoconf:windows-msvc-driver-link-flags.patch",
-        "//nodejs/private/patches/rules_cc_autoconf:windows-native-command-paths.patch",
-    ],
-    version = "0.12.1",
-)
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.11")
@@ -86,10 +32,7 @@ use_repo(pip, "v8_python_deps")
 
 rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
 rules_rust.patch(
-    patches = [
-        "//nodejs/private/patches/rules_rs:rust-objcopy.patch",
-        "//nodejs/private/patches/rules_rs:windows-bcrypt-case.patch",
-    ],
+    patches = ["//nodejs/private/patches/rules_rs:rust-objcopy.patch"],
     strip = 1,
 )
 use_repo(rules_rust, "rules_rust")

@@ -1,7 +1,12 @@
 """Hermetic Windows resource compilation with llvm-rc."""
 
-def _run_llvm_rc(ctx, source, output, inputs, include_anchors):
-    include_directories = [anchor.dirname for anchor in include_anchors]
+load("@bazel_skylib//rules/directory:providers.bzl", "DirectoryInfo")
+
+def _windows_resource_impl(ctx):
+    source = ctx.file.src
+    include_anchors = ctx.files.include_anchors
+    sdk_includes = [target[DirectoryInfo] for target in ctx.attr._sdk_includes]
+    include_directories = [directory.path for directory in sdk_includes] + [anchor.dirname for anchor in include_anchors]
     preprocessed = ctx.actions.declare_file(ctx.label.name + ".i")
 
     preprocess_args = ctx.actions.args()
@@ -26,7 +31,10 @@ def _run_llvm_rc(ctx, source, output, inputs, include_anchors):
     ctx.actions.run(
         arguments = [preprocess_args],
         executable = ctx.executable._clang,
-        inputs = depset(inputs + include_anchors + [ctx.file._windows_sdk_vfs_overlay]),
+        inputs = depset(
+            [source, ctx.file._windows_sdk_vfs_overlay] + include_anchors,
+            transitive = [directory.transitive_files for directory in sdk_includes],
+        ),
         mnemonic = "WindowsResourcePreprocess",
         outputs = [preprocessed],
         progress_message = "Preprocessing Windows resource %{input}",
@@ -36,8 +44,8 @@ def _run_llvm_rc(ctx, source, output, inputs, include_anchors):
     _compile_llvm_rc(
         ctx,
         preprocessed,
-        output,
-        inputs + include_anchors + [preprocessed],
+        ctx.outputs.out,
+        include_anchors + [preprocessed],
         include_anchors,
     )
 
@@ -60,15 +68,6 @@ def _compile_llvm_rc(ctx, source, output, inputs, include_anchors):
         ],
     )
 
-def _windows_resource_impl(ctx):
-    _run_llvm_rc(
-        ctx,
-        ctx.file.src,
-        ctx.outputs.out,
-        [ctx.file.src] + ctx.files.inputs,
-        ctx.files.include_anchors,
-    )
-
 windows_resource = rule(
     implementation = _windows_resource_impl,
     attrs = {
@@ -76,7 +75,6 @@ windows_resource = rule(
             allow_single_file = [".rc"],
             mandatory = True,
         ),
-        "inputs": attr.label_list(allow_files = True),
         "include_anchors": attr.label_list(allow_files = True),
         "out": attr.output(mandatory = True),
         "target_triple": attr.string(mandatory = True),
@@ -92,9 +90,16 @@ windows_resource = rule(
             default = Label("@llvm//tools:llvm-rc"),
             executable = True,
         ),
+        "_sdk_includes": attr.label_list(
+            default = [
+                Label("@llvm//runtimes/msvc:winsdk_shared_include"),
+                Label("@llvm//runtimes/msvc:winsdk_um_include"),
+            ],
+            providers = [DirectoryInfo],
+        ),
         "_windows_sdk_vfs_overlay": attr.label(
             allow_single_file = True,
-            default = Label("@windows_sdk//:windows_sdk_vfs_overlay.yaml"),
+            default = Label("@llvm//runtimes/msvc:msvc_sdk_header_case_overlay"),
         ),
     },
 )
