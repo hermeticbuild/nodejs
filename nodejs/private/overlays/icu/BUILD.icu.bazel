@@ -54,6 +54,7 @@ cc_library(
         "@platforms//os:windows": ["advapi32.lib"],
         "//conditions:default": [],
     }),
+    linkstatic = True,
     local_defines = [
         "U_COMMON_IMPLEMENTATION",
         "U_ICUDATAENTRY_IN_COMMON",
@@ -68,6 +69,7 @@ cc_library(
         "source/stubdata/stubdata.cpp",
         "source/stubdata/stubdata.h",
     ],
+    linkstatic = True,
     local_defines = ["U_COMMON_IMPLEMENTATION"],
     deps = [":icu_common"],
 )
@@ -110,6 +112,7 @@ genrule(
 cc_library(
     name = "icudata",
     srcs = [":icudata_assembly"],
+    linkstatic = True,
     alwayslink = True,
 )
 
@@ -138,6 +141,7 @@ cc_library(
             "-Wno-deprecated-declarations",
         ],
     }),
+    linkstatic = True,
     local_defines = ["U_I18N_IMPLEMENTATION"],
     deps = [":icuuc"],
     alwayslink = True,
