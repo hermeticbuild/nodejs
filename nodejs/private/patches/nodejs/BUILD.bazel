@@ -1,5 +1,6 @@
 exports_files([
     "fs-rm-permissions-root.patch",
     "libcxx-includes.patch",
+    "lief-relro-padding.patch",
     "openssl-ssize-max.patch",
 ])

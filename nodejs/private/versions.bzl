@@ -66,6 +66,7 @@ NODEJS_RELEASES = {
         node_patches = [
             Label("//nodejs/private/patches/nodejs:fs-rm-permissions-root.patch"),
             Label("//nodejs/private/patches/nodejs:libcxx-includes.patch"),
+            Label("//nodejs/private/patches/nodejs:lief-relro-padding.patch"),
             Label("//nodejs/private/patches/nodejs:openssl-ssize-max.patch"),
         ],
         release = "26.13.0",
