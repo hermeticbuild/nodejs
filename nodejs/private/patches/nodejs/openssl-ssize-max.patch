@@ -1,0 +1,13 @@
+diff --git a/deps/openssl/openssl/include/openssl/e_os2.h b/deps/openssl/openssl/include/openssl/e_os2.h
+--- a/deps/openssl/openssl/include/openssl/e_os2.h
++++ b/deps/openssl/openssl/include/openssl/e_os2.h
+@@ -187,7 +187,8 @@
+ #ifdef _WIN32
++#include <limits.h>
+ #ifdef _WIN64
+ #define ossl_ssize_t __int64
+-#define OSSL_SSIZE_MAX _I64_MAX
++#define OSSL_SSIZE_MAX LLONG_MAX
+ #else
+ #define ossl_ssize_t int
+ #define OSSL_SSIZE_MAX INT_MAX

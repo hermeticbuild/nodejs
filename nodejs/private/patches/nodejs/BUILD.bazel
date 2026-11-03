@@ -1,1 +1,5 @@
-exports_files(["fs-rm-permissions-root.patch"])
+exports_files([
+    "fs-rm-permissions-root.patch",
+    "libcxx-includes.patch",
+    "openssl-ssize-max.patch",
+])

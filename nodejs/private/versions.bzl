@@ -65,6 +65,8 @@ NODEJS_RELEASES = {
         icu_repository_name = "nodejs_icu_26_13_0",
         node_patches = [
             Label("//nodejs/private/patches/nodejs:fs-rm-permissions-root.patch"),
+            Label("//nodejs/private/patches/nodejs:libcxx-includes.patch"),
+            Label("//nodejs/private/patches/nodejs:openssl-ssize-max.patch"),
         ],
         release = "26.13.0",
         repository_name = "nodejs_26_13_0",
@@ -77,8 +79,6 @@ NODEJS_RELEASES = {
             Label("//nodejs/private/patches/v8:nodejs-icu.patch"),
             Label("//nodejs/private/patches/v8:nodejs-targets.patch"),
             Label("//nodejs/private/patches/v8:temporal.patch"),
-            Label("//nodejs/private/patches/v8:windows-defines.patch"),
-            Label("//nodejs/private/patches/v8:windows-libraries.patch"),
             Label("//nodejs/private/patches/v8:nodejs-config.patch"),
             Label("//nodejs/private/patches/v8:windows-target-config.patch"),
             Label("//nodejs/private/patches/v8:zlib.patch"),
