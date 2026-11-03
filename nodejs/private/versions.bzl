@@ -63,7 +63,9 @@ NODEJS_RELEASES = {
         doc_package_lock_sha256 = "b044cacc3ef141d3a3bc1f00cc13429bb34aa60ae942c069ca8934b99020089b",
         headers_sha256 = "519e269c3e78bf513fdf53d2ab114b763173a7c9424bd477d4e182d782ea366f",
         icu_repository_name = "nodejs_icu_26_13_0",
-        node_patches = [],
+        node_patches = [
+            Label("//nodejs/private/patches/nodejs:fs-rm-permissions-root.patch"),
+        ],
         release = "26.13.0",
         repository_name = "nodejs_26_13_0",
         sha256 = "263f639ecfa7a17b49438d76cdbf9aff73179e3c7cb789da69b900718427fa2e",

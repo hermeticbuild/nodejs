@@ -881,6 +881,7 @@ py_binary(
         ":benchmark_napi_function_args_napi_binding_node",
         ":benchmark_napi_function_call_binding_node",
         ":benchmark_napi_function_call_napi_binding_node",
+        ":benchmark_napi_make_callback_binding_node",
         ":benchmark_napi_property_keys_binding_node",
         ":benchmark_napi_ref_addon_node",
         ":benchmark_napi_string_binding_node",
@@ -944,6 +945,7 @@ py_binary(
         ":node_api_test_instance_data_set_then_ref_node",
         ":node_api_test_make_callback_binding_node",
         ":node_api_test_make_callback_recurse_binding_node",
+        ":node_api_test_module_version_mismatch_node",
         ":node_api_test_null_init_node",
         ":node_api_test_reference_all_types_node",
         ":node_api_test_reference_obj_only_node",
@@ -1074,7 +1076,10 @@ alias(
 
 cc_binary(
     name = "test/ffi/fixture_library/build/Release/ffi_test_library.so",
-    srcs = ["test/ffi/fixture_library/ffi_test_library.c"],
+    srcs = [
+        "test/ffi/fixture_library/deny_executable_memory.c",
+        "test/ffi/fixture_library/ffi_test_library.c",
+    ],
     linkshared = True,
     target_compatible_with = ["@platforms//os:linux"],
 )
@@ -1662,6 +1667,13 @@ node_addon(
 )
 
 node_addon(
+    name = "node_api_test_module_version_mismatch_node",
+    srcs = ["test/node-api/test_module_version_mismatch/test_module_version_mismatch.c"],
+    defines = ["NAPI_VERSION=2147483646"],
+    output = "test/node-api/test_module_version_mismatch/build/Release/test_module_version_mismatch.node",
+)
+
+node_addon(
     name = "node_api_test_threadsafe_function_binding_node",
     srcs = ["test/node-api/test_threadsafe_function/binding.c"],
     output = "test/node-api/test_threadsafe_function/build/Release/binding.node",
@@ -2045,6 +2057,12 @@ node_addon(
     name = "benchmark_napi_function_call_napi_binding_node",
     srcs = ["benchmark/napi/function_call/napi_binding.c"],
     output = "benchmark/napi/function_call/build/Release/napi_binding.node",
+)
+
+node_module_addon(
+    name = "benchmark_napi_make_callback_binding_node",
+    srcs = ["benchmark/napi/make_callback/binding.cc"],
+    output = "benchmark/napi/make_callback/build/Release/binding.node",
 )
 
 node_addon(

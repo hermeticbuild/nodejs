@@ -1,0 +1,1 @@
+exports_files(["fs-rm-permissions-root.patch"])
