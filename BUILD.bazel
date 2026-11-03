@@ -18,7 +18,7 @@ platform(
     exec_properties = {
         "Arch": "amd64",
         "OSFamily": "Linux",
-        "container-image": "docker://buildpack-deps@sha256:7d9a7601d4e042e3578d7557186c745e03524bd3c751680618639db99d7e9ced",
+        "container-image": "docker://mirror.gcr.io/library/buildpack-deps@sha256:7d9a7601d4e042e3578d7557186c745e03524bd3c751680618639db99d7e9ced",
     },
     visibility = ["//visibility:public"],
 )
