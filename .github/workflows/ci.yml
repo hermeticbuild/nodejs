@@ -56,6 +56,8 @@ jobs:
           bazel test \
             --config=ci \
             --config=release \
+            --config=remote \
+            --jobs=64 \
             --lockfile_mode=error \
             //...
 
