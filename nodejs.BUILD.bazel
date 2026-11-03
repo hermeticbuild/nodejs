@@ -3460,6 +3460,7 @@ cc_library(
     hdrs = ["deps/ncrypto/ncrypto.h"],
     copts = cxx20_copts(),
     includes = ["deps/ncrypto"],
+    linkstatic = True,
     local_defines = [
         "NCRYPTO_BSSL_LIBDECREPIT_MISSING=1",
         "NCRYPTO_ENGINE_COMPAT=1",
@@ -3483,6 +3484,7 @@ cc_library(
         "OPENSSL_NO_DEPRECATED",
     ],
     includes = ["deps/ncrypto"],
+    linkstatic = True,
     local_defines = select({
         ":target_windows": ["NOMINMAX"],
         "//conditions:default": [],
