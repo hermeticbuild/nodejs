@@ -1,0 +1,17 @@
+diff --git a/deps/LIEF/third-party/frozen/include/frozen/map.h b/deps/LIEF/third-party/frozen/include/frozen/map.h
+--- a/deps/LIEF/third-party/frozen/include/frozen/map.h
++++ b/deps/LIEF/third-party/frozen/include/frozen/map.h
+@@ -32 +32,2 @@
++#include <functional>
+ #include <utility>
+diff --git a/deps/ncrypto/ncrypto.cc b/deps/ncrypto/ncrypto.cc
+--- a/deps/ncrypto/ncrypto.cc
++++ b/deps/ncrypto/ncrypto.cc
+@@ -16,6 +16,7 @@
+ #include <array>
+ #include <cstring>
+ #include <string_view>
++#include <vector>
+ #if OPENSSL_VERSION_MAJOR >= 3
+ #include <openssl/core_names.h>
+ #include <openssl/params.h>

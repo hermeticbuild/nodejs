@@ -1,4 +1,6 @@
 exports_files([
     "histogram-windows-intrinsic.patch",
+    "libcxx-includes.patch",
     "libffi-clang-cl-inline-asm.patch",
+    "openssl-ssize-max.patch",
 ])
