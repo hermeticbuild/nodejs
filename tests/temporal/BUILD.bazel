@@ -3,6 +3,7 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
 cc_test(
     name = "temporal_capi_test",
     srcs = ["temporal_capi_test.cc"],
+    linkstatic = True,
     deps = ["@nodejs_crates_26_13_0//:temporal_capi_cpp"],
 )
 
@@ -19,4 +20,5 @@ cc_test(
         "@nodejs_icu_26_13_0//:icudata_file",
         "@v8//:icu/d8",
     ],
+    linkstatic = True,
 )

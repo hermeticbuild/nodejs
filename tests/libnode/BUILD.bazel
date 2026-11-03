@@ -5,5 +5,6 @@ cc_test(
     name = "libnode_test",
     srcs = ["libnode_test.cc"],
     copts = cxx20_copts(),
+    linkstatic = True,
     deps = ["@nodejs_26_13_0//:node_snapshot_stub"],
 )
