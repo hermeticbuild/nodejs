@@ -4,26 +4,26 @@ sh_test(
     name = "node_javascript_test",
     srcs = ["node_javascript_test.sh"],
     args = [
-        "$(rootpath @nodejs_26_3_1//:node_javascript)",
+        "$(rootpath @nodejs_26_13_0//:node_javascript)",
     ] + select(
         {
-            "@nodejs_26_3_1//:target_linux_arm64": ["arm64"],
-            "@nodejs_26_3_1//:target_linux_x86_64": ["x64"],
-            "@nodejs_26_3_1//:target_macos_arm64": ["arm64"],
-            "@nodejs_26_3_1//:target_macos_x86_64": ["x64"],
-            "@nodejs_26_3_1//:target_windows_arm64": ["arm64"],
-            "@nodejs_26_3_1//:target_windows_x86_64": ["x64"],
+            "@nodejs_26_13_0//:target_linux_arm64": ["arm64"],
+            "@nodejs_26_13_0//:target_linux_x86_64": ["x64"],
+            "@nodejs_26_13_0//:target_macos_arm64": ["arm64"],
+            "@nodejs_26_13_0//:target_macos_x86_64": ["x64"],
+            "@nodejs_26_13_0//:target_windows_arm64": ["arm64"],
+            "@nodejs_26_13_0//:target_windows_x86_64": ["x64"],
         },
         no_match_error = "node_javascript_test currently supports Linux, macOS, and Windows x86_64 and arm64 targets",
     ),
-    data = ["@nodejs_26_3_1//:node_javascript"],
+    data = ["@nodejs_26_13_0//:node_javascript"],
 )
 
 sh_test(
     name = "node_js2c_test",
     srcs = ["node_js2c_test.sh"],
     args = [
-        "$(rootpath @nodejs_26_3_1//:node_js2c)",
+        "$(rootpath @nodejs_26_13_0//:node_js2c)",
         "$(rootpath :config.gypi)",
         "$(rootpath :fixture.js)",
         "$(rootpath :fixture.mjs)",
@@ -32,6 +32,6 @@ sh_test(
         ":config.gypi",
         ":fixture.js",
         ":fixture.mjs",
-        "@nodejs_26_3_1//:node_js2c",
+        "@nodejs_26_13_0//:node_js2c",
     ],
 )

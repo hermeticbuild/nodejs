@@ -21,7 +21,7 @@ execution_root="$(bazel info execution_root)"
 output_base="$(bazel info output_base)"
 source_files="$(bazel cquery \
   --lockfile_mode=error \
-  '@nodejs_26_3_1//:configure_audit_sources' \
+  '@nodejs_26_13_0//:configure_audit_sources' \
   --output=files)"
 
 source_args=()

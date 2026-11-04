@@ -1,0 +1,31 @@
+diff --git a/deps/LIEF/src/ELF/Binary.cpp b/deps/LIEF/src/ELF/Binary.cpp
+--- a/deps/LIEF/src/ELF/Binary.cpp
++++ b/deps/LIEF/src/ELF/Binary.cpp
+@@ -3020,19 +3020,19 @@
+ 
+   std::vector<Segment*> load_seg;
+   Segment* bss_segment = nullptr;
+-  size_t bss_cnt = 0;
+   for (std::unique_ptr<Segment>& segment : segments_) {
+     if (segment->is_load()) {
+       load_seg.push_back(segment.get());
+       if (segment->physical_size() < segment->virtual_size()) {
+         bss_segment = segment.get();
+-        ++bss_cnt;
+-      }
+-    }
+-  }
+-
+-  if (bss_cnt != 1 || bss_segment == nullptr) {
+-    LIEF_ERR("Expected exactly 1 BSS-like segment");
++      }
++    }
++  }
++
++  // Earlier LOAD segments can contain zero-fill RELRO padding.
++  // Expand only the final LOAD, leaving earlier segments untouched.
++  if (bss_segment == nullptr || bss_segment != load_seg.back()) {
++    LIEF_ERR("Expected a final BSS-like LOAD segment");
+     return 0;
+   }
+ 

@@ -5,20 +5,20 @@ py_test(
     name = "release_archive_test",
     srcs = ["release_archive_test.py"],
     args = [
-        "$(rootpath @nodejs_26_3_1//:release_archives_tar_gz)",
-        "$(rootpath @nodejs_26_3_1//:release_archives_tar_xz)",
+        "$(rootpath @nodejs_26_13_0//:release_archives_tar_gz)",
+        "$(rootpath @nodejs_26_13_0//:release_archives_tar_xz)",
     ] + select(
         {
-            "@nodejs_26_3_1//:target_linux_arm64": ["node-v26.3.1-linux-arm64"],
-            "@nodejs_26_3_1//:target_linux_x86_64": ["node-v26.3.1-linux-x64"],
-            "@nodejs_26_3_1//:target_macos_arm64": ["node-v26.3.1-darwin-arm64"],
-            "@nodejs_26_3_1//:target_macos_x86_64": ["node-v26.3.1-darwin-x64"],
+            "@nodejs_26_13_0//:target_linux_arm64": ["node-v26.13.0-linux-arm64"],
+            "@nodejs_26_13_0//:target_linux_x86_64": ["node-v26.13.0-linux-x64"],
+            "@nodejs_26_13_0//:target_macos_arm64": ["node-v26.13.0-darwin-arm64"],
+            "@nodejs_26_13_0//:target_macos_x86_64": ["node-v26.13.0-darwin-x64"],
         },
         no_match_error = "release_archive_test currently supports Linux and macOS x86_64 and arm64 targets",
     ),
     data = [
-        "@nodejs_26_3_1//:release_archives_tar_gz",
-        "@nodejs_26_3_1//:release_archives_tar_xz",
+        "@nodejs_26_13_0//:release_archives_tar_gz",
+        "@nodejs_26_13_0//:release_archives_tar_xz",
     ],
 )
 
@@ -30,18 +30,18 @@ py_binary(
 
 run_binary(
     name = "windows_release_archive_validation",
-    srcs = ["@nodejs_26_3_1//:release_archives_zip"],
+    srcs = ["@nodejs_26_13_0//:release_archives_zip"],
     outs = ["windows_release_archive_validation.txt"],
     args = [
-        "$(execpath @nodejs_26_3_1//:release_archives_zip)",
+        "$(execpath @nodejs_26_13_0//:release_archives_zip)",
         "$(execpath windows_release_archive_validation.txt)",
     ] + select({
-        "@nodejs_26_3_1//:target_windows_arm64": [
-            "node-v26.3.1-win-arm64",
+        "@nodejs_26_13_0//:target_windows_arm64": [
+            "node-v26.13.0-win-arm64",
             "0xaa64",
         ],
-        "@nodejs_26_3_1//:target_windows_x86_64": [
-            "node-v26.3.1-win-x64",
+        "@nodejs_26_13_0//:target_windows_x86_64": [
+            "node-v26.13.0-win-x64",
             "0x8664",
         ],
     }),

@@ -10,7 +10,7 @@ import sys
 import zipfile
 
 
-_LAYOUT_SHA256 = "707030fa300fc1cfa3570e45e23fb609cfce01d311007da71d830fca0329d2cb"
+_LAYOUT_SHA256 = "5269730dcf8702bf8089b172193ece62ad4181c57b401c20163e5a5f779db109"
 _ROOT_FILES = {
     "CHANGELOG.md",
     "LICENSE",
@@ -48,7 +48,7 @@ def main() -> None:
         members = archive.infolist()
         names = [member.filename for member in members]
         assert names == sorted(names)
-        assert len(names) == len(set(names)) == 2388
+        assert len(names) == len(set(names)) == 2398
         assert archive.testzip() is None
 
         relative_names = [_relative_name(name, root) for name in names]
@@ -57,7 +57,7 @@ def main() -> None:
 
         files = [member for member in members if not member.is_dir()]
         directories = [member for member in members if member.is_dir()]
-        assert len(files) == 1928
+        assert len(files) == 1938
         assert len(directories) == 460
         assert all(member.date_time == (2010, 1, 1, 0, 0, 0) for member in members)
 
@@ -83,7 +83,7 @@ def main() -> None:
         pe_machine = struct.unpack_from("<H", node, pe_offset + 4)[0]
         assert pe_machine == expected_pe_machine
         package = json.loads(archive.read(root + "/node_modules/npm/package.json"))
-        assert package["version"] == "11.16.0"
+        assert package["version"] == "11.20.0"
 
     output_path.write_text("validated\n")
 

@@ -55,13 +55,13 @@ diff --git a/BUILD.bazel b/BUILD.bazel
  # =================================================
  # Libraries rules
  # =================================================
-@@ -4600,11 +4605,14 @@ v8_library(
-     ]),
+@@ -4609,11 +4614,14 @@ v8_library(
+     }),
      copts = ["-Wno-implicit-fallthrough"],
      icu_deps = [
-+        "@nodejs_crates_26_3_1//:temporal_capi_cpp",
++        "@nodejs_crates_26_13_0//:temporal_capi_cpp",
          ":icu/generated_torque_definitions_headers",
-         "@nodejs_icu_26_3_1//:icu",
+         "@nodejs_icu_26_13_0//:icu",
      ],
 +    icu_defines = ["V8_TEMPORAL_SUPPORT"],
      icu_srcs = [
@@ -115,15 +115,3 @@ diff --git a/bazel/defs.bzl b/bazel/defs.bzl
              includes = includes + default.includes,
              copts = copts + default.copts,
              linkopts = linkopts + default.linkopts,
-diff --git a/src/objects/js-date-time-format.cc b/src/objects/js-date-time-format.cc
---- a/src/objects/js-date-time-format.cc
-+++ b/src/objects/js-date-time-format.cc
-@@ -945,6 +945,8 @@ bool CalendarEquals(temporal_rs::AnyCalendarKind kind,
-     case HijriTabularTypeIIFriday:
-       return other_kind == "islamic-civil" || other_kind == "islamicc" ||
-              other_kind == "islamic";
-+    case HijriSimulatedMecca:
-+      return other_kind == "islamic-rgsa" || other_kind == "islamic";
-     case HijriTabularTypeIIThursday:
-       return other_kind == "islamic-tbla" || other_kind == "islamic";
-     case HijriUmmAlQura:

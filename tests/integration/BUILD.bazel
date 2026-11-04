@@ -1,7 +1,7 @@
-load(":execution_toolchain_check.bzl", "node_execution_check")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
+load(":execution_toolchain_check.bzl", "node_execution_check")
 
 cc_binary(
     name = "consumer_addon_shared",
@@ -72,17 +72,17 @@ sh_test(
     name = "source_contract_test",
     srcs = ["source_contract_test.sh"],
     args = [
-        "$(rootpath @nodejs_26_3_1//:bazel/release_metadata.json)",
-        "$(rootpath @nodejs_26_3_1//:configure.py)",
-        "$(rootpath @nodejs_26_3_1//:common.gypi)",
-        "$(rootpath @nodejs_26_3_1//:node.gyp)",
-        "$(rootpath @nodejs_26_3_1//:bazel/release_config.gypi)",
+        "$(rootpath @nodejs_26_13_0//:bazel/release_metadata.json)",
+        "$(rootpath @nodejs_26_13_0//:configure.py)",
+        "$(rootpath @nodejs_26_13_0//:common.gypi)",
+        "$(rootpath @nodejs_26_13_0//:node.gyp)",
+        "$(rootpath @nodejs_26_13_0//:bazel/release_config.gypi)",
     ],
     data = [
-        "@nodejs_26_3_1//:bazel/release_config.gypi",
-        "@nodejs_26_3_1//:bazel/release_metadata.json",
-        "@nodejs_26_3_1//:common.gypi",
-        "@nodejs_26_3_1//:configure.py",
-        "@nodejs_26_3_1//:node.gyp",
+        "@nodejs_26_13_0//:bazel/release_config.gypi",
+        "@nodejs_26_13_0//:bazel/release_metadata.json",
+        "@nodejs_26_13_0//:common.gypi",
+        "@nodejs_26_13_0//:configure.py",
+        "@nodejs_26_13_0//:node.gyp",
     ],
 )

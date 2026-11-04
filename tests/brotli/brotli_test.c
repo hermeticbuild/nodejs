@@ -4,7 +4,7 @@
 #include "brotli/encode.h"
 
 int main(void) {
-  static const uint8_t input[] = "Node.js 26.3.1 bundled Brotli";
+  static const uint8_t input[] = "Node.js 26.13.0 bundled Brotli";
   uint8_t compressed[128];
   size_t compressed_size = sizeof(compressed);
   if (!BrotliEncoderCompress(BROTLI_DEFAULT_QUALITY, BROTLI_DEFAULT_WINDOW,

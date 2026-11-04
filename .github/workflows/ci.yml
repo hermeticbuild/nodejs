@@ -23,7 +23,7 @@ jobs:
         run: >-
           bazel query
           --lockfile_mode=error
-          'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_3_1//:icu) + deps(@nodejs_crates_26_3_1//:cargo_files)'
+          'deps(@v8//:icu/d8) + deps(@nodejs_icu_26_13_0//:icu) + deps(@nodejs_crates_26_13_0//:cargo_files)'
           >/dev/null
 
       - name: Build bundled ICU
@@ -33,7 +33,7 @@ jobs:
             --config=remote \
             --jobs=64 \
             --lockfile_mode=error \
-            @nodejs_icu_26_3_1//:icu
+            @nodejs_icu_26_13_0//:icu
 
       - name: Check unsupported Node.js version
         working-directory: tests/unsupported_version
@@ -42,7 +42,7 @@ jobs:
             echo "unsupported Node.js version unexpectedly succeeded" >&2
             exit 1
           fi
-          grep -F 'Unsupported Node.js version "26.3.2"; supported versions are 26.3.1' <<<"$output"
+          grep -F 'Unsupported Node.js version "26.3.2"; supported versions are 26.13.0' <<<"$output"
 
   consumer-integration:
     name: Consumer integration
@@ -56,11 +56,13 @@ jobs:
           bazel test \
             --config=ci \
             --config=release \
+            --config=remote \
+            --jobs=64 \
             --lockfile_mode=error \
             //...
 
   windows-x86_64:
-    name: Windows x86_64 remote build / Node.js 26.3.1
+    name: Windows x86_64 remote build / Node.js 26.13.0
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +87,7 @@ jobs:
           if-no-files-found: error
 
   windows-x86_64-execution:
-    name: Windows x86_64 execution / Node.js 26.3.1
+    name: Windows x86_64 execution / Node.js 26.13.0
     needs: windows-x86_64
     runs-on: windows-2022
     steps:
@@ -101,7 +103,7 @@ jobs:
         run: python tests/node/node_windows_test.py node-windows-x86_64/node.exe x64
 
   windows-arm64:
-    name: Windows arm64 remote build / Node.js 26.3.1
+    name: Windows arm64 remote build / Node.js 26.13.0
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -126,7 +128,7 @@ jobs:
           if-no-files-found: error
 
   windows-arm64-execution:
-    name: Windows arm64 execution / Node.js 26.3.1
+    name: Windows arm64 execution / Node.js 26.13.0
     needs: windows-arm64
     runs-on: windows-11-arm
     steps:
@@ -142,7 +144,7 @@ jobs:
         run: python tests/node/node_windows_test.py node-windows-arm64/node.exe arm64
 
   test:
-    name: ${{ matrix.system.name }} / Node.js 26.3.1
+    name: ${{ matrix.system.name }} / Node.js 26.13.0
     runs-on: ${{ matrix.system.runner }}
     strategy:
       fail-fast: false
@@ -152,22 +154,22 @@ jobs:
             runner: ubuntu-24.04
             platform: "@llvm//platforms:linux_x86_64"
             test_strategy: remote
-            upstream_target: "@nodejs_26_3_1//:node_upstream_tests"
+            upstream_target: "@nodejs_26_13_0//:node_upstream_tests"
           - name: Linux arm64
             runner: ubuntu-24.04-arm
             platform: "@llvm//platforms:linux_aarch64"
             test_strategy: local
-            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
+            upstream_target: "@nodejs_26_13_0//:node_upstream_smoke_test"
           - name: macOS x86_64
             runner: macos-15-intel
             platform: "@llvm//platforms:macos_x86_64"
             test_strategy: local
-            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
+            upstream_target: "@nodejs_26_13_0//:node_upstream_smoke_test"
           - name: macOS arm64
             runner: macos-15
             platform: "@llvm//platforms:macos_aarch64"
             test_strategy: local
-            upstream_target: "@nodejs_26_3_1//:node_upstream_smoke_test"
+            upstream_target: "@nodejs_26_13_0//:node_upstream_smoke_test"
 
     steps:
       - uses: actions/checkout@v4

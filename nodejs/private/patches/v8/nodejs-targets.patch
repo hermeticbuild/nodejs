@@ -1,10 +1,11 @@
 diff --git a/BUILD.bazel b/BUILD.bazel
 --- a/BUILD.bazel
 +++ b/BUILD.bazel
-@@ -4581,6 +4581,8 @@ cc_library(
+@@ -4578,7 +4578,9 @@ cc_library(
    name = "simdutf",
    srcs = ["third_party/simdutf/simdutf.cpp"],
    hdrs = ["third_party/simdutf/simdutf.h"],
+   strip_include_prefix = "third_party/simdutf",
 +  includes = ["third_party/simdutf"],
 +  visibility = ["//visibility:public"],
    copts = select({

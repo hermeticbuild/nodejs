@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
   const LIEF::lief_version_t version = LIEF::version();
-  if (version.major != 0 || version.minor != 17 || version.patch != 0) {
+  if (version.major != 1 || version.minor != 0 || version.patch != 0) {
     return 1;
   }
   if (argc != 1)

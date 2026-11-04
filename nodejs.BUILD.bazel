@@ -1,6 +1,5 @@
 """Build targets for the Node.js source repository."""
 
-load(":bazel/release.bzl", "NODEJS_RELEASE")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@nodejs//nodejs:compiler_options.bzl", "cxx20_copts")
 load(
@@ -37,6 +36,7 @@ load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("@v8_python_deps//:requirements.bzl", "requirement")
+load(":bazel/release.bzl", "NODEJS_RELEASE")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -60,7 +60,6 @@ _NODE_TARGET_LOCAL_DEFINES = [
     "NODE_SHARED_FFI=0",
     "NODE_USE_V8_PLATFORM=1",
     "NODE_WANT_INTERNALS=1",
-    "OPENSSL_API_COMPAT=0x10100000L",
     "SQLITE_ENABLE_SESSION",
     "V8_DEPRECATION_WARNINGS=1",
 ] + select(
@@ -668,7 +667,7 @@ cc_library(
         ":zlib",
         ":zstd",
         "@abseil-cpp//absl/synchronization",
-        "@nodejs_icu_26_3_1//:icu",
+        "@nodejs_icu_26_13_0//:icu",
         "@v8//:simdutf",
         "@v8//:v8_icu",
     ],
@@ -851,10 +850,10 @@ copy_to_directory(
 
 copy_to_directory(
     name = "node_test_doc_modules",
-    srcs = ["@nodejs_doc_dependencies_26_3_1//:node_modules"],
+    srcs = ["@nodejs_doc_dependencies_26_13_0//:node_modules"],
     out = "tools/doc/node_modules",
     hardlink = "off",
-    include_external_repositories = ["*nodejs_doc_dependencies_26_3_1"],
+    include_external_repositories = ["*nodejs_doc_dependencies_26_13_0"],
     root_paths = ["node_modules"],
 )
 
@@ -878,6 +877,7 @@ py_binary(
         ":benchmark_napi_function_args_napi_binding_node",
         ":benchmark_napi_function_call_binding_node",
         ":benchmark_napi_function_call_napi_binding_node",
+        ":benchmark_napi_make_callback_binding_node",
         ":benchmark_napi_property_keys_binding_node",
         ":benchmark_napi_ref_addon_node",
         ":benchmark_napi_string_binding_node",
@@ -941,6 +941,7 @@ py_binary(
         ":node_api_test_instance_data_set_then_ref_node",
         ":node_api_test_make_callback_binding_node",
         ":node_api_test_make_callback_recurse_binding_node",
+        ":node_api_test_module_version_mismatch_node",
         ":node_api_test_null_init_node",
         ":node_api_test_reference_all_types_node",
         ":node_api_test_reference_obj_only_node",
@@ -1071,7 +1072,10 @@ alias(
 
 cc_binary(
     name = "test/ffi/fixture_library/build/Release/ffi_test_library.so",
-    srcs = ["test/ffi/fixture_library/ffi_test_library.c"],
+    srcs = [
+        "test/ffi/fixture_library/deny_executable_memory.c",
+        "test/ffi/fixture_library/ffi_test_library.c",
+    ],
     linkshared = True,
     target_compatible_with = ["@platforms//os:linux"],
 )
@@ -1659,6 +1663,13 @@ node_addon(
 )
 
 node_addon(
+    name = "node_api_test_module_version_mismatch_node",
+    srcs = ["test/node-api/test_module_version_mismatch/test_module_version_mismatch.c"],
+    defines = ["NAPI_VERSION=2147483646"],
+    output = "test/node-api/test_module_version_mismatch/build/Release/test_module_version_mismatch.node",
+)
+
+node_addon(
     name = "node_api_test_threadsafe_function_binding_node",
     srcs = ["test/node-api/test_threadsafe_function/binding.c"],
     output = "test/node-api/test_threadsafe_function/build/Release/binding.node",
@@ -2042,6 +2053,12 @@ node_addon(
     name = "benchmark_napi_function_call_napi_binding_node",
     srcs = ["benchmark/napi/function_call/napi_binding.c"],
     output = "benchmark/napi/function_call/build/Release/napi_binding.node",
+)
+
+node_module_addon(
+    name = "benchmark_napi_make_callback_binding_node",
+    srcs = ["benchmark/napi/make_callback/binding.cc"],
+    output = "benchmark/napi/make_callback/build/Release/binding.node",
 )
 
 node_addon(
@@ -3224,6 +3241,7 @@ cc_library(
     copts = cxx20_copts(),
     defines = ["ADA_USE_SIMDUTF=1"],
     includes = ["deps/ada"],
+    linkstatic = True,
     deps = ["@v8//:simdutf"],
 )
 
@@ -3237,6 +3255,7 @@ cc_library(
     copts = cxx20_copts(),
     defines = ["MERVE_USE_SIMDUTF=1"],
     includes = ["deps/merve"],
+    linkstatic = True,
     deps = ["@v8//:simdutf"],
 )
 
@@ -3428,23 +3447,52 @@ cc_library(
         "deps/openssl/openssl/engines/e_capi_err.c",
         "deps/openssl/openssl/providers/implementations/macs/blake2_mac_impl.c",
     ],
+    deps = [
+        ":brotli",
+        ":zlib",
+        ":zstd",
+    ],
 )
 
 cc_library(
-    name = "ncrypto",
-    srcs = [
-        "deps/ncrypto/engine.cc",
-        "deps/ncrypto/ncrypto.cc",
-    ],
+    name = "ncrypto_engine",
+    srcs = ["deps/ncrypto/engine.cc"],
     hdrs = ["deps/ncrypto/ncrypto.h"],
     copts = cxx20_copts(),
-    defines = ["NCRYPTO_BSSL_LIBDECREPIT_MISSING=1"],
     includes = ["deps/ncrypto"],
-    local_defines = select({
+    linkstatic = True,
+    local_defines = [
+        "NCRYPTO_BSSL_LIBDECREPIT_MISSING=1",
+        "NCRYPTO_ENGINE_COMPAT=1",
+        "OPENSSL_API_COMPAT=30000",
+        "OPENSSL_SUPPRESS_DEPRECATED",
+    ] + select({
         ":target_windows": ["NOMINMAX"],
         "//conditions:default": [],
     }),
     deps = [":openssl"],
+)
+
+cc_library(
+    name = "ncrypto",
+    srcs = ["deps/ncrypto/ncrypto.cc"],
+    hdrs = ["deps/ncrypto/ncrypto.h"],
+    copts = cxx20_copts(),
+    defines = [
+        "NCRYPTO_BSSL_LIBDECREPIT_MISSING=1",
+        "OPENSSL_API_COMPAT=30000",
+        "OPENSSL_NO_DEPRECATED",
+    ],
+    includes = ["deps/ncrypto"],
+    linkstatic = True,
+    local_defines = select({
+        ":target_windows": ["NOMINMAX"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":ncrypto_engine",
+        ":openssl",
+    ],
 )
 
 py_binary(
@@ -3454,7 +3502,7 @@ py_binary(
         "deps/libffi/include/ffi.h.in",
         "deps/libffi/src/aarch64/ffitarget.h",
         "deps/libffi/src/arm/ffitarget.h",
-        "deps/libffi/src/loongarch64/ffitarget.h",
+        "deps/libffi/src/loongarch/ffitarget.h",
         "deps/libffi/src/mips/ffitarget.h",
         "deps/libffi/src/powerpc/ffitarget.h",
         "deps/libffi/src/riscv/ffitarget.h",
@@ -3710,6 +3758,7 @@ cc_library(
         "deps/LIEF/config/**/*.h",
         "deps/LIEF/third-party/mbedtls/include/**/*.h",
         "deps/LIEF/third-party/mbedtls/library/**/*.h",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/**/*.h",
     ]),
     copts = select({
         ":target_windows": [],
@@ -3719,10 +3768,16 @@ cc_library(
         "deps/LIEF",
         "deps/LIEF/third-party/mbedtls/include",
         "deps/LIEF/third-party/mbedtls/library",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/include",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/builtin/include",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/core",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/builtin/src",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/everest/include/tf-psa-crypto/private/everest",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/everest/include/tf-psa-crypto/private/everest/kremlib",
     ],
     local_defines = [
         "MBEDTLS_CONFIG_FILE=\\\"config/mbedtls/config.h\\\"",
-        "MBEDTLS_NO_PLATFORM_ENTROPY",
+        "TF_PSA_CRYPTO_USER_CONFIG_FILE=\\\"config/mbedtls/psa_config.h\\\"",
     ],
 )
 
@@ -3776,16 +3831,23 @@ cc_library(
         "deps/LIEF/include/LIEF/third-party",
         "deps/LIEF/include/LIEF/third-party/internal",
         "deps/LIEF/src",
+        "deps/LIEF/src/runtime",
         "deps/LIEF/third-party/frozen/include",
         "deps/LIEF/third-party/mbedtls/include",
         "deps/LIEF/third-party/mbedtls/library",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/include",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/builtin/include",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/core",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/builtin/src",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/everest/include/tf-psa-crypto/private/everest",
+        "deps/LIEF/third-party/mbedtls/tf-psa-crypto/drivers/everest/include/tf-psa-crypto/private/everest/kremlib",
         "deps/LIEF/third-party/spdlog/include",
     ],
     linkstatic = True,
     local_defines = [
         "LIEF_STATIC",
         "MBEDTLS_CONFIG_FILE=\\\"config/mbedtls/config.h\\\"",
-        "MBEDTLS_NO_PLATFORM_ENTROPY",
+        "TF_PSA_CRYPTO_USER_CONFIG_FILE=\\\"config/mbedtls/psa_config.h\\\"",
         "NDEBUG",
         "SPDLOG_DISABLE_DEFAULT_LOGGER",
         "SPDLOG_FUNCTION=\\\"\\\"",
@@ -3793,6 +3855,10 @@ cc_library(
         "_GLIBCXX_USE_CXX11_ABI=1",
     ] + select({
         ":target_windows": ["_HAS_EXCEPTIONS=0"],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        ":target_windows": ["bcrypt.lib"],
         "//conditions:default": [],
     }),
     deps = [":lief_mbedtls"],

@@ -1,0 +1,12 @@
+diff --git a/test/parallel/test-fs-rmSync-special-char-additional-error.js b/test/parallel/test-fs-rmSync-special-char-additional-error.js
+--- a/test/parallel/test-fs-rmSync-special-char-additional-error.js
++++ b/test/parallel/test-fs-rmSync-special-char-additional-error.js
+@@ -1,5 +1,8 @@
+ 'use strict';
+ const common = require('../common');
++if (!common.isWindows && process.getuid() === 0)
++  common.skip('as this test should not be run as `root`');
++
+ const tmpdir = require('../common/tmpdir');
+ const assert = require('node:assert');
+ const fs = require('node:fs');

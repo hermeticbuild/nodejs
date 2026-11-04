@@ -18,7 +18,7 @@ int main(void) {
   }
 
   return parser.method == HTTP_GET && LLHTTP_VERSION_MAJOR == 9 &&
-                 LLHTTP_VERSION_MINOR == 4 && LLHTTP_VERSION_PATCH == 2
+                 LLHTTP_VERSION_MINOR == 4 && LLHTTP_VERSION_PATCH == 3
              ? 0
              : 1;
 }

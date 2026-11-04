@@ -3,7 +3,7 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 copy_file(
     name = "node_windows_binary",
-    src = "@nodejs_26_3_1//:node",
+    src = "@nodejs_26_13_0//:node",
     out = "node.exe",
     target_compatible_with = [
         "@platforms//os:windows",
@@ -13,33 +13,33 @@ copy_file(
 sh_test(
     name = "node_test",
     srcs = ["node_test.sh"],
-    args = ["$(rootpath @nodejs_26_3_1//:node)"] + select(
+    args = ["$(rootpath @nodejs_26_13_0//:node)"] + select(
         {
-            "@nodejs_26_3_1//:target_linux_arm64": [
+            "@nodejs_26_13_0//:target_linux_arm64": [
                 "arm64",
                 "linux",
             ],
-            "@nodejs_26_3_1//:target_linux_x86_64": [
+            "@nodejs_26_13_0//:target_linux_x86_64": [
                 "x64",
                 "linux",
             ],
-            "@nodejs_26_3_1//:target_macos_arm64": [
+            "@nodejs_26_13_0//:target_macos_arm64": [
                 "arm64",
                 "darwin",
             ],
-            "@nodejs_26_3_1//:target_macos_x86_64": [
+            "@nodejs_26_13_0//:target_macos_x86_64": [
                 "x64",
                 "darwin",
             ],
         },
         no_match_error = "node_test currently supports Linux and macOS x86_64 and arm64 targets",
     ),
-    data = ["@nodejs_26_3_1//:node"],
+    data = ["@nodejs_26_13_0//:node"],
 )
 
 sh_test(
     name = "node_snapshot_test",
     srcs = ["node_snapshot_test.sh"],
-    args = ["$(rootpath @nodejs_26_3_1//:node_snapshot_source)"],
-    data = ["@nodejs_26_3_1//:node_snapshot_source"],
+    args = ["$(rootpath @nodejs_26_13_0//:node_snapshot_source)"],
+    data = ["@nodejs_26_13_0//:node_snapshot_source"],
 )

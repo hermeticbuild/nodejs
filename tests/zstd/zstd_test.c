@@ -3,7 +3,7 @@
 #include "zstd.h"
 
 int main(void) {
-  static const char input[] = "Node.js 26.3.1 bundled zstd";
+  static const char input[] = "Node.js 26.13.0 bundled zstd";
   char compressed[128];
   const size_t compressed_size =
       ZSTD_compress(compressed, sizeof(compressed), input, sizeof(input), 3);

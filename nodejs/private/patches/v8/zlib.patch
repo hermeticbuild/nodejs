@@ -2,7 +2,7 @@ diff --git a/BUILD.bazel b/BUILD.bazel
 --- a/BUILD.bazel
 +++ b/BUILD.bazel
 @@ -548,7 +548,8 @@ v8_config(
-         "V8_EMBEDDER_STRING=\"-node.20\"",
+         "V8_EMBEDDER_STRING=\"-node.40\"",
          "V8_PROMISE_INTERNAL_FIELD_COUNT=1",
          "V8_TLS_USED_IN_LIBRARY",
          "V8_USE_SIPHASH",

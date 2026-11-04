@@ -3,10 +3,10 @@ diff --git a/BUILD.bazel b/BUILD.bazel
 +++ b/BUILD.bazel
 @@ -4603 +4603 @@ v8_library(
 -        "//external:icu",
-+        "@nodejs_icu_26_3_1//:icu",
++        "@nodejs_icu_26_13_0//:icu",
 @@ -4725 +4725 @@ v8_library(
 -        "//external:icu",
-+        "@nodejs_icu_26_3_1//:icu",
++        "@nodejs_icu_26_13_0//:icu",
 diff --git a/bazel/defs.bzl b/bazel/defs.bzl
 --- a/bazel/defs.bzl
 +++ b/bazel/defs.bzl

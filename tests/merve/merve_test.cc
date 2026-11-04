@@ -4,7 +4,7 @@
 
 int main() {
   auto analysis = lexer::parse_commonjs(
-      "exports.release = '26.3.1'; module.exports.build = true;");
+      "exports.release = '26.13.0'; module.exports.build = true;");
   if (!analysis || analysis->exports.size() != 2) {
     return 1;
   }

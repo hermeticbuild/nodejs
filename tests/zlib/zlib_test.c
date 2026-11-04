@@ -3,7 +3,7 @@
 #include "zlib.h"
 
 int main(void) {
-  static const Bytef input[] = "Node.js 26.3.1 bundled zlib";
+  static const Bytef input[] = "Node.js 26.13.0 bundled zlib";
   Bytef compressed[128];
   uLongf compressed_size = sizeof(compressed);
   if (compress2(compressed, &compressed_size, input, sizeof(input),
@@ -17,7 +17,7 @@ int main(void) {
     return 1;
   }
 
-  return strcmp(zlibVersion(), "1.3.1") == 0 && output_size == sizeof(input) &&
+  return strcmp(zlibVersion(), "1.3.2.1-motley") == 0 && output_size == sizeof(input) &&
                  memcmp(output, input, sizeof(input)) == 0
              ? 0
              : 1;

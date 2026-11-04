@@ -1,4 +1,4 @@
-"""Executes a Node.js 26.3.1 Windows binary."""
+"""Executes a Node.js 26.13.0 Windows binary."""
 
 import subprocess
 import sys
@@ -12,8 +12,8 @@ const { AsyncLocalStorage } = require('node:async_hooks');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 
-assert.equal(process.version, 'v26.3.1');
-assert.match(process.versions.v8, /^14\.6\.202\.34-node\.20$/);
+assert.equal(process.version, 'v26.13.0');
+assert.match(process.versions.v8, /^14\.6\.202\.34-node\.40$/);
 assert.equal(process.versions.modules, '147');
 assert.equal(process.versions.icu, '78.3');
 assert.equal(process.arch, process.argv[1]);

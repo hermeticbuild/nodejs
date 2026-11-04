@@ -5,7 +5,7 @@ node="$1"
 arch="$2"
 platform="$3"
 
-[[ "$("$node" --version)" == "v26.3.1" ]]
+[[ "$("$node" --version)" == "v26.13.0" ]]
 
 if [[ "$arch" == "x64" && "$platform" == "linux" ]]; then
   "$node" --v8-options | grep -F -- '--experimental-wasm-revectorize'
@@ -27,8 +27,8 @@ const { DatabaseSync } = require('node:sqlite');
 const expectedArch = process.argv[2];
 const expectedPlatform = process.argv[3];
 
-assert.equal(process.version, 'v26.3.1');
-assert.match(process.versions.v8, /^14\.6\.202\.34-node\.20$/);
+assert.equal(process.version, 'v26.13.0');
+assert.match(process.versions.v8, /^14\.6\.202\.34-node\.40$/);
 assert.equal(process.versions.modules, '147');
 assert.equal(process.versions.icu, '78.3');
 assert.equal(process.arch, expectedArch);

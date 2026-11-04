@@ -5,7 +5,7 @@
 int main(void) {
   const nghttp2_info *info = nghttp2_version(0);
   if (info == 0 || info->version_num != NGHTTP2_VERSION_NUM ||
-      strcmp(info->version_str, "1.69.0") != 0) {
+      strcmp(info->version_str, "1.70.0") != 0) {
     return 1;
   }
 
